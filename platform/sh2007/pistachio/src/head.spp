@@ -1,0 +1,16 @@
+/* $Id$ */
+
+/**
+ *  @brief  Kernel entry point
+ *  @since  December 2008
+ */
+
+
+    .section .init.head
+    EXPORT  __phys_addr_stack
+    BEGIN_PROC(_start)
+
+LABEL(__phys_addr_stack)
+    DCDU    0x0
+
+    END

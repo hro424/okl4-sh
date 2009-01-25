@@ -1,0 +1,364 @@
+/* $Id$ */
+
+/**
+ * @brief   SH7780 Trap Handling
+ * @file    pistachio/src/traps.spp
+ * @since   December 8, 2008
+ */
+
+#include <arch/config.h>
+#include <arch/exception.h>
+#include <arch/globals.h>
+#include <kernel/arch/asm.h>
+
+
+#define KERNEL_STACK
+#define COMMON_RETURN
+#define GENERAL_EXCEPTION_HANDLER   do_general_exception
+#define SYSCALL_EXCEPTION_HANDLER   do_syscall_exception
+#define TLB_HANDLER                 do_tlb_miss
+#define IRQ_HANDLER                 do_irq
+
+#define PUSH(reg)   mov.l   reg, @-r15
+#define POP(reg)    mov.l   @r15+, reg
+
+#define SAVE_CONTEXT                    \
+    stc     sgr, r0;                    \
+    PUSH(r0);                           \
+    stc     spc, r0;                    \
+    PUSH(r0);                           \
+    stc     ssr, r0;                    \
+    PUSH(r0);                           \
+    sts     pr, r0;                     \
+    PUSH(r0);                           \
+    sts     macl, r0;                   \
+    PUSH(r0);                           \
+    sts     mach, r0;                   \
+    PUSH(r0);                           \
+    /* After exception or interrupt, the current bank is 1.  */ \
+    stc     sr, r0;                     \
+    /* Make the mask to switch the bank */  \
+    mov     #0x20, r1;                  \
+    shll8   r1;                         \
+    shll16  r1;                         \
+    not     r1, r1;                     \
+    /* Switch bank 1 to bank 0 */       \
+    and     r1, r0;                     \
+    ldc     r0, sr;                     \
+    /* Push the rest of the registers on to the stack */    \
+    PUSH(r14);                          \
+    PUSH(r13);                          \
+    PUSH(r12);                          \
+    PUSH(r11);                          \
+    PUSH(r10);                          \
+    PUSH(r9);                           \
+    PUSH(r8);                           \
+    PUSH(r7);                           \
+    PUSH(r6);                           \
+    PUSH(r5);                           \
+    PUSH(r4);                           \
+    PUSH(r3);                           \
+    PUSH(r2);                           \
+    PUSH(r1);                           \
+    PUSH(r0);
+
+#define RESTORE_CONTEXT                 \
+    mov     r15, r1;                    \
+    add     #60, r1;                    \
+    mov.l   @(0, r1), r0;               \
+    lds     r0, mach;                   \
+    mov.l   @(4, r1), r0;               \
+    lds     r0, macl;                   \
+    mov.l   @(8, r1), r0;               \
+    lds     r0, pr;                     \
+    mov.l   @(12, r1), r0;              \
+    ldc     r0, ssr;                    \
+    mov.l   @(16, r1), r0;              \
+    ldc     r0, spc;                    \
+    mov.l   @(20, r1), r0;              \
+    /*XXX: Compile error: ldc     r0, sgr; */                   \
+    POP(r0);                            \
+    POP(r1);                            \
+    POP(r2);                            \
+    POP(r3);                            \
+    POP(r4);                            \
+    POP(r5);                            \
+    POP(r6);                            \
+    POP(r7);                            \
+    POP(r8);                            \
+    POP(r9);                            \
+    POP(r10);                           \
+    POP(r11);                           \
+    POP(r12);                           \
+    POP(r13);                           \
+    POP(r14);                           \
+    stc     sgr, r15;
+
+
+
+
+/*
+ * Locate the trap vector in the P1 or P2 domain in order to avoid double
+ * fault.
+ *
+ * P1 (0x80000000 - 0x9FFFFFFF):
+ *      Cacheable but address translation via TLB is impossible.
+ * P2 (0xA0000000 - 0xBFFFFFFF):
+ *      Uncacheable and address translation via TLB is impossible.
+ */
+
+/*
+ * Initialize the layout of the trap handler
+ */
+        TRAPS_BEGIN_MARKER
+
+/*
+ * General exception handler vector
+ *
+ */
+        BEGIN_PROC_TRAPS(sh_exception, 0x100)
+
+        /*
+         * Read the exception event register, which includes 11-bit of
+         * exception code
+         */
+        mov.l   EXP_CONST_REG_EXPEVT, r0
+        mov.l   @r0, r0
+
+        /* Check if it is the TRAPA exception */
+        mov.l   EXP_CONST_ECODE_TRAPA, r1
+        cmp/eq  r1, r0
+        bt      sh_handle_trapa
+
+#if 0
+        /* Check if it is TLB exception */
+        cmp/eq  EXP_CONST_ECODE_TLB_FAULT_R, r0
+        bt      sh_handle_tlb_fault
+        cmp/eq  EXP_CONST_ECODE_TLB_FAULT_W, r0
+        bt      sh_handle_tlb_fault
+
+        /* Check if it is initial write exception */
+        cmp/qe  EXP_CONST_ECODE_INIT_WRITE, r0
+        bt      sh_handle_init_write
+#endif
+
+        /* Deal with it as general exception */
+
+        mov.l   EXP_CONST_STACK, r15
+        SAVE_CONTEXT
+
+        /* Pass the exception code to the handler via the first argument */
+        mov.l   EXP_CONST_REG_EXPEVT, r4
+        mov.l   @r4, r4
+
+        /*
+         * Pass the current SP, which points at sh_context_t, to the handler
+         * via the second argument
+         */
+        mov     r15, r5
+
+        /* Invoke the handler */
+        /* handle(uint32_t exception, sh_context_t* context) */
+        mov.l   EXP_CONST_GENERAL_EXCEPTION_HANDLER, r0
+        jsr     @r0
+        nop
+
+        RESTORE_CONTEXT
+        rte
+        nop
+
+LABEL(sh_handle_trapa)
+        /* See if the TRAPA code indicates a system call */
+        mov.l   EXP_CONST_REG_TRA, r0
+        mov.l   @r0, r0
+        shlr2   r0
+        mov.l   EXP_CONST_CODE_SYSCALL, r1
+        cmp/eq  r1, r0
+        bt      sh_handle_syscall
+
+        /* Not a system call.  Throw a system call exception.  */
+        SAVE_CONTEXT
+        mov     r15, r4
+
+        /* Set the return address */
+        mov.l   EXP_CONST_COMMON_RETURN, r0
+        lds     r0, pr
+
+        /* Invoke the handler */
+        /* handle(sh_context_t* context) */
+        mov.l   EXP_CONST_SYSCALL_EXCEPTION_HANDLER, r0
+        jmp     @r0
+        nop
+        /* NOT REACHED */
+
+LABEL(sh_handle_syscall)
+        /* Switch to the kernel stack */
+        mov.l   EXP_CONST_STACK, r15
+        stc     sgr, r0
+        /*TODO: mov.l   r0, @(DISP_sp, r15) */
+
+        /* Set the return address */
+        mov.l   EXP_CONST_COMMON_RETURN, r0
+        lds     r0, pr
+
+        /* Call it */
+        mov.l   sh_syscall_vectors, r0
+        add     r1, r0
+        jmp     @r0
+        nop
+        /* NOT REACHED */
+
+ipc_syscall_return:
+        mov.l   EXP_CONST_STACK, r15
+        /*TODO: add     #OFS_GLOBAL_CURRENT_TCB, r15 */
+        mov.l   @r15, r15
+        /*TODO: add     #OFS_TCB_PARTNER, r15 */
+        mov.l   @r15, r0
+
+misc_syscall_return:
+
+        /* Constant values and function pointers */
+        .align 2
+LABEL(EXP_CONST_REG_EXPEVT)
+        .long   REG_EXPEVT
+LABEL(EXP_CONST_REG_TRA)
+        .long   REG_TRA
+LABEL(EXP_CONST_ECODE_TRAPA)
+        .long   ECODE_TRAPA
+LABEL(EXP_CONST_STACK)
+        .long   KERNEL_STACK
+LABEL(EXP_CONST_GENERAL_EXCEPTION_HANDLER)
+        .long   GENERAL_EXCEPTION_HANDLER
+LABEL(EXP_CONST_CODE_SYSCALL)
+        .long   CODE_SYSCALL
+LABEL(EXP_CONST_COMMON_RETURN)
+        .long   COMMON_RETURN
+LABEL(EXP_CONST_SYSCALL_EXCEPTION_HANDLER)
+        .long   SYSCALL_EXCEPTION_HANDLER
+LABEL(sh_syscall_vectors)
+        .long   sys_ipc
+        .long   sys_thread_switch
+        .long   sys_thread_control
+        .long   sys_exchange_registers
+        .long   sys_schedule
+        .long   sys_map_control
+        .long   sys_space_control
+        .long   syscall_return      /* Unused system call */
+        .long   sys_cache_control
+        .long   syscall_return      /* Unused system call */
+        .long   sys_ipc             /* lipc */
+        .long   sys_platform_control
+        .long   sys_space_switch
+        .long   sys_mutex
+        .long   sys_mutex_control
+        .long   sys_interrupt_control
+        .long   sys_cap_control
+        .long   sys_memory_copy
+
+        END_PROC_TRAPS(sh_exception)
+
+/*
+ * TLB miss handler vector
+ */
+        BEGIN_PROC_TRAPS(sh_tlb_miss, 0x400)
+        mov.l   TLB_CONST_STACK, r15
+        SAVE_CONTEXT
+
+        /*
+         * The exception event register contains the access mode, such as
+         * read (0x40) or write (0x60).  Pass it via the first argument.
+         */
+        mov.l   TLB_CONST_REG_EXPEVT, r4
+        mov.l   @r4, r4
+
+        /* Pass SP via the second argument */
+        mov     r15, r5
+
+        /* Call the handler */
+        mov.l   TLB_CONST_TLB_HANDLER, r0
+        jsr     @r0
+        nop
+
+        RESTORE_CONTEXT
+        rte
+        nop
+
+        /* Constant values and function pointers */
+        .align 2
+LABEL(TLB_CONST_STACK)
+        .long   KERNEL_STACK
+LABEL(TLB_CONST_REG_EXPEVT)
+        .long   REG_EXPEVT
+LABEL(TLB_CONST_TLB_HANDLER)
+        .long   TLB_HANDLER
+
+        END_PROC_TRAPS(sh_tlb_miss)
+
+/*
+ * IRQ handler vector
+ * NOTE: Must be placed at 0x600 (= 0x400 + 0x200)
+ */
+        BEGIN_PROC_TRAPS(sh_interrupt, 0x200)
+
+        /* Check whether it is raised in user or kernel mode */
+        /*TODO: bf      allocate_kernel_stack */
+        
+        /* Handle an interrupt raised in user mode */
+
+        /* Use the kernel stack */
+        mov.l   IRQ_CONST_STACK, r15
+
+        SAVE_CONTEXT
+
+        /*
+         * Read the interrupt event register.  Pass it via the first argument.
+         */
+        mov.l   IRQ_CONST_REG_INTEVT, r4
+        mov.l   @r4, r4
+
+        /* Pass the saved context via the second argument */
+        mov     r15, r5
+
+        /* Invoke the IRQ handler */
+        mov.l   IRQ_CONST_IRQ_HANDLER, r0
+        jsr     @r0
+        nop
+        RESTORE_CONTEXT
+        rte
+        nop
+
+LABEL(kernel_interrupt)
+        /* Handle an interrupt raised in kernel mode */
+
+        /* Allocate stack */
+
+        SAVE_CONTEXT
+
+        /*
+         * Read the interrupt event register.  Pass it via the first argument.
+         */
+        mov.l   IRQ_CONST_REG_INTEVT, r4
+        mov.l   @r4, r4
+
+        /* Pass the saved context via the second argument */
+        mov     r15, r5
+
+        /* Invoke the IRQ handler */
+        mov.l   IRQ_CONST_IRQ_HANDLER, r0
+        jsr     @r0
+        nop
+        RESTORE_CONTEXT
+        rte
+        nop
+
+        /* Constant values and function pointers */
+        .align 2
+LABEL(IRQ_CONST_STACK)
+        .long   KERNEL_STACK
+LABEL(IRQ_CONST_REG_INTEVT)
+        .long   REG_INTEVT
+LABEL(IRQ_CONST_IRQ_HANDLER)
+        .long   IRQ_HANDLER
+
+        END_PROC_TRAPS(sh_interrupt)
+
