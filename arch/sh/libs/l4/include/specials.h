@@ -9,6 +9,8 @@
 #ifndef OKL4_ARCH_SH_L4_SPECIALS_H
 #define OKL4_ARCH_SH_L4_SPECIALS_H
 
+#include <compat/c.h>
+
 L4_INLINE int __L4_Msb(L4_Word_t w) CONST;
 
 L4_INLINE int

@@ -7,6 +7,8 @@
 #ifndef OKL4_ARCH_SH_KERNEL_CONTINUATION_H
 #define OKL4_ARCH_SH_KERNEL_CONTINUATION_H
 
+#include <kernel/arch/config.h>
+
 #if !defined(ASSEMBLY)
 
 #include <kernel/arch/asm.h>

@@ -61,4 +61,29 @@
 #define __L4_TCR_PLATFORM_NUM                   (5)
 #define __L4_TCR_RESERVED_NUM                   (2)
 
+#define __L4_TCR_MR_OFFSET                      (64)
+
+//TODO
+#ifndef USER_UTCB_REF
+#define USER_UTCB_REF               0xFF0000FF0
+#endif
+
+#if !defined(__ASSEMBLER__)
+
+INLINE word_t* __L4_SH_Utcb(void) CONST;
+INLINE word_t*
+__L4_SH_Utcb(void)
+{
+    return 0;
+}
+
+INLINE word_t* L4_GetUtcbBase(void) CONST;
+INLINE word_t*
+L4_GetUtcbBase()
+{
+    return __L4_SH_Utcb();
+}
+
+#endif
+
 #endif /* OKL4_ARCH_SH_L4_VREGS_H */
