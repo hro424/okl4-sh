@@ -15,7 +15,7 @@
 #define VIRT_ADDR_RAM           VIRT_ADDR_BASE
 
 #define STACK_BITS              11
-#define STACK_SIZE              (1UL << STACK_BITS)
+#define STACK_SIZE              (1 << STACK_BITS)
 #define STACK_TOP               (STACK_SIZE - 4)
 
 #endif /* OKL4_ARCH_SH_KERNEL_CONFIG_H */

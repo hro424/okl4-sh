@@ -3,7 +3,7 @@
 /**
  * @brief   Page table entry
  * @file    arch/sh/pistachio/include/pgent.h
- * @since   December 9, 2008\
+ * @since   December 9, 2008
  */
 
 #ifndef OKL4_ARCH_SH_PGENT_H
@@ -32,11 +32,13 @@ public:
     };
 
     enum pgsize_e {
-        size_4k     = 1,
+        /* Indice of HW_PGSHIFTS */
+        size_4k     = 0,
         size_min    = size_4k,
-        size_64k    = 2,
-        size_1m     = 3,
+        size_64k    = 1,
+        size_1m     = 2,
         min_tree    = size_1m,  // minimum mid-level tree
+        size_4g     = 3,
         size_max    = size_1m,
     };
     

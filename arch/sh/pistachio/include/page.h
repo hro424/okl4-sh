@@ -18,7 +18,7 @@
 #define SH_SECTION_SIZE             (1UL << (32 - SH_SECTION_BITS))
 #define SH_NUM_SECTIONS             (1UL << SH_SECTION_BITS)
 
-#define HW_PGSHIFTS                 {12, 16, 20}
+#define HW_PGSHIFTS                 {12, 16, 20, 32}
 
 #define HW_VALID_PGSIZES            ((1 << 12) | (1 << 16) | (1 << 20))
 

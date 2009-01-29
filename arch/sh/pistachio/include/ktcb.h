@@ -13,6 +13,8 @@ class arch_ktcb_t
 {
 public:
     sh_context_t    context;
+    word_t          exc_code;
+    word_t          exc_num;
 };
 
 #endif /* OKL4_ARCH_SH_KTCB_H */

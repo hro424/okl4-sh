@@ -6,6 +6,7 @@
 #ifndef OKL4_ARCH_SH_KERNEL_THREAD_H
 #define OKL4_ARCH_SH_KERNEL_THREAD_H
 
+#if !defined(ASSEMBLY)
 class sh_context_t
 {
 public:
@@ -31,16 +32,9 @@ public:
     u32_t   pc;
     u32_t   sp;
 };
+#endif
 
-class sh_syscall_context_t
-{
-public:
-    u32_t   macl;
-    u32_t   mach;
-    u32_t   sp;
-    u32_t   pr;
-    u32_t   pc;
-    u32_t   sr;
-};
+#define SIZEOF_CONTEXT          84
+#define OFFSET_CONTEXT_MACH     60
 
 #endif /* OKL4_ARCH_SH_KERNEL_THREAD_H */

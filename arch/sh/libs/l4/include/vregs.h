@@ -74,6 +74,7 @@ INLINE word_t* __L4_SH_Utcb(void) CONST;
 INLINE word_t*
 __L4_SH_Utcb(void)
 {
+    //TODO
     return 0;
 }
 

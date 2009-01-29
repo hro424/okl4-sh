@@ -14,6 +14,8 @@
 #define EXPORT                  .global
 #define IMPORT                  .extern
 #define LABEL(name)             name:
+#define PUSH(reg)               mov.l   reg, @-r15
+#define POP(reg)                mov.l   @r15+, reg
 
 #define TRAPS_BEGIN_MARKER              \
     .section .data.traps;               \

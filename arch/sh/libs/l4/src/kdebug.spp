@@ -1,0 +1,112 @@
+/*
+ * Copyright (c) 2006, National ICT Australia
+ */
+/*
+ * Copyright (c) 2007, Open Kernel Labs, Inc.
+ * 
+ * All rights reserved.
+ * 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ * 
+ *     * Redistributions of source code must retain the above copyright
+ *       notice, this list of conditions and the following disclaimer.
+ *     * Redistributions in binary form must reproduce the above copyright
+ *       notice, this list of conditions and the following disclaimer in the
+ *       documentation and/or other materials provided with the distribution.
+ *     * Neither the name of the Open Kernel Labs, Inc. nor the names of
+ *       its contributors may be used to endorse or promote products derived
+ *       from this software without specific prior written permission.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER
+ * OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+ * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+ * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+#include <compat/asm.h>
+#include <l4/arch/vregs.h>
+#include <l4/arch/syscalls_asm.h>
+
+/*
+ * FIXME: Move these to libcompat, and make them more general.
+ */
+
+/*
+ * L4_KDB_Enter
+ */
+    EXPORT L4_KDB_Enter
+LABEL(L4_KDB_Enter)
+    sts.l   pr, @-r15
+//        mov.l   SYSCALL_REG, @-r15
+    mov r4, r0
+    
+    mov #L4_TRAP_KDEBUG, SYSCALL_REG
+    trapa   #SYSCALL_TRAPANUM
+
+//        mov.l   @r15+, SYSCALL_REG
+    lds.l   @r15+, pr
+    rts
+    nop
+
+    .macro __L4_KDB_Op op, name
+
+    EXPORT  \name
+LABEL(\name)
+    sts.l   pr, @-r15
+//        mov.l   SYSCALL_REG, @-r15
+    mov r4, r0
+    mov #\op, SYSCALL_REG
+    trapa   #SYSCALL_TRAPANUM
+
+//        mov.l   @r15+, SYSCALL_REG
+    lds.l   @r15+, pr
+    rts
+    nop
+    .endm
+
+#define L4_KDB_Op(op, name)     __L4_KDB_Op     op, name
+
+    L4_KDB_Op(L4_TRAP_GETTICK, L4_KDB_GetTick)
+    L4_KDB_Op(L4_TRAP_KGETC, L4_KDB_ReadChar_Blocked_ASM)
+    L4_KDB_Op(L4_TRAP_KGETC_NB, L4_KDB_ReadChar_ASM)
+    L4_KDB_Op(L4_TRAP_KPUTC, L4_KDB_PrintChar_ASM)
+    L4_KDB_Op(L4_TRAP_GETCOUNTER, L4_KDB_GetTracepointCount)
+    L4_KDB_Op(L4_TRAP_GETNUMTPS, L4_KDB_GetNumTracepoints)
+    L4_KDB_Op(L4_TRAP_GETTPNAME, L4_KDB_GetTracepointNameIntroMRs)
+    L4_KDB_Op(L4_TRAP_TCCTRL, L4_KDB_TCCtrl)
+
+    L4_KDB_Op(L4_TRAP_PMU_RESET, L4_KDB__PMU_Rese)
+    L4_KDB_Op(L4_TRAP_PMU_STOP, L4_KDB__PMU_Stop)
+    L4_KDB_Op(L4_TRAP_PMU_READ, L4_KDB_PMU_Read)
+    L4_KDB_Op(L4_TRAP_PMU_CONFIG, L4_KDB__PMU_Config)
+
+/*
+ * L4_KDB_SetThreadName_ASM
+ */
+    EXPORT  L4_KDB_SetThreadName_ASM
+LABEL(L4_KDB_SetThreadName_ASM)
+    sts.l   pr, @-r15
+//        mov.l   SYSCALL_REG, @-r15
+
+    mov r4, r0
+    mov.l   @r5,r1
+    mov.l   @(4,r5),r2
+    mov.l   @(8,r5),r3
+    mov.l   @(12,r5),r4
+
+    mov #L4_TRAP_KSET_THRD_NAME, SYSCALL_REG
+    trapa   #SYSCALL_TRAPANUM
+
+//        mov.l   @r15+, SYSCALL_REG
+    lds.l   @r15+, pr
+    rts
+    nop
+
