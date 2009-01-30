@@ -41,6 +41,12 @@
 
 #define UPDATE_REG()        __asm__ __volatile__ ("icbi @%0" :: "r" (0x1000))
 
+INLINE static word_t
+read_mapped_reg(word_t reg)
+{
+    return *(word_t*)reg;
+}
+
 /* TRAPA */
 #define REG_TRA             0xFF000020
 /* Exception */

@@ -346,6 +346,8 @@ LABEL(sh_syscall_vectors)
     mov.l   TLB_CONST_STACK, r15
     SAVE_CONTEXT
 
+    /* Using register bank 0 */
+
     /*
      * The exception event register contains the access mode, such as
      * read (0x40) or write (0x60).  Pass it via the first argument.
@@ -392,6 +394,8 @@ LABEL(TLB_CONST_TLB_HANDLER)
     mov.l   IRQ_CONST_STACK, r15
 
     SAVE_CONTEXT
+
+    /* Using register bank 0 */
 
     /*
      * Read the interrupt event register.  Pass it via the first argument.
