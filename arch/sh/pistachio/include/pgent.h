@@ -358,7 +358,7 @@ pgent_t::next(generic_space_t* s, pgsize_e pgsize, word_t num)
     return this + num;
 }
 
-void
+INLINE void
 pgent_t::dump_misc(generic_space_t* s, pgsize_e pgsize)
 {
     UNIMPLEMENTED();
