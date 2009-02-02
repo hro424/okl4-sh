@@ -4,6 +4,11 @@
  *  @since  December 2008
  */
 
+#include <l4.h>
+
+OUTPUT_FORMAT("elf32-sh-linux", "elf32-sh-linux", "elf32-sh-linux")
+OUTPUT_ARCH("sh4")
+
 ENTRY(_start)
 
 MEMORY
