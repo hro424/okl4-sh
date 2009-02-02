@@ -39,13 +39,21 @@
  * MEMORY-MAPPED REGISTERS (VIRTUAL ADDRESS)
  */
 
+#if !defined(ASSEMBLY)
 #define UPDATE_REG()        __asm__ __volatile__ ("icbi @%0" :: "r" (0x1000))
 
 INLINE static word_t
-read_mapped_reg(word_t reg)
+mapped_reg_read(word_t reg)
 {
     return *(word_t*)reg;
 }
+
+INLINE static void
+mapped_reg_write(word_t reg, word_t val)
+{
+    *(word_t*)reg = val;
+}
+#endif
 
 /* TRAPA */
 #define REG_TRA             0xFF000020
@@ -104,6 +112,7 @@ read_mapped_reg(word_t reg)
 #define REG_PTEL_D          0x00000004
 #define REG_PTEL_SH         0x00000002
 #define REG_PTEL_WT         0x00000001
+#define REG_PTEL_MASK       0x1FFFFDFF
 
 /*
  * MMU Control Register

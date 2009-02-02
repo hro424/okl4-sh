@@ -160,7 +160,7 @@ pgent_t::is_subtree(generic_space_t* s, pgsize_e pgsize)
 {
     switch (pgsize) {
         case size_1m:
-            return l1.large.size != (int)size_1m;
+            return (l1.large.size0 != 1) || (l1.large.size1 != 1);
         case size_64k:
         case size_4k:
         default:

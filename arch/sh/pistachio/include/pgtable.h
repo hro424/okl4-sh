@@ -26,24 +26,24 @@ public:
             BITFIELD11(word_t,
                 /* Write-through/Copy-back */
                 wt              : 1,
-                /* Dirty */
-                dirty           : 1,
-                /* User/Supervisor & Read/Write */
-                perm            : 2,
-                /* Cache enabled */
-                cache           : 1,
                 /* Shared */
                 shared          : 1,
+                /* Dirty */
+                dirty           : 1,
+                /* Cache enabled */
+                cache           : 1,
                 /* Size of the entry */
-                size            : 2,
-                /* Executable */
-                x               : 1,
+                size0           : 1,
+                /* User/Supervisor & Read/Write */
+                perm            : 2,
+                /* Size of the entry */
+                size1           : 1,
                 /* Present */
                 present         : 1,
-                /* Accessed */
-                accessed        : 1,
+                /* Executable */
+                x               : 1,
 
-                reserved        : 10,
+                reserved        : 11,
                 /* Base address of a level-2 table or a 1M page */
                 base_address    : 12
             );
@@ -71,24 +71,24 @@ public:
             BITFIELD11(word_t,
                 /* Write-through/Copy-back */
                 wt              : 1,
-                /* Dirty */
-                dirty           : 1,
-                /* User/Supervisor & Read/Write */
-                perm            : 2,
-                /* Cache enabled */
-                cache           : 1,
                 /* Shared */
                 shared          : 1,
-                /* Size of the entry */
-                size            : 2,
-                /* Executable */
-                x               : 1,
+                /* Dirty */
+                dirty           : 1,
+                /* Cache enabled */
+                cache           : 1,
+                /* Size of the entry (bit 0) */
+                size0           : 1,
+                /* User/Supervisor & Read/Write */
+                perm            : 2,
+                /* Size of the entry (bit 1) */
+                size1           : 1,
                 /* Present */
                 present         : 1,
-                /* Accessed */
-                accessed        : 1,
+                /* Executable */
+                x               : 1,
 
-                reserved        : 6,
+                reserved        : 7,
                 /* Base address of a level-2 table or a 1M page */
                 base_address    : 16
             );
@@ -99,24 +99,24 @@ public:
             BITFIELD11(word_t,
                 /* Write-through(1)/Copy-back(0) */
                 wt              : 1,
-                /* Dirty */
-                dirty           : 1,
-                /* User/Supervisor & Read/Write */
-                perm            : 2,
-                /* Cache enabled */
-                cache           : 1,
                 /* Shared */
                 shared          : 1,
+                /* Dirty */
+                dirty           : 1,
+                /* Cache enabled */
+                cache           : 1,
                 /* Size of the entry */
-                size            : 2,
-                /* Executable */
-                x               : 1,
+                size0           : 1,
+                /* User/Supervisor & Read/Write */
+                perm            : 2,
+                /* Size of the entry */
+                size1           : 1,
                 /* Present */
                 present         : 1,
-                /* Accessed */
-                accessed        : 1,
+                /* Executable */
+                x               : 1,
 
-                reserved        : 2,
+                reserved        : 3,
                 /* Base address of a level-2 table or a 1M page */
                 base_address    : 20
             );
