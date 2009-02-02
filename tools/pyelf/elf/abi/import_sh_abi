@@ -1,0 +1,43 @@
+#!/usr/bin/python
+
+# description: convert elf32-sh.c
+
+import sys
+import re
+
+# Header
+print """
+# $Id$
+
+\"\"\"
+Support for the SH ABI.
+\"\"\"
+
+# imported from %s
+
+import elf.abi
+from elf.abi import ElfRelocType
+from elf.constants import EM_SH
+
+class ShRelocType(ElfRelocType):
+    \"\"\"ElfRelocType for SH processors. \"\"\"
+    _show = {}
+""" % sys.argv[1]
+
+# Body
+
+counter = 0
+matchstr = re.compile(r'HOWTO\s*\((\w+)')
+
+for line in open(sys.argv[1], 'r').xreadlines():
+    line = line.strip()
+    r = matchstr.match(line)
+    if r != None:
+        type = r.group(1)
+        print type + " = ShRelocType(" + str(counter) + ", \"" + type[5:] + "\")"
+        counter += 1
+
+
+# Footer
+print
+print """elf.abi.ABI_REGISTRATION[EM_SH] = ShRelocType"""
