@@ -6,6 +6,8 @@
 #ifndef OKL4_ARCH_SH_KERNEL_THREAD_H
 #define OKL4_ARCH_SH_KERNEL_THREAD_H
 
+#define SH_USER_FLAGS_MASK  0x100083F3
+
 #if !defined(ASSEMBLY)
 class sh_context_t
 {

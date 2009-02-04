@@ -176,8 +176,10 @@ LABEL(sh_handle_trapa)
     cmp/eq  #SYSCALL_NUM, r0
     bt      sh_handle_syscall
 
-    /* Not a system call.  Throw a system call exception.  */
+    /* Not an OKL4 system call.  Throw a system call exception?  */
     SAVE_CONTEXT
+
+    /*TODO: Handle non-OKL4 system calls */
 
     /* Using register bank 0 */
 

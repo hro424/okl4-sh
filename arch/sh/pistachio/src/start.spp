@@ -1,0 +1,17 @@
+/* $Id$ */
+
+/**
+ *  @since  February 2009
+ */
+
+#include <soc/interface.h>
+
+    .section .init.start
+    EXPORT __phys_addr_ram
+
+    BEGIN_PROC(kernel_arch_init)
+
+LABEL(__phys_addr_ram)
+    .long   0x0
+
+    END_PROC(kernel_arch_init)

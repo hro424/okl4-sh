@@ -21,6 +21,7 @@
     BEGIN_PROC(_start)
 
     /* Clean up BSS section */
+/* Do we really need this? 
     mov.l   CONST_BSS_START, r0
     mov.l   CONST_BSS_END, r1
     xor     r2, r2
@@ -30,6 +31,7 @@
     cmp/eq  r0, r1
     bf      1b
     nop
+*/
 
     mov.l   CONST_INIT_VBR, r0
     jsr     @r0
@@ -48,10 +50,12 @@
 
     END_PROC(_start)
 
+/*
 LABEL(CONST_BSS_START)
     .long   __start_bss
 LABEL(CONST_BSS_END)
     .long   __end_bss
+*/
 LABEL(CONST_INIT_VBR)
     .long   VIRT_ADDR_RAM
 LABEL(CONST_INIT_SR)

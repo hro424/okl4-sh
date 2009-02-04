@@ -8,6 +8,7 @@
 #define OKL4_ARCH_SH_TCB_H
 
 #include <syscalls.h>
+#include <arch/thread.h>
 #include <kernel/errors.h>
 #include <kernel/arch/continuation.h>
 
@@ -122,7 +123,8 @@ tcb_t::in_exception_ipc()
  * context.
  */
 
-INLINE void NORETURN initial_switch_to (tcb_t * tcb)
+INLINE void NORETURN
+initial_switch_to (tcb_t * tcb)
 {
     word_t*     pteh = (word_t*)REG_PTEH;
     tcb_t**     stack_top;
@@ -149,11 +151,11 @@ INLINE void NORETURN initial_switch_to (tcb_t * tcb)
  * read the user-level instruction pointer
  * @return      the user-level stack pointer
  */
-INLINE addr_t tcb_t::get_user_ip()
+INLINE addr_t
+tcb_t::get_user_ip()
 {
-    //sh_irq_context_t* context = &arch.context;
-    //return (addr_t) ((context)->pc & ~1UL);
-    return 0;
+    sh_context_t* context = &arch.context;
+    return (addr_t) ((context)->pc & ~1UL);
 }
 
 
@@ -161,10 +163,72 @@ INLINE addr_t tcb_t::get_user_ip()
  * set the user-level instruction pointer
  * @param ip    new user-level instruction pointer
  */
-INLINE void tcb_t::set_user_ip(addr_t ip)
+INLINE void
+tcb_t::set_user_ip(addr_t ip)
 {
-    //sh_irq_context_t*   context = &arch.context;
-    //context->pc = (word_t)ip;
+    sh_context_t*   context = &arch.context;
+    context->pc = (word_t)ip;
 }
+
+/**
+ * read the user-level stack pointer
+ * @return      the user-level stack pointer
+ */
+INLINE addr_t
+tcb_t::get_user_sp()
+{
+    sh_context_t * context = &arch.context;
+
+    return (addr_t) (context)->sp;
+}
+
+/**
+ * set the user-level stack pointer
+ * @param sp    new user-level stack pointer
+ */
+INLINE void
+tcb_t::set_user_sp(addr_t sp)
+{
+    sh_context_t *context = &arch.context;
+
+    context->sp = (word_t)sp;
+}
+
+INLINE word_t tcb_t::get_utcb_location()
+{
+    return (word_t)this->utcb_location;
+}
+
+INLINE void tcb_t::set_utcb_location(word_t location)
+{
+    utcb_location = location;
+}
+
+
+/**
+ * read the user-level flags (one word)
+ * @return      the user-level flags
+ */
+INLINE word_t
+tcb_t::get_user_flags (void)
+{
+    sh_context_t * context = &(arch.context);
+
+    return (word_t) (context)->sr & SH_USER_FLAGS_MASK;
+}
+
+/**
+ * set the user-level flags
+ * @param flags new user-level flags
+ */
+INLINE void
+tcb_t::set_user_flags (const word_t flags)
+{
+    sh_context_t *context = &(arch.context);
+
+    context->sr = (context->sr & ~SH_USER_FLAGS_MASK) |
+            ((word_t)flags & SH_USER_FLAGS_MASK);
+}
+
 
 #endif /* OKL4_ARCH_SH_TCB_H */
