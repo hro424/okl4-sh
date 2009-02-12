@@ -11,15 +11,39 @@
 /* SH has 8-bit ASID space */
 typedef s16_t   hw_asid_t;
 
-/**
- *  Flushes TLB and page cache for the specified ASID
- *
- *  @param asid         the address space ID of the space to purge
- */
-INLINE void
-flush_asid(word_t asid)
+INLINE hw_asid_t
+get_hw_asid()
 {
-    //sh_cache::tlb_flush_asid(asid);
+    word_t  asid;
+
+    __asm__ __volatile__ (
+        "    mov.l   %1, %0"
+        : "=r" (asid)
+        : "m" (REG_PTEH));
+    asid &= REG_PTEH_ASID_MASK;
+    return (hw_asid_t)asid;
+}
+
+INLINE void
+set_hw_asid(hw_asid_t asid)
+{
+    word_t  tmp = (word_t)asid;
+
+    __asm__ __volatile__(
+        "    mov.l   %1, r0\n"
+        "    and     %2, r0\n"
+        "    or      %0, r0\n"
+        "    mov.l   r0, %1\n"
+        :
+        : "r" (tmp), "m" (REG_PTEH), "r" (REG_PTEH_VPN_MASK)
+        : "r0");
+}
+
+INLINE void
+flush_asid(hw_asid_t asid)
+{
+    /*XXX Do nothing here */
 }
 
 #endif /* OKL4_ARCH_SH_ASID_H */
+

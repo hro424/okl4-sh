@@ -217,7 +217,7 @@ void * kmem_resource_t::alloc(kmem_group_e group, word_t size, bool zeroed)
     return ret;
 }
 
-#if defined(CONFIG_ARCH_MIPS) || (defined(CONFIG_ARM_VER) && (CONFIG_ARM_VER == 6))
+#if defined(CONFIG_ARCH_MIPS) || (defined(CONFIG_ARM_VER) && (CONFIG_ARM_VER == 6)) || defined(CONFIG_ARCH_SH)
 void * kmem_resource_t::alloc_aligned(
     kmem_group_e group, word_t size, word_t alignment, word_t mask, bool zeroed)
 {

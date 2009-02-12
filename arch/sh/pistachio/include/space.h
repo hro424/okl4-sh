@@ -28,12 +28,17 @@ public:
 
     hw_asid_t   asid;
 
+    /**
+     * Base physical address of the page table of this space.
+     */
+    word_t      pgbase;
+
     word_t space_control(word_t ctrl);
     asid_t* get_asid();
+    void set_asid(asid_t* asid);
     sh_pid_t get_pid(void);
     void set_pid(sh_pid_t pid);
 
-    /*
     bool add_mapping(addr_t vaddr, addr_t paddr, pgent_t::pgsize_e size,
                      rwx_e rwx, bool kernel,
                      memattrib_e attrib, kmem_resource_t* kresource);
@@ -43,7 +48,7 @@ public:
         return add_mapping(vaddr, paddr, size, rwx, kernel, l4default,
                            kresource);
     }
-    */
+
 };
 
 

@@ -45,13 +45,13 @@
 INLINE static word_t
 mapped_reg_read(word_t reg)
 {
-    return *(word_t*)reg;
+    return *(volatile word_t*)reg;
 }
 
 INLINE static void
 mapped_reg_write(word_t reg, word_t val)
 {
-    *(word_t*)reg = val;
+    *(volatile word_t*)reg = val;
 }
 #endif
 
@@ -89,6 +89,10 @@ mapped_reg_write(word_t reg, word_t val)
 #define REG_LDA0            0xFF000058
 #define REG_LDA1            0xFF00005C
 
+/* Version */
+#define REG_PVR             0xFF000030
+#define REG_PRR             0xFF000044
+
 /*
  * MASKS FOR MEMORY-MAPPED REGISTERS
  */
@@ -97,7 +101,7 @@ mapped_reg_write(word_t reg, word_t val)
  * Page Table Entry (high)
  */
 #define REG_PTEH_VPN_MASK   0xFFFFFC00
-#define REG_PTEH_ASID_MASK  0x0000007F
+#define REG_PTEH_ASID_MASK  0x000000FF
 
 /*
  * Page Table Entry (low)
@@ -156,6 +160,16 @@ mapped_reg_write(word_t reg, word_t val)
 #define REG_RAMCR_RP        0x00000100
 #define REG_RAMCR_IC2W      0x00000080
 #define REG_RAMCR_OC2W      0x00000040
+
+/*
+ * Memory Mapped TLBs
+ */
+#define REG_ITLB_ADDRESS    0xF2000000
+#define REG_ITLB_DATA       0xF3000000
+#define REG_UTLB_ADDRESS    0xF6000000
+#define REG_UTLB_DATA       0xF7000000
+
+#define REG_UTLB_ASSOC      0x80
 
 
 #endif /* OKL4_ARCH_SH_REGISTERS_H */

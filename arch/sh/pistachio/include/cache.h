@@ -38,7 +38,7 @@ public:
                                       addr_t end, cacheattr_e attr);
 
     /**
-     *  Invalidates the cache.
+     *  Invalidates the cached page entry.
      *
      *  @param start    the start address to be invalidated
      *  @param size     the size of the address space to be invalidated

@@ -324,7 +324,7 @@ void * kmem_t::alloc(word_t size, bool zeroed)
 
 #define ALIGN(x)    (x & mask)
 
-#if defined(CONFIG_ARCH_MIPS) || (defined(CONFIG_ARM_VER) && (CONFIG_ARM_VER == 6))
+#if defined(CONFIG_ARCH_MIPS) || (defined(CONFIG_ARM_VER) && (CONFIG_ARM_VER == 6)) || defined(CONFIG_ARCH_SH)
 /* the stupid aligned version */
     void * kmem_t::alloc_aligned(word_t size, word_t alignment, word_t mask, bool zeroed)
 {

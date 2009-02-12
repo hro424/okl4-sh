@@ -20,6 +20,7 @@
 #define TRAPS_BEGIN_MARKER              \
     .section .data.traps;               \
     .balign 4096;                       \
+exception_vector:
 
 #define BEGIN_PROC_TRAPS(name, offset)  \
     .global name;                       \

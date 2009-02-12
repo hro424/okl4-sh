@@ -7,6 +7,9 @@
 #ifndef OKL4_ARCH_SH_INTERRUPT_CONTROL_H
 #define OKL4_ARCH_SH_INTERRUPT_CONTROL_H
 
+#include <space.h>
+#include <tcb.h>
+
 void SECTION(".init") init_sh_interrupts();
 
 INLINE word_t

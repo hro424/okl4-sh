@@ -13,19 +13,23 @@ public:
     static void cli() {
         u32_t   tmp;
         __asm__ __volatile__ (
-            "stc     sr, %0     \n\t"
-            "or      %1, %0     \n\t"
-            "ldc     %0, sr"
-            : "=&z" (tmp) : "r" (0x10000000) : "memory");
+            "    stc     sr, %0     \n"
+            "    or      %1, %0     \n"
+            "    ldc     %0, sr     \n"
+            : "=&z" (tmp)
+            : "r" (0x10000000)
+            : "memory");
     }
 
     static void sti() {
         u32_t   tmp;
         __asm__ __volatile__ (
-            "stc     sr, %0     \n\t"
-            "and     %1, %0     \n\t"
-            "ldc     %0, sr"
-            : "=&z" (tmp) : "r" (0xefffffff) : "memory");
+            "    stc     sr, %0     \n"
+            "    and     %1, %0     \n"
+            "    ldc     %0, sr     \n"
+            : "=&z" (tmp)
+            : "r" (0xefffffff)
+            : "memory");
     }
 
     static void sleep() {

@@ -37,11 +37,7 @@ init_kernel_space()
 
     kspace->enqueue_spaces();
 
-    word_t attribs = 0;
-#ifdef ARM_CPU_HAS_L2_CACHE
-    attribs = 1 << 3;  // Outter writeback + write allocate
-#endif
-    kspace->pgbase = (word_t)page_table_to_phys(kspace->pgent(0)) | attribs;
+    kspace->pgbase = (word_t)page_table_to_phys(kspace->pgent(0));
 }
 
 /**
@@ -59,7 +55,8 @@ generic_space_t::init_kernel_mappings()
  *
  * @param utcb_area     fpage describing location of UTCB area
  */
-bool generic_space_t::init (fpage_t utcb_area, kmem_resource_t *kresource)
+bool
+generic_space_t::init (fpage_t utcb_area, kmem_resource_t *kresource)
 {
     word_t i;
     word_t offset = USER_AREA_SECTIONS;
@@ -82,23 +79,13 @@ bool generic_space_t::init (fpage_t utcb_area, kmem_resource_t *kresource)
     for (i = 0; i < (UNCACHE_AREA_SECTIONS); i++) {
         *pg_to++ = *pg_from++;
     }
-
-    /*
-    pg_to += VAR_AREA_SECTIONS;
-    pg_from += VAR_AREA_SECTIONS;
-
-    for (i = 0; i < (IO_AREA_SECTIONS + MISC_AREA_SECTIONS); i++) {
+    for (i = 0; i < (MISC_AREA_SECTIONS); i++) {
         *pg_to++ = *pg_from++;
     }
-    */
 
-    *pg_to = *pg_from;  /* high_int_vector */
+    /*XXX: Leave P0 and P4 unmanaged */
 
-    word_t attribs = 0;
-#ifdef ARM_CPU_HAS_L2_CACHE
-    attribs = 1 << 3;  // Outter writeback + write allocate
-#endif
-    ((space_t*)this)->pgbase = (word_t)page_table_to_phys(this->pdir) | attribs;
+    ((space_t*)this)->pgbase = (word_t)page_table_to_phys(this->pdir);
 
     return true;
 }
@@ -106,31 +93,40 @@ bool generic_space_t::init (fpage_t utcb_area, kmem_resource_t *kresource)
 /**
  * Clean up a Space
  */
-void generic_space_t::arch_free(kmem_resource_t *kresource)
+void
+generic_space_t::arch_free(kmem_resource_t *kresource)
 {
     asid_t *asid = ((space_t *)this)->get_asid();
 
     asid->release();
 }
 
-#define PAGE_COLOR_ALIGN ((DCACHE_SIZE/PAGE_SIZE_4K/DCACHE_WAYS - 1UL) << PAGE_BITS_4K)
+//#define PAGE_COLOR_ALIGN ((DCACHE_SIZE/PAGE_SIZE_4K/DCACHE_WAYS - 1UL) << PAGE_BITS_4K)
+#define PAGE_COLOR_ALIGN    0
 
 /**
  * Allocate a UTCB
  * @param tcb   Owner of the utcb
  */
-utcb_t * generic_space_t::allocate_utcb(tcb_t * tcb, kmem_resource_t *kresource)
+utcb_t*
+generic_space_t::allocate_utcb(tcb_t * tcb, kmem_resource_t *kresource)
 {
     ASSERT (DEBUG, tcb);
 
-    addr_t utcb = (addr_t) tcb->get_utcb_location ();
+    addr_t  utcb;
+    word_t  section;
+    pgent_t leaf;
+    pgent_t level1;
+    bool    is_valid;
+    addr_t  page;
+
+    utcb = (addr_t) tcb->get_utcb_location ();
 
     /* Try lookup the UTCB page for this utcb */
-    word_t section = (word_t)utcb >> PAGE_BITS_1M;
+    section = (word_t)utcb >> PAGE_BITS_1M;
 
-    pgent_t leaf;
-    pgent_t level1 = *this->pgent(section);
-    bool is_valid = true;
+    level1 = *this->pgent(section);
+    is_valid = true;
 
     if (EXPECT_TRUE(level1.is_valid(this, pgent_t::size_1m)))
     {
@@ -139,53 +135,60 @@ utcb_t * generic_space_t::allocate_utcb(tcb_t * tcb, kmem_resource_t *kresource)
                     this, UTCB_AREA_PGSIZE,
                     ((word_t)utcb & (PAGE_SIZE_1M-1)) >> UTCB_AREA_PAGEBITS);
 
-            if (leaf.l2.fault.zero == 0)
+            if (leaf.l2.medium.present == 0)
             {
                 is_valid = false;
             }
-        } else {
+        }
+        else {
             enter_kdebug("1MB page in UTCB area");
             return (utcb_t *)0;
         }
-    } else {
+    }
+    else {
         is_valid = false;
     }
 
     if (is_valid)
     {
-        addr_t kaddr =
-            addr_mask (leaf.address(this, UTCB_AREA_PGSIZE),
-                    ~page_mask (UTCB_AREA_PGSIZE));
-        utcb_t *retv = (utcb_t *)ram_to_virt(
-                addr_offset (kaddr, (word_t) utcb & page_mask (UTCB_AREA_PGSIZE)));
-        (void)memset(retv, 0, UTCB_SIZE);
+        addr_t  kaddr;
+        utcb_t* retv;
+
+        kaddr = addr_mask (leaf.address(this, UTCB_AREA_PGSIZE),
+                           ~page_mask (UTCB_AREA_PGSIZE));
+        retv = (utcb_t *)ram_to_virt(
+             addr_offset(kaddr, (word_t)utcb & page_mask(UTCB_AREA_PGSIZE)));
+        memset(retv, 0, UTCB_SIZE);
         return retv;
     }
 
-    addr_t page = kresource->alloc_aligned (kmem_group_utcb, page_size (UTCB_AREA_PGSIZE),
-                                            (word_t) utcb, PAGE_COLOR_ALIGN, true);
+    page = kresource->alloc_aligned (kmem_group_utcb,
+                                     page_size(UTCB_AREA_PGSIZE),
+                                     (word_t)utcb, PAGE_COLOR_ALIGN, true);
 
-    if (page == NULL)
+    if (page == NULL) {
         return NULL;
+    }
 
     if (! ((space_t *)this)->add_mapping((addr_t)addr_align(utcb, UTCB_AREA_PAGESIZE),
-                                         virt_to_ram(page), UTCB_AREA_PGSIZE,
+                                         virt_to_phys(page), UTCB_AREA_PGSIZE,
                                          space_t::read_write, false, kresource))
     {
         get_current_tcb()->set_error_code(ENO_MEM);
-        kresource->free(kmem_group_utcb, page, page_size (UTCB_AREA_PGSIZE));
+        kresource->free(kmem_group_utcb, page, page_size(UTCB_AREA_PGSIZE));
         return NULL;
     }
 
     return (utcb_t *)
-        addr_offset (page, addr_mask (utcb, page_mask(UTCB_AREA_PGSIZE)));
+        addr_offset(page, addr_mask(utcb, page_mask(UTCB_AREA_PGSIZE)));
 }
 
 /** 
  * Free a UTCB in this space
  * @param utcb  The utcb
  */
-void generic_space_t::free_utcb(utcb_t * utcb)
+void
+generic_space_t::free_utcb(utcb_t* utcb)
 {
     /* do nothing, since in arm v6, utcb isn't allocated by kernel,
      * kernel isn't responsible for removing utcb mapping from space
@@ -197,7 +200,8 @@ void generic_space_t::free_utcb(utcb_t * utcb)
 /**
  * Set up hardware context to run the tcb in this space.
  */
-void generic_space_t::activate(tcb_t *tcb)
+void
+generic_space_t::activate(tcb_t *tcb)
 {
     USER_UTCB_REF = tcb->get_utcb_location();
 
@@ -206,6 +210,7 @@ void generic_space_t::activate(tcb_t *tcb)
 
     word_t new_pt = ((space_t*)this)->pgbase;
 
+    //TODO
     /* Flush BTB/BTAC */
     //write_cp15_register(C15_cache_con, c5, 0x6, 0x0);
     /* drain write buffer */
@@ -226,7 +231,8 @@ void generic_space_t::activate(tcb_t *tcb)
  * @return true if something was copied, false otherwise.
  * Synchronization must happen at the highest level, allowing sharing.
  */
-bool generic_space_t::sync_kernel_space(addr_t addr)
+bool
+generic_space_t::sync_kernel_space(addr_t addr)
 {
     pgent_t::pgsize_e   size;
     word_t              section;
@@ -253,15 +259,18 @@ bool generic_space_t::sync_kernel_space(addr_t addr)
 }
 
 
-void generic_space_t::flush_tlb(space_t *curspace)
+void
+generic_space_t::flush_tlb(space_t *curspace)
 {
     asid_t *asid = ((space_t *)this)->get_asid();
     if (asid->is_valid()) {
-        flush_asid (asid->value());
+        flush_asid(asid->value());
     }
 }
 
-void generic_space_t::flush_tlbent_local(space_t *curspace, addr_t vaddr, word_t log2size)
+void
+generic_space_t::flush_tlbent_local(space_t *curspace, addr_t vaddr,
+                                    word_t log2size)
 {
     asid_t *asid = ((space_t *)this)->get_asid();
 
@@ -270,16 +279,19 @@ void generic_space_t::flush_tlbent_local(space_t *curspace, addr_t vaddr, word_t
     if (asid->is_valid()) {
         this->activate(get_current_tcb());
 
-        sh_cache::cache_flush_ent_mva(vaddr, log2size);
-        shm_cache::tlb_flush_ent(asid->value(), vaddr, log2size);
+        sh_cache::flush_d_entry(vaddr, log2size);
+        sh_cache::invalidate_tlb_entry(asid->value(), vaddr);
 
         curspace->activate(get_current_tcb());
     }
 }
 
-bool generic_space_t::allocate_page_directory(kmem_resource_t *kresource)
+bool
+generic_space_t::allocate_page_directory(kmem_resource_t *kresource)
 {
-    addr_t addr = kresource->alloc(kmem_group_pgtab, SH_L1_SIZE, true);
+    addr_t addr;
+
+    addr = kresource->alloc(kmem_group_pgtab, SH_L1_SIZE, true);
     if (!addr) {
         return false;
     }
@@ -288,11 +300,13 @@ bool generic_space_t::allocate_page_directory(kmem_resource_t *kresource)
      * this for uncached accesses, need to flush this out now.
      */
     sh_cache::cache_flush_d_ent(addr, SH_L1_BITS);
-    pdir = (pgent_t*)virt_to_page_table(addr);
+    pdir = (pgent_t*)addr;
     return true;
 }
 
-void generic_space_t::free_page_directory(kmem_resource_t *kresource)
+void
+generic_space_t::free_page_directory(kmem_resource_t *kresource)
 {
-    kresource->free(kmem_group_pgtab, page_table_to_virt(pdir), SH_L1_SIZE);
+    kresource->free(kmem_group_pgtab, pdir, SH_L1_SIZE);
+    pdir = NULL;
 }

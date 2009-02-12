@@ -15,53 +15,31 @@
  * mode and translation disabled.
  */
 
-
     .section .init.head
-    EXPORT  __phys_addr_stack
     BEGIN_PROC(_start)
 
-    /* Clean up BSS section */
-/* Do we really need this? 
-    mov.l   CONST_BSS_START, r0
-    mov.l   CONST_BSS_END, r1
-    xor     r2, r2
-1:
-    mov.b   r2, @r0
-    add     #1, r0
-    cmp/eq  r0, r1
-    bf      1b
-    nop
-*/
-
-    mov.l   CONST_INIT_VBR, r0
-    jsr     @r0
-    nop
+    /* Initialize the vector base address */
+    mov.l   exception_vector, r0
+    ldc     r0, vbr
 
     /* Setup status register for supervisor mode, interrupts disabled. */
-    mov.l   CONST_INIT_SR, r0
+    mov.l   CONST_INITIAL_SR, r0
     ldc     r0, sr
 
     /* Setup boot stack */
+    mov.l   CONST_KERNEL_STACK, r15
 
     /* Jump to the architecture startup routine */
-    mov.l   KERNEL_ARCH_ENTRY, r0
+    mov.l   kernel_arch_init, r0
     jmp     @r0
     nop
 
     END_PROC(_start)
 
-/*
-LABEL(CONST_BSS_START)
-    .long   __start_bss
-LABEL(CONST_BSS_END)
-    .long   __end_bss
-*/
-LABEL(CONST_INIT_VBR)
-    .long   VIRT_ADDR_RAM
-LABEL(CONST_INIT_SR)
+LABEL(CONST_VBR_BASE)
+    .long   exception_vector
+LABEL(CONST_INITIAL_SR)
     .long   0x500000F0
-LABEL(__phys_addr_stack)
-    .long   0x0
-LABEL(KERNEL_ARCH_ENTRY)
-    .long   kernel_arch_init
+LABEL(CONST_KERNEL_STACK)
+    .long   __stack + STACK_TOP
 

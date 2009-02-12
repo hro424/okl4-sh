@@ -9,18 +9,41 @@
 
 class generic_space_t;
 
-#define CACHE_SIZE      (32 * 1024)
+#define CACHE_LINE_SIZE     (32)
+#define CACHE_WAY           (4)
+#define CACHE_SIZE          (CACHE_LINE_SIZE * CACHE_WAY * 256)
 
-#define VALIDATE_REGISTER()             \
-    u32_t   __dummy = 0xdeadbeef;       \
-    __asm__ __volatile__ ("\t"          \
-        "icbi @%0           \n\t"       \
-        "synco              \n"         \
-        : : "r" (__dummy) : "memory")
+/* Jump to the uncached area */
+#define ENTER_P2()                              \
+    do {                                        \
+        unsigned long dummy;                    \
+        __asm__ __volatile__ (                  \
+            "    mova    1f, %0         \n"     \
+            "    add     %1, %0         \n"     \
+            "    jmp     @%0            \n"     \
+            "    nop                    \n"     \
+            ".blign 4                   \n"     \
+            "1:                         \n"     \
+            : "=&z" (dummy)                     \
+            : "r" (P2_START - P1_START)         \
+        );                                      \
+    } while (0)
 
-#define ENTER_P2()
+/* Jump to the cached area */
+#define ENTER_P1()                              \
+    do {                                        \
+        unsigned long dummy;                    \
+        __asm__ __volatile__ (                  \
+            "    mov.l   1f, %0         \n"     \
+            "    jmp     @%0            \n"     \
+            "    nop                    \n"     \
+            ".balign 4                  \n"     \
+            "1: .long 2f                \n"     \
+            "2:                         \n"     \
+            : "=&r" (dummy)                     \
+        );                                      \
+    } while (0)
 
-#define ENTER_P1()
 
 class sh_cache
 {
@@ -31,7 +54,8 @@ public:
     }
 
     /**
-     * Invalidates the instruction and operand caches.
+     * Invalidates the instruction and operand caches.  Cache blocks are
+     * discarded.
      */
     static void invalidate() {
         ENTER_P2();
@@ -39,14 +63,15 @@ public:
         u32_t ccr = *(u32_t*)REG_CCR;
         ccr |= REG_CCR_ICI | REG_CCR_OCI;
         *(u32_t*)REG_CCR = ccr;
-        VALIDATE_REGISTER();
+        UPDATE_REG();
 
         ENTER_P1();
     }
 
 
     /**
-     * Selectively invalidates the instruction and operand caches.
+     * Selectively invalidates the instruction and operand caches.  Cache
+     * blocks are discarded
      *
      * @param attr      the cache attribute
      */
@@ -69,7 +94,7 @@ public:
         u32_t ccr = *(u32_t*)REG_CCR;
         ccr |= REG_CCR_OCI;
         *(u32_t*)REG_CCR = ccr;
-        VALIDATE_REGISTER();
+        UPDATE_REG();
 
         ENTER_P1();
     }
@@ -84,48 +109,137 @@ public:
         u32_t ccr = *(u32_t*)REG_CCR;
         ccr |= REG_CCR_ICI;
         *(u32_t*)REG_CCR = ccr;
-        VALIDATE_REGISTER();
+        UPDATE_REG();
 
         ENTER_P1();
     }
 
-    static void invalidate_d_entry(addr_t vaddr, word_t size) {
+    /**
+     * Invalidates the specified address.  The block is not written back.
+     *
+     * @param vaddr     the address to be invalidated
+     * @param log2size  the range of invalidation in log2
+     */
+    static void invalidate_d_entry(addr_t vaddr, word_t log2size) {
+        /* Whole invalidation is better for >32k */
+        if (log2size >= 15) {
+            invalidate_d();
+            return;
+        }
+
+        word_t size = 1 << (log2size > 5 ? log2size : 5);
+
         __asm__ __volatile__ (
-            "   ocbi    @r1             \n"
-            :::
+            "    mov.l   %0, r1         \n"
+            "    mov.l   %1, r0         \n"
+            "    add     r1, r0         \n"
+            "1b:                        \n"
+            "    ocbi    @r1            \n"
+            "    add     %2, r1         \n"
+            "    cmp.eq  r0, r1         \n"
+            "    bf      1b             \n"
+            : "+r" (vaddr)
+            : "r" (size), "i" (CACHE_LINE_SIZE)
+            : "r0", "r1", "memory"
         );
     }
 
-    static void clean_d_entry(addr_t vaddr, word_t size) {
+    /**
+     * Invalidates the specified address.  The block is written back.
+     *
+     * @param vaddr     the address to be invalidated
+     * @param log2size  the range of invalidation in log2
+     */
+    static void flush_d_entry(addr_t vaddr, word_t log2size) {
+        word_t  size = 1 << (log2size > 5 ? log2size : 5);
+
         __asm__ __volatile__ (
-            "   ocbp    @r1             \n"
-            :::
+            "    mov.l   %0, r1         \n"
+            "    mov.l   %1, r0         \n"
+            "    add     r1, r0         \n"
+            "1b:                        \n"
+            "    ocbp    @r1            \n"
+            "    add     %2, r1         \n"
+            "    cmp.eq  r0, r1         \n"
+            "    bf      1b             \n"
+            : "+r" (vaddr)
+            : "r" (size), "i" (CACHE_LINE_SIZE)
+            : "r0", "r1", "memory"
         );
     }
 
-    static void writeback_d_entry(addr_t vaddr, word_t size) {
+    /**
+     * Writes back the specified address.
+     *
+     * @param vaddr     the address to be written back
+     * @param log2size  the range of write-back in log2
+     */
+    static void writeback_d_entry(addr_t vaddr, word_t log2size) {
+        word_t  size = 1 << (log2size > 5 ? log2size : 5);
+
         __asm__ __volatile__ (
-            "   ocbwb   @r1             \n"
-            :::
+            "    mov.l   %0, r1         \n"
+            "    mov.l   %1, r0         \n"
+            "    add     r1, r0         \n"
+            "1b:                        \n"
+            "    ocbwb   @r1            \n"
+            "    add     %2, r1         \n"
+            "    cmp.eq  r0, r1         \n"
+            "    bf      1b             \n"
+            : "+r" (vaddr)
+            : "r" (size), "i" (CACHE_LINE_SIZE)
+            : "r0", "r1", "memory"
         );
     }
 
-    static void invalidate_i_entry(addr_t vaddr) {
+    /**
+     * Invalidates the instruction cache entry.
+     *
+     * @param vaddr     the address to be invalidated
+     * @param log2size  the range of invaliation in log2
+     */
+    static void invalidate_i_entry(addr_t vaddr, word_t log2size) {
+        word_t  size;
+
+        /* Whole invalidation is better for >32k */
+        if (log2size >= 15) {
+            invalidate_i();
+            return;
+        }
+
+        size = 1 << (log2size > 5 ? log2size : 5);
         __asm__ __volatile__ (
-            "   icbi    @r1             \n"
-            :::
+            "    mov.l   %0, r1         \n"
+            "    mov.l   %1, r0         \n"
+            "    add     r1, r0         \n"
+            "1b:                        \n"
+            "    icbi    @r1            \n"
+            "    add     %2, r1         \n"
+            "    cmp.eq  r0, r1         \n"
+            "    bf      1b             \n"
+            : "+r" (vaddr)
+            : "r" (size), "i" (CACHE_LINE_SIZE)
+            : "r0", "r1", "memory"
         );
     }
 
-    static void flush() {
-        invalidate();
-    }
+    /**
+     * Invalidates the TLB entry.
+     *
+     * @param asid      the ASID
+     * @param vaddr     the address to be invalidated
+     * @param log2size  the range of invalidation in log2
+     */
+    static void invalidate_tlb_entry(u8_t asid, addr_t vaddr) {
+        word_t  addr;
+        word_t  data;
 
-    static void flush(word_t attr) {
-        invalidate(attr);
-    }
-
-    static void flush_range(addr_t vaddr, word_t size, word_t attr) {
+        addr = REG_UTLB_ARRAY | REG_UTLB_ASSOC;
+        data = asid | (vaddr & 0xFFFFFC00);
+        ENTER_P2();
+        mapped_reg_write(addr, data);
+        UPDATE_REG();
+        ENTER_P1();
     }
 };
 

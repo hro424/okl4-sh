@@ -19,8 +19,16 @@
 #define ARCH_READWRITE  2
 #define ARCH_EXECUTE    3
 
+#define PGTABLE_OFFSET      (VIRT_ADDR_PGTABLE - get_globals()->phys_addr_ram)
+
 class mapnode_t;
 class generic_space_t;
+
+template<typename T> INLINE T
+page_table_to_phys(T virt)
+{
+    return (T)((u32_t)virt - PGTABLE_OFFSET);
+}
 
 class pgent_t
 {
@@ -219,7 +227,7 @@ pgent_t::make_subtree(generic_space_t* s, pgsize_e pgsize, bool kernel,
             return false;
         }
         l1.raw = 0;
-        l1.large.base_address = (word_t)virt_to_ram(base) >> 10;
+        l1.large.base_address = (word_t)virt_to_phys(base) >> 10;
         sh_cache::clean_d_entry(base, SH_L2_BITS);
     }
     return true;
@@ -231,7 +239,7 @@ pgent_t::remove_subtree(generic_space_t* s, pgsize_e pgsize, bool kernel,
 {
     if (pgsize == size_1m) {
         kresource->free(kmem_group_pgtab,
-                        ram_to_virt((addr_t)l1.large.base_address),
+                        phys_to_virt((addr_t)l1.large.base_address),
                         SH_L2_SIZE);
     }
     clear(s, pgsize, kernel);
