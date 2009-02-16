@@ -30,7 +30,7 @@
     mov.l   CONST_KERNEL_STACK, r15
 
     /* Jump to the architecture startup routine */
-    mov.l   kernel_arch_init, r0
+    mov.l   CONST_KERNEL_ARCH_INIT, r0
     jmp     @r0
     nop
 
@@ -42,4 +42,6 @@ LABEL(CONST_INITIAL_SR)
     .long   0x500000F0
 LABEL(CONST_KERNEL_STACK)
     .long   __stack + STACK_TOP
+LABEL(CONST_KERNEL_ARCH_INIT)
+    .long   kernel_arch_init
 

@@ -7,8 +7,9 @@
 #ifndef OKL4_ARCH_SH_SYSCALLS_H
 #define OKL4_ARCH_SH_SYSCALLS_H
 
-#include <arch/config.h>
 #include <compat/c.h>
+#include <arch/config.h>
+#include <arch/utcb.h>
 #include <kernel/arch/asm.h>
 #include <l4/arch/syscalls_asm.h>
 

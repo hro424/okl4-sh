@@ -55,12 +55,13 @@
  * Memory layout (virtual)
  */
 /* 0x00000000 */
-#define USER_AREA_SECTIONS      0x800
+#define USER_AREA_SECTIONS      0x7F0
 #define USER_AREA_START         0UL
 #define USER_AREA_SIZE          (USER_AREA_SECTIONS * SH_SECTION_SIZE)
 #define USER_AREA_END           (USER_AREA_START + USER_AREA_SIZE)
 
 //TODO
+#define UTCB_AREA_SECTIONS      0x010
 #define UTCB_AREA_START         USER_AREA_END
 #define UTCB_AREA_SIZE          0
 #define UTCB_AREA_END           (UTCB_AREA_START + UTCB_AREA_SIZE)

@@ -28,7 +28,7 @@ class generic_space_t;
             "    add     %1, %0         \n"     \
             "    jmp     @%0            \n"     \
             "    nop                    \n"     \
-            ".blign 4                   \n"     \
+            ".balign 4                  \n"     \
             "1:                         \n"     \
             : "=&z" (dummy)                     \
             : "r" (P2_START - P1_START)         \
@@ -123,13 +123,13 @@ public:
 
     static void invalidate_i_range(addr_t vaddr, word_t size) {
         __asm__ __volatile__ (
-            "    mov.l   %0, r1         \n"
-            "    mov.l   %1, r0         \n"
+            "    mov     %0, r1         \n"
+            "    mov     %1, r0         \n"
             "    add     r1, r0         \n"
-            "1b:                        \n"
+            "1:                         \n"
             "    icbi    @r1            \n"
             "    add     %2, r1         \n"
-            "    cmp.eq  r0, r1         \n"
+            "    cmp/eq  r0, r1         \n"
             "    bf      1b             \n"
             : "+r" (vaddr)
             : "r" (size), "i" (CACHE_LINE_SIZE)
@@ -170,13 +170,13 @@ public:
 
     static void invalidate_d_range(addr_t vaddr, word_t size) {
         __asm__ __volatile__ (
-            "    mov.l   %0, r1         \n"
-            "    mov.l   %1, r0         \n"
+            "    mov     %0, r1         \n"
+            "    mov     %1, r0         \n"
             "    add     r1, r0         \n"
-            "1b:                        \n"
+            "1:                         \n"
             "    ocbi    @r1            \n"
             "    add     %2, r1         \n"
-            "    cmp.eq  r0, r1         \n"
+            "    cmp/eq  r0, r1         \n"
             "    bf      1b             \n"
             : "+r" (vaddr)
             : "r" (size), "i" (CACHE_LINE_SIZE)
@@ -184,6 +184,13 @@ public:
         );
     }
 
+    /**
+     * Flush all caches.
+     */
+    static void flush() {
+        invalidate_i();
+        flush_d();
+    }
 
     /**
      * Selectively flushes the instruction and/or operand caches.
@@ -267,13 +274,13 @@ public:
 
     static void flush_d_range(addr_t vaddr, word_t size) {
         __asm__ __volatile__ (
-            "    mov.l   %0, r1         \n"
-            "    mov.l   %1, r0         \n"
+            "    mov     %0, r1         \n"
+            "    mov     %1, r0         \n"
             "    add     r1, r0         \n"
-            "1b:                        \n"
+            "1:                         \n"
             "    ocbp    @r1            \n"
             "    add     %2, r1         \n"
-            "    cmp.eq  r0, r1         \n"
+            "    cmp/eq  r0, r1         \n"
             "    bf      1b             \n"
             : "+r" (vaddr)
             : "r" (size), "i" (CACHE_LINE_SIZE)
@@ -309,13 +316,13 @@ public:
         word_t  size = 1 << (log2size > 5 ? log2size : 5);
 
         __asm__ __volatile__ (
-            "    mov.l   %0, r1         \n"
-            "    mov.l   %1, r0         \n"
+            "    mov     %0, r1         \n"
+            "    mov     %1, r0         \n"
             "    add     r1, r0         \n"
-            "1b:                        \n"
+            "1:                         \n"
             "    ocbwb   @r1            \n"
             "    add     %2, r1         \n"
-            "    cmp.eq  r0, r1         \n"
+            "    cmp/eq  r0, r1         \n"
             "    bf      1b             \n"
             : "+r" (vaddr)
             : "r" (size), "i" (CACHE_LINE_SIZE)

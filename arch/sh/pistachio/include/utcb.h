@@ -8,6 +8,6 @@
 #define OKL4_ARCH_SH_UTCB_H
 
 #undef USER_UTCB_REF
-#define USER_UTCB_REF           (*(word_t*)(USER_UTCB_PAGE + 0xff0))
+#define USER_UTCB_REF           (*(word_t*)(USER_AREA_START + 0xff0))
 
 #endif /* OKL4_ARCH_SH_UTCB_H */

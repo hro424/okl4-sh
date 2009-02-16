@@ -1,0 +1,13 @@
+/* $Id$ */
+
+/**
+ *  @since  February 2009
+ */
+
+#include <kernel/arch/asm.h>
+
+    BEGIN_PROC(initial_to_user)
+
+    nop
+
+    END_PROC(initial_to_user)

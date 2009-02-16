@@ -88,20 +88,43 @@ tcb_t::set_acceptor(const acceptor_t value)
 INLINE bool
 tcb_t::copy_mrs(tcb_t* dest, word_t start, word_t count)
 {
+    //TODO:
     return false;
 }
 
 INLINE void
 tcb_t::set_exception_ipc(word_t num)
 {
+    //TODO:
 }
 
 INLINE bool
 tcb_t::in_exception_ipc()
 {
+    //TODO:
     return false;
 }
 
+INLINE void
+tcb_t::clear_exception_ipc()
+{
+    //TODO:
+}
+
+INLINE void
+tcb_t::set_space(space_t* new_space)
+{
+    this->space = new_space;
+
+    if (EXPECT_TRUE(new_space)) {
+        this->space_id = new_space->get_space_id();
+        this->page_directory = new_space->pgent(0);
+    }
+    else {
+        this->space_id = spaceid_t::nilspace();
+        this->page_directory = NULL;
+    }
+}
 
 
 #define asm_initial_switch_to(new_sp, new_pc)   \
@@ -230,5 +253,11 @@ tcb_t::set_user_flags (const word_t flags)
             ((word_t)flags & SH_USER_FLAGS_MASK);
 }
 
+
+INLINE addr_t
+tcb_t::get_preempt_callback_ip()
+{
+    return (addr_t)get_utcb()->preempt_callback_ip;
+}
 
 #endif /* OKL4_ARCH_SH_TCB_H */

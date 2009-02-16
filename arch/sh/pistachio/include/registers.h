@@ -42,13 +42,13 @@
 #if !defined(ASSEMBLY)
 #define UPDATE_REG()        __asm__ __volatile__ ("icbi @%0" :: "r" (0x1000))
 
-INLINE static word_t
+INLINE word_t
 mapped_reg_read(word_t reg)
 {
     return *(volatile word_t*)reg;
 }
 
-INLINE static void
+INLINE void
 mapped_reg_write(word_t reg, word_t val)
 {
     *(volatile word_t*)reg = val;

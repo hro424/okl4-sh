@@ -17,9 +17,10 @@ get_hw_asid()
     word_t  asid;
 
     __asm__ __volatile__ (
-        "    mov.l   %1, %0"
+        "    mov     %1, %0"
         : "=r" (asid)
-        : "m" (REG_PTEH));
+        : "m" (REG_PTEH)
+    );
     asid &= REG_PTEH_ASID_MASK;
     return (hw_asid_t)asid;
 }
@@ -35,8 +36,11 @@ set_hw_asid(hw_asid_t asid)
         "    or      %0, r0\n"
         "    mov.l   r0, %1\n"
         :
-        : "r" (tmp), "m" (REG_PTEH), "r" (REG_PTEH_VPN_MASK)
-        : "r0");
+        : "r" (tmp), "m" (*(word_t*)REG_PTEH), "r" (REG_PTEH_VPN_MASK)
+        : "r0", "memory"
+    );
+
+    UPDATE_REG();
 }
 
 INLINE void

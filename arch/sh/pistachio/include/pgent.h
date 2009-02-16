@@ -228,7 +228,7 @@ pgent_t::make_subtree(generic_space_t* s, pgsize_e pgsize, bool kernel,
         }
         l1.raw = 0;
         l1.large.base_address = (word_t)virt_to_phys(base) >> 10;
-        sh_cache::clean_d_entry(base, SH_L2_BITS);
+        sh_cache::flush_d(base, SH_L2_BITS);
     }
     return true;
 }

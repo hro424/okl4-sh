@@ -73,17 +73,19 @@ generic_space_t::init (fpage_t utcb_area, kmem_resource_t *kresource)
     pgent_t *pg_to = pgent(offset);
     pgent_t *pg_from = get_kernel_space()->pgent(offset);
 
-    for (i = 0; i < (KERNEL_AREA_SECTIONS); i++) {
+    for (i = 0; i < KERNEL_AREA_SECTIONS; i++) {
         *pg_to++ = *pg_from++;
     }
-    for (i = 0; i < (UNCACHE_AREA_SECTIONS); i++) {
+    for (i = 0; i < UNCACHE_AREA_SECTIONS; i++) {
         *pg_to++ = *pg_from++;
     }
-    for (i = 0; i < (MISC_AREA_SECTIONS); i++) {
+    for (i = 0; i < MISC_AREA_SECTIONS; i++) {
+        *pg_to++ = *pg_from++;
+    }
+    for (i = 0; i < VAR_AREA_SECTIONS; i++) {
         *pg_to++ = *pg_from++;
     }
 
-    /*XXX: Leave P0 and P4 unmanaged */
 
     ((space_t*)this)->pgbase = (word_t)page_table_to_phys(this->pdir);
 
@@ -203,27 +205,18 @@ generic_space_t::free_utcb(utcb_t* utcb)
 void
 generic_space_t::activate(tcb_t *tcb)
 {
+    word_t  dest_asid;
+    word_t  new_pt;
+
     USER_UTCB_REF = tcb->get_utcb_location();
 
-    word_t dest_asid = ((space_t *)this)->get_asid()->get((space_t *)this);
+    dest_asid = ((space_t *)this)->get_asid()->get((space_t *)this);
     get_globals()->current_clist = this->get_clist();
+    new_pt = ((space_t*)this)->pgbase;
 
-    word_t new_pt = ((space_t*)this)->pgbase;
-
-    //TODO
-    /* Flush BTB/BTAC */
-    //write_cp15_register(C15_cache_con, c5, 0x6, 0x0);
-    /* drain write buffer */
-    //write_cp15_register(C15_cache_con, c10, 0x4, 0x0);
-    //__asm__ __volatile__ ("nop; nop");
-    /* Set new ASID (procID) */
-    //write_cp15_register(C15_pid, c0, 0x1, dest_asid);
-    //__asm__ __volatile__ ("nop");
-    /* install new PT */
-    //write_cp15_register(C15_ttbase, C15_CRm_default, 0, new_pt);
-    //__asm__ __volatile__ ("nop; nop");
+    set_hw_asid(dest_asid);
+    mapped_reg_write(REG_TTB, new_pt);
 }
-
 
 /**
  * Try to copy a mapping from kernel space into the current space
@@ -279,7 +272,7 @@ generic_space_t::flush_tlbent_local(space_t *curspace, addr_t vaddr,
     if (asid->is_valid()) {
         this->activate(get_current_tcb());
 
-        sh_cache::flush_d_entry(vaddr, log2size);
+        sh_cache::flush_d(vaddr, log2size);
         sh_cache::invalidate_tlb_entry(asid->value(), vaddr);
 
         curspace->activate(get_current_tcb());
@@ -299,7 +292,7 @@ generic_space_t::allocate_page_directory(kmem_resource_t *kresource)
     /* kmem.alloc zeros out the page, in cached memory. Since we'll be using
      * this for uncached accesses, need to flush this out now.
      */
-    sh_cache::cache_flush_d_ent(addr, SH_L1_BITS);
+    sh_cache::flush_d(addr, SH_L1_BITS);
     pdir = (pgent_t*)addr;
     return true;
 }
@@ -310,3 +303,12 @@ generic_space_t::free_page_directory(kmem_resource_t *kresource)
     kresource->free(kmem_group_pgtab, pdir, SH_L1_SIZE);
     pdir = NULL;
 }
+
+#if defined (CONFIG_DEBUG)
+word_t
+generic_space_t::readmem_phys(addr_t vaddr, addr_t paddr)
+{
+    // TODO:
+    return 0;
+}
+#endif /* CONFIG_DEBUG */
