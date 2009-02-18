@@ -19,6 +19,7 @@
 
 #define TRAPS_BEGIN_MARKER              \
     .section .data.traps;               \
+    .global exception_vector;           \
     .balign 4096;                       \
 exception_vector:
 

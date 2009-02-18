@@ -57,32 +57,25 @@
 /**
  * Location of TCRs within UTCB
  */
-#define __L4_TCR_USER_NUM                       (10)
-#define __L4_TCR_PLATFORM_NUM                   (5)
-#define __L4_TCR_RESERVED_NUM                   (2)
+#define __L4_TCR_USER_NUM           (10)
+#define __L4_TCR_PLATFORM_NUM       (5)
+#define __L4_TCR_RESERVED_NUM       (2)
 
-#define __L4_TCR_MR_OFFSET                      (64)
+#define __L4_TCR_MR_OFFSET          (64)
 
-//TODO
-#ifndef USER_UTCB_REF
-#define USER_UTCB_REF               0xFF000FF0
-#endif
+//#define USER_UTCB_REF               (SYS_AREA_START + 0xFF0)
+#define USER_UTCB_REF               (0x7F000FF0)
 
 #if !defined(__ASSEMBLER__)
 
-INLINE word_t* __L4_SH_Utcb(void) CONST;
-INLINE word_t*
-__L4_SH_Utcb(void)
-{
-    //TODO
-    return (word_t*)USER_UTCB_REF;
-}
-
+/**
+ * Obtains the pointer to the UTCB (User Thread Control Block).
+ */
 INLINE word_t* L4_GetUtcbBase(void) CONST;
 INLINE word_t*
 L4_GetUtcbBase()
 {
-    return __L4_SH_Utcb();
+    return *(word_t**)USER_UTCB_REF;
 }
 
 #endif

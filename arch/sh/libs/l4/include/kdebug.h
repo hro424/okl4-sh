@@ -163,7 +163,7 @@ L4_KDB_SetObjectName(word_t type, word_t id, const char *name)
 INLINE okl4_kdb_res_t
 L4_KDB_GetTracepointName(word_t tp, char *dest)
 {
-    char *src = (char *)&(__L4_SH_Utcb())[__L4_TCR_MR_OFFSET];
+    char *src = (char *)&(L4_GetUtcbBase())[__L4_TCR_MR_OFFSET];
 
     L4_KDB_GetTracepointNameIntroMRs(tp);
 

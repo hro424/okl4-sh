@@ -6,20 +6,18 @@
 
 #include <l4.h>
 
-OUTPUT_FORMAT("elf32-sh-linux", "elf32-sh-linux", "elf32-sh-linux")
-OUTPUT_ARCH("sh4")
-
 ENTRY(_start)
 
 MEMORY
 {
-    ram(RWX) :  ORIGIN = VIRT_ADDR_RAM, LENGTH = 0x10000000
+    ram(RWX) : ORIGIN = VIRT_ADDR_RAM, LENGTH = 128M
 }
 
 #define rom     ram
 
 SECTIONS
 {
+    . = VIRT_ADDR_RAM;
     .text :
     {
         . = ALIGN(64K);

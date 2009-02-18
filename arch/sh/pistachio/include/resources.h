@@ -16,4 +16,5 @@ public:
                  kmem_resource_t* kresource);
 };
 
+
 #endif /* OKL4_ARCH_SH_RESOURCES_H */

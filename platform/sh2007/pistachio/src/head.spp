@@ -19,7 +19,7 @@
     BEGIN_PROC(_start)
 
     /* Initialize the vector base address */
-    mov.l   exception_vector, r0
+    mov.l   CONST_VBR_BASE, r0
     ldc     r0, vbr
 
     /* Setup status register for supervisor mode, interrupts disabled. */
@@ -34,8 +34,7 @@
     jmp     @r0
     nop
 
-    END_PROC(_start)
-
+    .align 2
 LABEL(CONST_VBR_BASE)
     .long   exception_vector
 LABEL(CONST_INITIAL_SR)
@@ -44,4 +43,6 @@ LABEL(CONST_KERNEL_STACK)
     .long   __stack + STACK_TOP
 LABEL(CONST_KERNEL_ARCH_INIT)
     .long   kernel_arch_init
+
+    END_PROC(_start)
 

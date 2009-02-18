@@ -18,6 +18,7 @@
 INLINE static void
 handle_memory_fault(word_t ecode, addr_t addr, sh_context_t* context)
 {
+    //TODO
     /*
     addr_t              faddr;
     pgent_t*            pg;
@@ -34,12 +35,14 @@ handle_memory_fault(word_t ecode, addr_t addr, sh_context_t* context)
 INLINE static void
 handle_exception(word_t ecode, addr_t addr, sh_context_t* context)
 {
+    //TODO
     /* Call exception handler */
 }
 
 INLINE static void
 handle_user_break(word_t ecode, addr_t addr, sh_context_t* context)
 {
+    //TODO
     /* Call kernel debugger */
 }
 
@@ -145,3 +148,8 @@ do_tlb_miss(word_t ecode, sh_context_t* context)
                             ASM_CONTINUATION);
 }
 
+extern "C" void
+do_syscall_exception(sh_context_t* context)
+{
+    //TODO
+}

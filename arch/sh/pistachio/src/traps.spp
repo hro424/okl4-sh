@@ -7,10 +7,12 @@
  */
 
 #include <asmsyms.h>
+#include <tcb_layout.h>
 #include <arch/config.h>
 #include <arch/exception.h>
 #include <arch/globals.h>
 #include <arch/syscalls.h>
+#include <arch/thread.h>
 #include <kernel/arch/asm.h>
 #include <kernel/arch/config.h>
 
@@ -258,37 +260,6 @@ LABEL(sh_handle_syscall)
     nop
     /* NOT REACHED */
 
-LABEL(ipc_syscall_return)
-    mov.l   EXP_CONST_GLOBAL, r15
-    add     #OFFSET_GLOBAL_CURRENT_TCB, r15
-    mov.l   @r15, r15
-    mov.l   EXP_CONST_OFFSET_TCB_PARTNER, r14
-    add     r14, r15
-    mov.l   @r15, r0
-
-    /* FALL THROUGH */
-
-LABEL(syscall_return)
-    /* Restore the control and system registers from TCB */
-    mov.l   EXP_CONST_GLOBAL, r15
-    add     #OFFSET_GLOBAL_CURRENT_TCB, r15
-    mov.l   @r15, r15
-    add     #OFFSET_TCB_ARCH_CONTEXT, r15
-    mov.l   EXP_CONST_OFFSET_CONTEXT_MACH, r14
-    add     r14, r15
-    
-    lds.l   @r15+, mach
-    lds.l   @r15+, macl
-    lds.l   @r15+, pr
-    ldc.l   @r15+, ssr
-    ldc.l   @r15+, spc
-    /*ldc.l   @r15+, sgr */
-    stc     sgr, r15
-    rte
-    nop    
-    /* NOT REACHED */
-
-
     /* Constant values and function pointers */
     .align 2
 LABEL(EXP_CONST_REG_EXPEVT)
@@ -309,17 +280,8 @@ LABEL(EXP_CONST_GENERAL_EXCEPTION_HANDLER)
 LABEL(EXP_CONST_SYSCALL_EXCEPTION_HANDLER)
     .long   SYSCALL_EXCEPTION_HANDLER
 
-LABEL(EXP_CONST_GLOBAL)
-    .long   SH_GLOBAL_BASE
-
 LABEL(EXP_CONST_SIZEOF_CONTEXT)
     .long   SIZEOF_CONTEXT
-
-LABEL(EXP_CONST_OFFSET_CONTEXT_MACH)
-    .long   OFFSET_CONTEXT_MACH
-
-LABEL(EXP_CONST_OFFSET_TCB_PARTNER)
-    .long   OFFSET_TCB_PARTNER
 
 LABEL(sh_syscall_vectors)
     .long   sys_ipc
@@ -340,6 +302,54 @@ LABEL(sh_syscall_vectors)
     .long   sys_memory_copy
 
     END_PROC_TRAPS(sh_exception)
+
+
+    BEGIN_PROC(ipc_syscall_return)
+    mov.l   EXP_CONST_GLOBAL, r15
+    add     #OFFSET_GLOBAL_CURRENT_TCB, r15
+    mov.l   @r15, r15
+    mov.l   EXP_CONST_OFFSET_TCB_PARTNER, r14
+    add     r14, r15
+    mov.l   @r15, r0
+
+    /* FALL THROUGH */
+
+    BEGIN_PROC(syscall_return)
+    /* Restore the control and system registers from TCB */
+    mov.l   EXP_CONST_GLOBAL, r15
+    add     #OFFSET_GLOBAL_CURRENT_TCB, r15
+    mov.l   @r15, r15
+    add     #OFFSET_TCB_ARCH_CONTEXT, r15
+    mov.l   EXP_CONST_OFFSET_CONTEXT_MACH, r14
+    add     r14, r15
+    
+    lds.l   @r15+, mach
+    lds.l   @r15+, macl
+    lds.l   @r15+, pr
+    ldc.l   @r15+, ssr
+    ldc.l   @r15+, spc
+    /*ldc.l   @r15+, sgr */
+    stc     sgr, r15
+    rte
+    nop    
+    /* NOT REACHED */
+
+    .align 2
+LABEL(EXP_CONST_GLOBAL)
+    .long   SH_GLOBAL_BASE
+
+LABEL(EXP_CONST_OFFSET_TCB_PARTNER)
+    .long   OFS_TCB_PARTNER
+
+LABEL(EXP_CONST_OFFSET_CONTEXT_MACH)
+    .long   OFFSET_CONTEXT_MACH
+
+    END_PROC(syscall_return)
+
+    BEGIN_PROC(abort_return)
+    //TODO
+    nop
+    END_PROC(abort_return)
 
 /*
 * TLB miss handler vector

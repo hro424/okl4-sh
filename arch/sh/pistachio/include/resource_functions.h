@@ -9,7 +9,8 @@
 INLINE void
 thread_resources_t::init(tcb_t* tcb)
 {
-    tcb->resource_bits->init();
+//    tcb->resource_bits->init();
+    tcb->resource_bits = 0;
 }
 
 INLINE void
@@ -23,5 +24,6 @@ thread_resources_t::control(tcb_t* tcb, tc_resources_t tresources,
 {
     return true;
 }
+
 
 #endif /* OKL4_ARCH_SH_RESOURCE_FUNCTIONS_H */

@@ -9,6 +9,7 @@
 
 #include <syscalls.h>
 #include <arch/thread.h>
+#include <arch/resource_functions.h>
 #include <kernel/errors.h>
 #include <kernel/arch/continuation.h>
 
@@ -126,6 +127,12 @@ tcb_t::set_space(space_t* new_space)
     }
 }
 
+INLINE void
+tcb_t::set_mutex_thread_handle(capid_t handle)
+{
+    get_utcb()->mutex_thread_handle = handle;
+}
+
 
 #define asm_initial_switch_to(new_sp, new_pc)   \
     __asm__ __volatile__ (                      \
@@ -169,6 +176,31 @@ initial_switch_to (tcb_t * tcb)
     ASSERT(ALWAYS, !"We shouldn't get here!");
     while(true) {}
 }
+
+extern "C" void* abort_return();
+extern "C" void* ipc_syscall_return();
+
+INLINE void
+tcb_t::return_from_ipc()
+{
+    //TODO
+    ACTIVATE_CONTINUATION(ipc_syscall_return);
+}
+
+INLINE void
+tcb_t::return_from_user_interruption()
+{
+    //TODO
+    ACTIVATE_CONTINUATION(abort_return);
+}
+
+INLINE void
+tcb_t::init_stack()
+{
+    //TODO
+}
+
+
 
 /**
  * read the user-level instruction pointer
@@ -253,6 +285,17 @@ tcb_t::set_user_flags (const word_t flags)
             ((word_t)flags & SH_USER_FLAGS_MASK);
 }
 
+INLINE void
+tcb_t::set_preempted_ip(addr_t ip)
+{
+    get_utcb()->preempted_ip = (word_t)ip;
+}
+
+INLINE addr_t
+tcb_t::get_preempted_ip()
+{
+    return (addr_t)get_utcb()->preempted_ip;
+}
 
 INLINE addr_t
 tcb_t::get_preempt_callback_ip()

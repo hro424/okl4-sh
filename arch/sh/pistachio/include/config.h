@@ -30,7 +30,6 @@
 #define ARCH_OBJECT_PTR(index)      (VIRT_ADDR_BASE + (index))
 #define ARCH_OBJECT_INDEX(ptr)      (((word_t)(ptr)) - VIRT_ADDR_BASE)
 
-//TODO: Make sure the reason
 #define KTCB_ALIGN          16
 
 #define UTCB_MASK           (~(UTCB_SIZE - 1))
@@ -41,7 +40,6 @@
 #define IPC_NUM_MR          __L4_NUM_MRS
 
 /* Page size for small object allocator */
-//TODO: Make sure the reason
 #define SMALL_OBJECT_BLOCKSIZE  PAGE_SIZE_4K
 
 /* SH version specific config, if any */
@@ -60,15 +58,15 @@
 #define USER_AREA_SIZE          (USER_AREA_SECTIONS * SH_SECTION_SIZE)
 #define USER_AREA_END           (USER_AREA_START + USER_AREA_SIZE)
 
-//TODO
-#define UTCB_AREA_SECTIONS      0x010
-#define UTCB_AREA_START         USER_AREA_END
-#define UTCB_AREA_SIZE          0
-#define UTCB_AREA_END           (UTCB_AREA_START + UTCB_AREA_SIZE)
+/* 0x7F000000 */
+#define SYS_AREA_SECTIONS       0x010
+#define SYS_AREA_START          USER_AREA_END
+#define SYS_AREA_SIZE           0
+#define SYS_AREA_END            (SYS_AREA_START + SYS_AREA_SIZE)
 
 /* 0x80000000 */
 #define KERNEL_AREA_SECTIONS    0x200
-#define KERNEL_AREA_START       UTCB_AREA_END
+#define KERNEL_AREA_START       SYS_AREA_END
 #define KERNEL_AREA_SIZE        (KERNEL_AREA_SECTIONS * SH_SECTION_SIZE)
 #define KERNEL_AREA_END         (KERNEL_AREA_START + KERNEL_AREA_SIZE)
 

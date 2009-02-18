@@ -69,6 +69,7 @@ KZM="machine=kzm_arm11"
 VERSATILE="machine=versatile"
 
 ARM="arm-linux-"
+SH="sh-linux-"
 
 READELF="readelf -s -W "
 CUT="cut -b 52-"

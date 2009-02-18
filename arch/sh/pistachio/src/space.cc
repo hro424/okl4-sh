@@ -172,6 +172,7 @@ generic_space_t::allocate_utcb(tcb_t * tcb, kmem_resource_t *kresource)
         return NULL;
     }
 
+    /*TODO
     if (! ((space_t *)this)->add_mapping((addr_t)addr_align(utcb, UTCB_AREA_PAGESIZE),
                                          virt_to_phys(page), UTCB_AREA_PGSIZE,
                                          space_t::read_write, false, kresource))
@@ -180,6 +181,7 @@ generic_space_t::allocate_utcb(tcb_t * tcb, kmem_resource_t *kresource)
         kresource->free(kmem_group_utcb, page, page_size(UTCB_AREA_PGSIZE));
         return NULL;
     }
+    */
 
     return (utcb_t *)
         addr_offset(page, addr_mask(utcb, page_mask(UTCB_AREA_PGSIZE)));
@@ -208,7 +210,7 @@ generic_space_t::activate(tcb_t *tcb)
     word_t  dest_asid;
     word_t  new_pt;
 
-    USER_UTCB_REF = tcb->get_utcb_location();
+    *(word_t*)USER_UTCB_REF = tcb->get_utcb_location();
 
     dest_asid = ((space_t *)this)->get_asid()->get((space_t *)this);
     get_globals()->current_clist = this->get_clist();
@@ -305,10 +307,18 @@ generic_space_t::free_page_directory(kmem_resource_t *kresource)
 }
 
 #if defined (CONFIG_DEBUG)
+/**
+ * reads a word from a given physical address, uses a remap window and
+ * maps a 1MB page for the access
+ *
+ * @param vaddr         virtual address (if caches need to be flushed)
+ * @param paddr         physical address to read from
+ * @return the value at the given address
+ */
 word_t
 generic_space_t::readmem_phys(addr_t vaddr, addr_t paddr)
 {
-    // TODO:
-    return 0;
+    return *(word_t*)paddr;
 }
 #endif /* CONFIG_DEBUG */
+

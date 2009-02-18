@@ -16,6 +16,14 @@ typedef word_t  sh_pid_t;
 /* SH provides its own implementation of space->arch_free */
 #define HAVE_ARCH_FREE_SPACE
 
+
+PURE INLINE space_t*
+get_kenel_space()
+{
+    return get_globals()->kernel_space;
+}
+
+
 class space_t : public generic_space_t
 {
 public:
@@ -51,23 +59,25 @@ public:
 
 };
 
-
-PURE INLINE space_t*
-get_kenel_space()
+INLINE asid_t*
+space_t::get_asid()
 {
-    return get_globals()->kernel_space;
+    return (asid_t*)&this->asid;
 }
+
+INLINE word_t
+space_t::space_control(word_t ctrl)
+{
+    //TODO
+    return 0;
+}
+
+
 
 INLINE bool
 generic_space_t::does_tlbflush_pay(word_t log2size)
 {
     return log2size > 12;
-}
-
-INLINE asid_t*
-space_t::get_asid()
-{
-    return (asid_t*)&this->asid;
 }
 
 INLINE pgent_t*

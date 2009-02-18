@@ -7,11 +7,14 @@
 #include <soc/interface.h>
 
     .section .init.start
-
     BEGIN_PROC(kernel_arch_init)
 
-    mov.l   init_memory, r0
+    mov.l   1f, r0
     jmp     @r0
     nop
+
+    .align 2
+1:
+    .long   init_memory
 
     END_PROC(kernel_arch_init)

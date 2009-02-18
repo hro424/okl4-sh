@@ -77,15 +77,16 @@ class toolchain:
         self.dict["STRIP"] = "${TOOLPREFIX}${_STRIP}${TOOLSUFFIX}"
         self.dict["OBJCOPY"] = "${TOOLPREFIX}${_OBJCOPY}${TOOLSUFFIX}"
 
+        # HRO: Comment out to get verbose message
         #self.dict["CCCOMSTR"] = "[CC  ] $TARGET"
         #self.dict["CXXCOMSTR"] = "[CXX ] $TARGET"
 
         #self.dict["ASPPCOMSTR"] = "[ASPP] $TARGET"
         self.dict["ASMCOMSTR"] = "[ASM ] $TARGET"
         self.dict["CPPCOMSTR"] = "[CPP ] $TARGET"
-        self.dict["LINKCOMSTR"] = "[LINK] $TARGET"
-        self.dict["ARCOMSTR"] = "[AR  ] $TARGET"
-        self.dict["RANLIBCOMSTR"] = "[LIB ] $TARGET"
+        #self.dict["LINKCOMSTR"] = "[LINK] $TARGET"
+        #self.dict["ARCOMSTR"] = "[AR  ] $TARGET"
+        #self.dict["RANLIBCOMSTR"] = "[LIB ] $TARGET"
 
         self.dict["RANLIBFLAGS"] = "${_RANLIB_COM_FLAGS} ${RANLIB_FLAGS}"
         self.dict["_RANLIB_COM_FLAGS"] = []

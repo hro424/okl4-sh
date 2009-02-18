@@ -25,5 +25,5 @@ class sh2007(sh7780):
     memory = sh7780.memory.copy()
     memory['physical'] = [Region(0x88000000, 0x90000000)]
     memory['rom'] = [Region(0xA0000000, 0xA8000000)]
-    cpp_defines = sh7780.cpp_defins = [("PLATFORM_SH2007", 1)]
+    cpp_defines = sh7780.cpp_defines = [("PLATFORM_SH2007", 1)]
 
