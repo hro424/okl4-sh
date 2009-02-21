@@ -39,3 +39,4 @@ soc_do_platform_control(tcb_h current, plat_control_t control,
     current_utcb->error_code = ENOT_IMPLEMENTED;
     return 0;
 }
+

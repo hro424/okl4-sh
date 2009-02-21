@@ -5,6 +5,8 @@
  *  @since  January 2009
  */
 
+#include <kernel/arch/registers.h>
+
 /*
  * MASKS FOR CPU REGISTERS
  */
@@ -39,21 +41,7 @@
  * MEMORY-MAPPED REGISTERS (VIRTUAL ADDRESS)
  */
 
-#if !defined(ASSEMBLY)
 #define UPDATE_REG()        __asm__ __volatile__ ("icbi @%0" :: "r" (0x1000))
-
-INLINE word_t
-mapped_reg_read(word_t reg)
-{
-    return *(volatile word_t*)reg;
-}
-
-INLINE void
-mapped_reg_write(word_t reg, word_t val)
-{
-    *(volatile word_t*)reg = val;
-}
-#endif
 
 /* TRAPA */
 #define REG_TRA             0xFF000020

@@ -13,18 +13,20 @@ void
 soc_mask_irq(word_t irq)
 {
 //    SOC_ASSERT(DEBUG, irq < (word_t)IRQS);
+    //TODO
 }
 
 void
 soc_unmask_irq(word_t irq)
 {
 //    SOC_ASSERT(DEBUG, irq < (word_t)IRQS);
+    //TODO
 }
-
 
 void
 soc_handle_interrupt(word_t context, word_t irq)
 {
 //    SOC_ASSERT(DEBUG, irq < (word_t)IRQS);
+    //TODO
 }
 
