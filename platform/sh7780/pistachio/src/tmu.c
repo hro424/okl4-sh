@@ -8,10 +8,8 @@
 #include <soc/interface.h>
 #include <soc/soc.h>
 #include <kernel/arch/registers.h>
+#include <timer.h>
 #include <tmu.h>
-
-#define TIMER_TICK_LENGTH   10000
-#define TIMER_RATE          50000000
 
 void
 tmu_init(void)

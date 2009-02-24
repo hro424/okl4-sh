@@ -10,6 +10,7 @@
 #include <intctrl.h>
 #include <interrupt.h>
 #include <timer.h>
+#include <tmu.h>
 
 #if defined(CONFIG_KDEBUG_TIMER)
 word_t
@@ -30,18 +31,20 @@ word_t soc_timer_disabled;
 void
 soc_disable_timer(void)
 {
-    //TODO
+    soc_timer_disabled = 1;
+    tmu_stop();
 }
 
 void
 soc_enable_timer(void)
 {
-    //TODO
+    soc_timer_disabled = 0;
+    tmu_start();
 }
 
 void
 init_clocks(void)
 {
-    //TODO
+    tmu_init();
 }
 

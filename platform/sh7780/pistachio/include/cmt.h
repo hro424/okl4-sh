@@ -64,7 +64,14 @@
 #define CMT_CONTROL_CC0_PCK128  0x00000100
 #define CMT_CONTROL_CC0_PCK512  0x00000200
 #define CMT_CONTROL_CC0_PCK1024 0x00000300
+#define CMT_CONTROL_STC1        0x00000020
+#define CMT_CONTROL_STC0        0x00000010
+#define CMT_CONTROL_OP3         0x00000008
+#define CMT_CONTROL_OP2         0x00000004
+#define CMT_CONTROL_OP1         0x00000002
+#define CMT_CONTROL_OP0         0x00000001
 
+void cmt_handle_timer_interrupt(void);
 void cmt_init(void);
 void cmt_start(void);
 void cmt_stop(void);

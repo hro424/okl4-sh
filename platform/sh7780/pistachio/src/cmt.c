@@ -14,10 +14,15 @@
 #define TIMER_RATE              50000000
 
 void
+cmt_handle_timer_interrupt(void)
+{
+}
+
+void
 cmt_init(void)
 {
     u32_t count;
-    count = TIMER_RATE / (1000000 / TIMER_TICK_LENGTH);
+    count = TIMER_RATE / 32 / (1000000 / TIMER_TICK_LENGTH);
 }
 
 void
