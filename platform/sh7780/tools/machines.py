@@ -1,7 +1,7 @@
 # $Id$
 
 ##
-##  @file   platform/sh2007/tools/machines.py
+##  @file   platform/sh7780/tools/machines.py
 ##  @since  December 9, 2008
 ##
 
@@ -19,7 +19,7 @@ class sh7780(sh4a):
     platform_dir = "sh7780"
     timer_driver = ""
     serial_driver = ""
-    drivers = [timer_driver, serial_driver] + sh7780.drivers
+    drivers = [timer_driver, serial_driver] + sh4a.drivers
 
     # Define memory layout based on the configuration of sh7780
     memory = sh4a.memory.copy()

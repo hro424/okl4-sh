@@ -4,8 +4,8 @@
  * @since   February 2009
  */
 
-#ifndef OKL4_PLATFORM_SH2007_CONSOLE_H
-#define OKL4_PLATFORM_SH2007_CONSOLE_H
+#ifndef OKL4_PLATFORM_SH7780_CONSOLE_H
+#define OKL4_PLATFORM_SH7780_CONSOLE_H
 
 #define SCIF0_BASE              0xFFE0000
 #define SCIF1_BASE              0xFFE1000
@@ -66,7 +66,7 @@
 #define SCIF_LINE_STAT_ORER     0x01
 
 /*
- * SH2007:
+ * SH7780:
  * Clock    33.333MHz
  * Ick      400MHz
  * DDRck    160MHz
@@ -84,5 +84,5 @@
 #define SCIF_BITRATE_500000     2       /* n: 0, Error rate: 4.17 */
 #define SCIF_BITRATE_576000     1       /* n: 0, Error rate: 35.6 */
 
-#endif /* OKL4_PLATFORM_SH2007_CONSOLE_H */
+#endif /* OKL4_PLATFORM_SH7780_CONSOLE_H */
 

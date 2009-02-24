@@ -1,5 +1,5 @@
-#ifndef OKL4_PLATFORM_SH2007_INTERRUPT_H
-#define OKL4_PLATFORM_SH2007_INTERRUPT_H
+#ifndef OKL4_PLATFORM_SH7780_INTERRUPT_H
+#define OKL4_PLATFORM_SH7780_INTERRUPT_H
 
 #include <soc/interface.h>
 #include <soc/arch/soc.h>
@@ -11,4 +11,4 @@
 void soc_mask_irq(word_t irq);
 void soc_unmask_irq(word_t irq);
 
-#endif /* OKL4_PLATFORM_SH2007_INTERRUPT_H */
+#endif /* OKL4_PLATFORM_SH7780_INTERRUPT_H */
