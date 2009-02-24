@@ -5,8 +5,8 @@
  * @since   February 2009
  */
 
-#ifndef OKL4_ARCH_SH_KERNEL_TMU_H
-#define OKL4_ARCH_SH_KERNEL_TMU_H
+#ifndef OKL4_PLATFORM_SH7780_TMU_H
+#define OKL4_PLATFORM_SH7780_TMU_H
 
 #define TMU_OUTPUT_CONTROL          0xFFD80000
 #define TMU_START0                  0xFFD80004
@@ -57,8 +57,8 @@
 #define TMU_CONTROL_TPSC_RTC        0x0006
 #define TMU_CONTROL_TPSC_TCLK       0x0007
 
-void tmu_init();
-void tmu_start();
-void tmu_stop();
+void tmu_init(void);
+void tmu_start(void);
+void tmu_stop(void);
 
-#endif /* OKL4_ARCH_SH_KERNEL_TMU_H */
+#endif /* OKL4_PLATFORM_SH7780_TMU_H */

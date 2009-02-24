@@ -45,19 +45,3 @@ init_clocks(void)
     //TODO
 }
 
-
-void
-tmu_init(void)
-{
-}
-
-void
-tmu_start(void)
-{
-}
-
-void
-tmu_stop(void)
-{
-}
-

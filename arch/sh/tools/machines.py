@@ -27,6 +27,7 @@ class sh4(sh):
 
 # SH-4A (in SH778X Series)
 class sh4a(sh):
+    cpu = "sh4a"
     memory = sh.memory.copy();
     memory['virtual'] = [Region(0x1000, 0x7ef00000)]
     arch_version = 4
