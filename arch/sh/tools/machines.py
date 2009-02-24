@@ -31,8 +31,3 @@ class sh4a(sh):
     memory['virtual'] = [Region(0x1000, 0x7ef00000)]
     arch_version = 4
 
-class sh7780(sh4a):
-    cpu = "sh7780"
-
-class sh7785(sh4a):
-    cpu = "sh7785"

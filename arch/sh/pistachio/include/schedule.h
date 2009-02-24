@@ -50,11 +50,25 @@ preempt_disable()
 INLINE void
 arch_enable_timer()
 {
+#if defined(CONFIG_SH_TMU_ENABLE)
+    tmu_start();
+#elif defined(CONFIG_SH_CMT_ENABLE)
+    cmt_start();
+#else
+#error Timer is not specified.
+#endif
 }
 
 INLINE void
 arch_disable_timer()
 {
+#if defined(CONFIG_SH_TMU_ENABLE)
+    tmu_stop();
+#elif defined(CONFIG_SH_CMT_ENABLE)
+    cmt_stop();
+#else
+#error Timer is not specified.
+#endif
 }
 
 #endif /* OKL4_ARCH_SH_SCHEDULE_H */

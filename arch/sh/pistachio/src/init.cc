@@ -136,6 +136,11 @@ startup_system()
     soc_init();
 
     /*
+     * Initialize the timer unit
+     */
+    init_timer();
+
+    /*
      * Initialize the L4 console
      */
     init_console();
