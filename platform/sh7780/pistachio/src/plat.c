@@ -24,9 +24,9 @@ soc_init()
 
     /*
     simplesoc_init(IRQS);
+    */
 
     init_clocks();
-    */
 }
 
 word_t
