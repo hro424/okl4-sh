@@ -394,6 +394,7 @@ LABEL(TLB_CONST_TLB_HANDLER)
 /*
 * IRQ handler vector
 * NOTE: Must be placed at 0x600 (= 0x400 + 0x200)
+* TODO: Handling multiple interrupts
 */
     BEGIN_PROC_TRAPS(sh_interrupt, 0x200)
 
@@ -427,7 +428,7 @@ LABEL(TLB_CONST_TLB_HANDLER)
     nop
     /* NOT REACHED */
 
-LABEL(kernel_interrupt)
+    BEGIN_PROC(kernel_interrupt)
     /* Handle an interrupt raised in kernel mode */
 
     /* Allocate stack */

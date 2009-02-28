@@ -12,6 +12,7 @@
 #include <timer.h>
 #include <interrupt.h>
 
+void simplesoc_init(int num_irqs);
 
 /**
  * Initializes the platform specific mappings needed to start the kernel.
@@ -22,10 +23,7 @@ soc_init()
 {
     //TODO: Initialize mapped I/O registers
 
-    /*
     simplesoc_init(IRQS);
-    */
-
     init_clocks();
 }
 
