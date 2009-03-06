@@ -103,8 +103,8 @@
     TRAPS_BEGIN_MARKER
 
 /*
-* GENERAL EXCEPTION HANDLER (VBR, Offset:0x100)
-*/
+ * GENERAL EXCEPTION HANDLER (VBR, Offset:0x100)
+ */
     BEGIN_PROC_TRAPS(sh_exception, 0x100)
 
     /* Using register bank 1 */
@@ -352,8 +352,8 @@ LABEL(EXP_CONST_OFFSET_CONTEXT_MACH)
     END_PROC(abort_return)
 
 /*
-* TLB miss handler vector
-*/
+ * TLB miss handler vector
+ */
     BEGIN_PROC_TRAPS(sh_tlb_miss, 0x400)
     mov.l   TLB_CONST_STACK, r15
     SAVE_CONTEXT
@@ -392,10 +392,10 @@ LABEL(TLB_CONST_TLB_HANDLER)
     END_PROC_TRAPS(sh_tlb_miss)
 
 /*
-* IRQ handler vector
-* NOTE: Must be placed at 0x600 (= 0x400 + 0x200)
-* TODO: Handling multiple interrupts
-*/
+ * IRQ handler vector
+ * NOTE: Must be placed at 0x600 (= 0x400 + 0x200)
+ * TODO: Handling multiple interrupts
+ */
     BEGIN_PROC_TRAPS(sh_interrupt, 0x200)
 
     /* Check whether it is raised in user or kernel mode */

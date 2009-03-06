@@ -23,7 +23,7 @@ soc_init()
 {
     //TODO: Initialize mapped I/O registers
 
-    simplesoc_init(IRQS);
+    init_intc();
     init_clocks();
 }
 
