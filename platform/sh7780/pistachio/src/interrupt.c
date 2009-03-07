@@ -23,10 +23,40 @@ typedef struct {
     space_h     owner;
 } irq_owner_t;
 
-#define IRQ_VECT(evt, mask)     {evt, mask, {0, 0}, 0}
+/* Converts INTEVT to the internal interrupt number */
+static word_t evttbl[] = {
+    IRQ7, 0, IRQ0, 0, IRQ1, 0, IRQ2, 0, IRQ3, 0,
+    /* 10 */
+    IRQ4, 0, IRQ5, 0, IRQ6, 0, 0, 0, 0, 0,
+    /* 20 */
+    RTC_ATI, RTC_PRI, RTC_CUI, 0, 0, 0, 0, WDT, TMU0, TMU1,
+    /* 30 */
+    TMU2, TMU2_TICPI, HUDI, 0, DMAC0_DMINT0, DMAC0_DMINT1, DMAC0_DMINT2,
+    DMAC0_DMINT3, DMAC0_DMAE, 0,
+    /* 40 */
+    SCIF0_ERI, SCIF0_RXI, SCIF0_BRI, SCIF0_TXI, DMAC0_DMINT4, DMAC0_DMINT5,
+    DMAC1_DMINT6, DMAC1_DMINT7, 0, 0,
+    /* 50 */
+    0, 0, 0, 0, 0, 0, CMT, 0, 0, 0,
+    /* 60 */
+    HAC, 0, 0, 0, PCISERR, PCIINTA, PCIINTB, PCIINTC, PCIINTD, PCIERR,
+    /* 70 */
+    PCIPWD3, PCIPWD2, PCIPWD1, PCIPWD0, 0, 0, SCIF1_ERI, SCIF1_RXI, SCIF1_BRI,
+    SCIF1_TXI,
+    /* 80 */
+    SIOF, 0, 0, 0, HSPI, 0, 0, 0, MMCIF_FSTAT, MMCIF_TRAN,
+    /* 90 */
+    MMCIF_ERR, MMCIF_FRDY, DMAC1_DMINT8, DMAC1_DMINT9, DMAC1_DMINT10,
+    DMAC1_DMINT11, TMU3, TMU4, TMU5, 0,
+    /* 100 */
+    SSI, 0, 0, 0, FLSTE, FLTEND, FLTRQ0, FLTRQ1, GPIO0, GPIO1,
+    /* 110 */
+    GPIO2, GPIO3
+};
 
-static irq_mapping_t irq_mapping[] = {
-    IRQ_VECT(0,             0),
+#define IRQ_VECT(evt, mask)     mask
+
+static word_t intc_mask[IRQS] = {
     IRQ_VECT(IRQ0,          MASK_IRQ0),
     IRQ_VECT(IRQ1,          MASK_IRQ1),
     IRQ_VECT(IRQ2,          MASK_IRQ2),
@@ -87,21 +117,23 @@ static irq_mapping_t irq_mapping[] = {
     IRQ_VECT(TMU4,          MASK_TMU345),
     IRQ_VECT(TMU5,          MASK_TMU345),
     IRQ_VECT(SSI,           MASK_SSI),
-    IRQ_VECT(FLCTL_FLSTE,   MASK_FLCTL),
-    IRQ_VECT(FLCTL_FLTEND,  MASK_FLCTL),
-    IRQ_VECT(FLCTL_FLTRQ0,  MASK_FLCTL),
-    IRQ_VECT(FLCTL_FLTRQ1,  MASK_FLCTL),
+    IRQ_VECT(FLSTE,         MASK_FLCTL),
+    IRQ_VECT(FLTEND,        MASK_FLCTL),
+    IRQ_VECT(FLTRQ0,        MASK_FLCTL),
+    IRQ_VECT(FLTRQ1,        MASK_FLCTL),
     IRQ_VECT(GPIO0,         MASK_GPIO),
     IRQ_VECT(GPIO1,         MASK_GPIO),
     IRQ_VECT(GPIO2,         MASK_GPIO),
     IRQ_VECT(GPIO3,         MASK_GPIO),
 };
 
+static irq_mapping_t    irq_mapping[IRQS];
+
 /* Get the owner space for each interrupt */
-static irq_owner_t  irq_owners[IRQS];
+static irq_owner_t      irq_owners[IRQS];
 
 /* Bitmap of pending IRQs */
-static bitmap_t     irq_pending[IRQS];
+static bitmap_t         irq_pending[IRQS];
 
 /* Initialise interrupt data strctures. */
 void
@@ -110,6 +142,9 @@ init_intc(void)
     int i;
 
     /* Mask IRQs */
+    mapped_reg_write(INTC_INTMSK0, 0xFF000000);
+    mapped_reg_write(INTC_INTMSK1, 0xC0000000);
+    mapped_reg_write(INTC_INT2MSKR, 0x03FFF3BF);
 
     /* Setup memory. */
     for (i = 0; i < IRQS + 1; i++) {
@@ -121,61 +156,53 @@ init_intc(void)
 static inline word_t
 evt2index(word_t intevt)
 {
-    word_t i;
-
-    for (i = 1; i < IRQS + 1; i++) {
-        if (irq_mapping[i].intevt == intevt) {
-            return i;
-        }
-    }
-    return 0;
+    word_t i = (intevt - INTEVT_MIN) >> 5;
+    return evttbl[i];
 }
 
 static inline void
 mask_external_interrupt(word_t index)
 {
-    mapped_reg_write(INTC_INTMSK0, irq_mapping[index].mask_bit);
+    mapped_reg_write(INTC_INTMSK0, intc_mask[index]);
 }
 
 static inline void
 unmask_internal_interrupt(word_t index)
 {
-    mapped_reg_write(INTC_INTMSKCLR0, irq_mapping[index].mask_bit);
+    mapped_reg_write(INTC_INTMSKCLR0, intc_mask[index]);
 }
 
 static inline void
 mask_internal_interrupt(word_t index)
 {
-    mapped_reg_write(INTC_INT2MSKR, irq_mapping[index].mask_bit);
+    mapped_reg_write(INTC_INT2MSKR, intc_mask[index]);
 }
 
 static inline void
 unmask_external_interrupt(word_t index)
 {
-    mapped_reg_write(INTC_INT2MSKCR, irq_mapping[index].mask_bit);
+    mapped_reg_write(INTC_INT2MSKCR, intc_mask[index]);
 }
 
 static void
 mask_intevt(word_t index)
 {
-    //TODO: magic number
-    if (index < 9) {
-        mask_external_interrupt(index);
+    if (index > IRQ7) {
+        mask_internal_interrupt(index);
     }
     else {
-        mask_internal_interrupt(index);
+        mask_external_interrupt(index);
     }
 }
 
 static void
 unmask_intevt(word_t index)
 {
-    //TODO: magic number
-    if (index < 9) {
-        unmask_external_interrupt(index);
+    if (index > IRQ7) {
+        unmask_internal_interrupt(index);
     }
     else {
-        unmask_internal_interrupt(index);
+        unmask_external_interrupt(index);
     }
 }
 
@@ -191,6 +218,7 @@ handle_irq(word_t intevt, continuation_t cont)
     utcb_t* utcb;
     word_t  mask;
     word_t  index;
+    word_t* ievt_desc;
 
     index = evt2index(intevt);
 
@@ -207,7 +235,7 @@ handle_irq(word_t intevt, continuation_t cont)
     /* Fetch the handler thread's IRQ UTCB word. */
     utcb = kernel_get_utcb(handler);
     SOC_ASSERT(DEBUG, utcb);
-    word_t *ievt_desc = &utcb->platform_reserved[0];
+    ievt_desc = &utcb->platform_reserved[0];
 
     /* If the handler hasn't dealt with the previous interrupt yet,
      * mark the interrupt as pending.
@@ -249,7 +277,7 @@ soc_handle_interrupt(word_t context, word_t intevt)
         handle_irq_reschedule(intevt, cont);
     }
 
-    if (EXPECT_TRUE(intevt == TMU0)) {
+    if (EXPECT_TRUE(evt2index(intevt) == TMU0)) {
         handle_timer_interrupt(0, cont);
     }
 
@@ -258,6 +286,13 @@ soc_handle_interrupt(word_t context, word_t intevt)
 
 /**
  * Register and unregister interrupts
+ * 
+ * @param desc          the exception code to be configured
+ * @param notify_bit    the notify bit to be sent to the receiving thread
+ * @param handler
+ * @param owner         the address space where the receiving thread resides
+ * @param control       register or unregister
+ * @param utcb
  */
 word_t
 soc_config_interrupt(struct irq_desc *desc, int notify_bit, tcb_h handler,
@@ -268,7 +303,7 @@ soc_config_interrupt(struct irq_desc *desc, int notify_bit, tcb_h handler,
 
     /* Get the IRQ to configure. */
     intevt = *((word_t*)desc);
-    if (intevt >= INTEVT_MAX) {
+    if (intevt < INTEVT_MIN || intevt > INTEVT_MAX) {
         return EINVALID_PARAM;
     }
 
