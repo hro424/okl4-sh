@@ -13,8 +13,6 @@
 #include <kernel/arch/continuation.h>
 
 typedef struct {
-    intevt_e    intevt;
-    intc_mask_e mask_bit;
     soc_ref_t   handler;
     word_t      notify_mask;
 } irq_mapping_t;
@@ -24,7 +22,7 @@ typedef struct {
 } irq_owner_t;
 
 /* Converts INTEVT to the internal interrupt number */
-static word_t evttbl[] = {
+static word_t evttbl[112] = {
     IRQ7, 0, IRQ0, 0, IRQ1, 0, IRQ2, 0, IRQ3, 0,
     /* 10 */
     IRQ4, 0, IRQ5, 0, IRQ6, 0, 0, 0, 0, 0,
@@ -127,6 +125,7 @@ static word_t intc_mask[IRQS] = {
     IRQ_VECT(GPIO3,         MASK_GPIO),
 };
 
+/* Map interrupt numbers to handler/notify mask information. */
 static irq_mapping_t    irq_mapping[IRQS];
 
 /* Get the owner space for each interrupt */
@@ -140,6 +139,8 @@ void
 init_intc(void)
 {
     int i;
+
+    //TODO:
 
     /* Mask IRQs */
     mapped_reg_write(INTC_INTMSK0, 0xFF000000);
@@ -271,12 +272,11 @@ soc_handle_interrupt(word_t context, word_t intevt)
 {
     continuation_t cont = ASM_CONTINUATION;
 
-    //TODO
-
     if (INTEVT_MIN <= intevt && intevt <= INTEVT_MAX) {
         handle_irq_reschedule(intevt, cont);
     }
 
+    //TODO:
     if (EXPECT_TRUE(evt2index(intevt) == TMU0)) {
         handle_timer_interrupt(0, cont);
     }

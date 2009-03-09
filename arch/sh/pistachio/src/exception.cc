@@ -12,25 +12,9 @@
 #include <kdb/tracepoints.h>
 #include <arch/exception.h>
 
+//TODO
 //DECLARE_TRACEPOINT(EXCEPTION_GENERAL);
 //DECLARE_TRACEPOINT(EXCEPTION_TLB_MISS);
-
-INLINE static void
-handle_memory_fault(word_t ecode, addr_t addr, sh_context_t* context)
-{
-    //TODO
-    /*
-    addr_t              faddr;
-    pgent_t*            pg;
-    space_t*            space;
-    tcb_t*              current;
-    pgent_t::pgsize_e   pgsize;
-    space_t::access_e   access;
-    */
-
-    /* Call page fault handler */
-
-}
 
 INLINE static void
 handle_exception(word_t ecode, addr_t addr, sh_context_t* context)
@@ -52,23 +36,18 @@ do_general_exception(word_t ecode, sh_context_t* context)
     addr_t faddr = (addr_t)mapped_reg_read(REG_TEA);
 
     switch (ecode) {
-        case ECODE_TLB_FAULT_R:
-        case ECODE_TLB_FAULT_W:
-        case ECODE_ADDRESS_R:
-        case ECODE_ADDRESS_W:
-        case ECODE_INIT_WRITE:
-            handle_memory_fault(ecode, faddr, context);
-            break;
         case ECODE_FPU:
-        case ECODE_GENERAL_INST:
-        case ECODE_SLOT_INST:
-        case ECODE_GENERAL_FPU:
-        case ECODE_SLOT_FPU:
             handle_exception(ecode, faddr, context);
             break;
         case ECODE_USER_BREAK:
             handle_user_break(ecode, faddr, context);
             break;
+        case ECODE_ADDRESS_R:
+        case ECODE_ADDRESS_W:
+        case ECODE_GENERAL_INST:
+        case ECODE_SLOT_INST:
+        case ECODE_GENERAL_FPU:
+        case ECODE_SLOT_FPU:
         default:
             enter_kdebug("do_general_exception");
             break;
@@ -99,7 +78,7 @@ fill_tlb(addr_t vaddr, space_t* space, pgent_t* pg, pgent_t::pgsize_e pgsize)
 }
 
 extern "C" void
-do_tlb_miss(word_t ecode, sh_context_t* context)
+do_tlb_exception(word_t ecode, sh_context_t* context)
 {
     addr_t              faddr;
     pgent_t*            pg;
@@ -109,6 +88,12 @@ do_tlb_miss(word_t ecode, sh_context_t* context)
     space_t::access_e   access;
 
     switch (ecode) {
+        //TODO
+        case ECODE_TLB_FAULT_R:
+        case ECODE_TLB_FAULT_W:
+        case ECODE_INIT_WRITE:
+            break;
+
         case ECODE_TLB_MISS_W:
             access = space_t::write;
             break;

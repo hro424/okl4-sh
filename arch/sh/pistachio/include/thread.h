@@ -37,6 +37,6 @@ public:
 #endif
 
 #define SIZEOF_CONTEXT          84
-#define OFFSET_CONTEXT_MACH     60
+#define OFS_CONTEXT_MACH        60
 
 #endif /* OKL4_ARCH_SH_KERNEL_THREAD_H */

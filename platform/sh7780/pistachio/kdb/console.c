@@ -44,21 +44,22 @@ soc_console_putc(char c)
     u16_t   reg;
 
     do {
-        reg = scif_read(SCIF_STATUS);
-    } while (!(reg & SCIF_STATUS_TDFE));
+        /* Read the status */
+        reg = scif_read(SCIF_SCFSR);
+    } while (!(reg & SCIF_SCFSR_TDFE));
 
-    scif_write8(SCIF_SEND_FIFO, c);
+    scif_write8(SCIF_SCFTDR, c);
 
-    reg &= ~(SCIF_STATUS_TDFE | SCIF_STATUS_TEND);
-    scif_write(SCIF_STATUS, reg);
+    reg &= ~(SCIF_SCFSR_TDFE | SCIF_SCFSR_TEND);
+    scif_write(SCIF_SCFSR, reg);
 
     do {
-        reg = scif_read(SCIF_STATUS);
-    } while (!(reg & SCIF_STATUS_TEND));
+        reg = scif_read(SCIF_SCFSR);
+    } while (!(reg & SCIF_SCFSR_TEND));
 
-    reg = scif_read(SCIF_CONTROL);
-    reg &= ~SCIF_CONTROL_TE;
-    scif_write(SCIF_CONTROL, reg);
+    reg = scif_read(SCIF_SCSCR);
+    reg &= ~SCIF_SCSCR_TE;
+    scif_write(SCIF_SCSCR, reg);
 
     if (c == '\n') {
         soc_console_putc('\r');
@@ -74,41 +75,41 @@ soc_console_getc(bool can_block)
     u16_t   reg;
     int     c;
 
-    reg = scif_read(SCIF_STATUS);
+    reg = scif_read(SCIF_SCFSR);
 
     /* Check ER, DR, BRK, ORER -> Clear them */
-    if (reg & SCIF_STATUS_ER ||
-        reg & SCIF_STATUS_DR ||
-        reg & SCIF_STATUS_BRK) {
+    if (reg & SCIF_SCFSR_ER ||
+        reg & SCIF_SCFSR_DR ||
+        reg & SCIF_SCFSR_BRK) {
         //TODO: Error handling
-        reg &= ~(SCIF_STATUS_ER | SCIF_STATUS_DR | SCIF_STATUS_BRK);
-        scif_write(SCIF_STATUS, reg);
+        reg &= ~(SCIF_SCFSR_ER | SCIF_SCFSR_DR | SCIF_SCFSR_BRK);
+        scif_write(SCIF_SCFSR, reg);
         return -1;
     }
 
-    reg = scif_read(SCIF_LINE_STAT);
-    if (reg & SCIF_LINE_STAT_ORER) {
+    reg = scif_read(SCIF_SCLSR);
+    if (reg & SCIF_SCLSR_ORER) {
         //TODO: Error handing
-        reg &= ~SCIF_LINE_STAT_ORER;
-        scif_write(SCIF_LINE_STAT, reg);
+        reg &= ~SCIF_SCLSR_ORER;
+        scif_write(SCIF_SCLSR, reg);
         return -1;
     }
 
     /* Check if the buffer exceeds the limit */
-    reg = scif_read(SCIF_STATUS);
-    if (!(reg & SCIF_STATUS_RDF)) {
+    reg = scif_read(SCIF_SCFSR);
+    if (!(reg & SCIF_SCFSR_RDF)) {
         return -1;
     }
 
     /* Read it in */
-    c = (int)scif_read8(SCIF_RECV_FIFO);
+    c = (int)scif_read8(SCIF_SCFRDR);
     /* Clear RDF */
-    reg &= ~SCIF_STATUS_RDF;
-    scif_write(SCIF_STATUS, reg);
+    reg &= ~SCIF_SCFSR_RDF;
+    scif_write(SCIF_SCFSR, reg);
 
-    reg = scif_read(SCIF_CONTROL);
-    reg &= ~SCIF_CONTROL_RE;
-    scif_write(SCIF_CONTROL, reg);
+    reg = scif_read(SCIF_SCSCR);
+    reg &= ~SCIF_SCSCR_RE;
+    scif_write(SCIF_SCSCR, reg);
 
     return c;
 }
@@ -118,15 +119,15 @@ soc_serial_init(word_t base)
 {
     scif_base = base;
 
-    scif_write(SCIF_CONTROL, 0);
-    scif_write(SCIF_FIFO_CTRL, SCIF_FIFO_CTRL_TFCL | SCIF_FIFO_CTRL_RFCL);
-    scif_write(SCIF_MODE, SCIF_MODE_PCK);
-    scif_write8(SCIF_BITRATE, SCIF_BITRATE_57600);
+    scif_write(SCIF_SCSCR, 0);
+    scif_write(SCIF_SCFCR, SCIF_SCFCR_TFCL | SCIF_SCFCR_RFCL);
+    scif_write(SCIF_SCSMR, SCIF_SCSMR_PCK);
+    scif_write8(SCIF_SCBRR, SCIF_BITRATE_57600);
 
     // Wait for one clock
 
-    scif_write(SCIF_FIFO_CTRL, SCIF_FIFO_CTRL_RTRG1 | SCIF_FIFO_CTRL_TTRG32);
-    scif_write(SCIF_CONTROL, SCIF_CONTROL_TE | SCIF_CONTROL_RE);
+    scif_write(SCIF_SCFCR, SCIF_SCFCR_RTRG1 | SCIF_SCFCR_TTRG32);
+    scif_write(SCIF_SCSCR, SCIF_SCSCR_TE | SCIF_SCSCR_RE);
 }
 
 void
