@@ -38,5 +38,6 @@ public:
 
 #define SIZEOF_CONTEXT          84
 #define OFS_CONTEXT_MACH        60
+#define OFS_CONTEXT_PR          68
 
 #endif /* OKL4_ARCH_SH_KERNEL_THREAD_H */

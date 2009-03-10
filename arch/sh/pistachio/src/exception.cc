@@ -6,6 +6,7 @@
  */
 
 #include <debug.h>
+#include <schedule.h>
 #include <space.h>
 #include <tcb.h>
 #include <tracebuffer.h>
@@ -47,6 +48,13 @@ handle_user_break(word_t ecode, addr_t addr, sh_context_t* context)
     /* Call kernel debugger */
 }
 
+/**
+ * Handles the general exceptions apart from TLB exceptions.
+ * Invoked by the trap handler.
+ *
+ * @param ecode     the exception code
+ * @param context   the context where this exception was raised.
+ */
 extern "C" void
 handle_general_exception(word_t ecode, sh_context_t* context)
 {
@@ -54,7 +62,7 @@ handle_general_exception(word_t ecode, sh_context_t* context)
 
     switch (ecode) {
         case ECODE_FPU:
-            handle_exception(ecode, faddr, context);
+            //handle_cpu_exception(ecode, faddr, context);
             break;
         case ECODE_USER_BREAK:
             handle_user_break(ecode, faddr, context);
@@ -71,6 +79,14 @@ handle_general_exception(word_t ecode, sh_context_t* context)
     }
 }
 
+/**
+ * Fills the specified TLB entry.
+ *
+ * @param vaddr     the virtual address
+ * @param space     the address space
+ * @param pg        the page entry
+ * @param pgsize    the size of the page
+ */
 static void
 fill_tlb(addr_t vaddr, space_t* space, pgent_t* pg, pgent_t::pgsize_e pgsize)
 {
@@ -94,6 +110,12 @@ fill_tlb(addr_t vaddr, space_t* space, pgent_t* pg, pgent_t::pgsize_e pgsize)
     UPDATE_REG();
 }
 
+/**
+ * Handles TLB miss and memory access violation.  Invoked by the trap handler.
+ *
+ * @param ecode     the exception code
+ * @param context   the context where this exception was raised
+ */
 extern "C" void
 handle_tlb_exception(word_t ecode, sh_context_t* context)
 {
@@ -155,3 +177,4 @@ handle_syscall_exception(sh_context_t* context)
 {
     //TODO
 }
+
