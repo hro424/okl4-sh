@@ -18,9 +18,9 @@
 
 
 #define KERNEL_STACK                __stack + STACK_TOP
-#define GENERAL_EXCEPTION_HANDLER   do_general_exception
-#define SYSCALL_EXCEPTION_HANDLER   do_syscall_exception
-#define TLB_HANDLER                 do_tlb_exception
+#define GENERAL_EXCEPTION_HANDLER   handle_general_exception
+#define SYSCALL_EXCEPTION_HANDLER   handle_syscall_exception
+#define TLB_HANDLER                 handle_tlb_exception
 #define IRQ_HANDLER                 soc_handle_interrupt
 
 #define SWITCH_BANK_1_TO_0              \

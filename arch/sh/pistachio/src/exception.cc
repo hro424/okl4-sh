@@ -16,11 +16,28 @@
 //DECLARE_TRACEPOINT(EXCEPTION_GENERAL);
 //DECLARE_TRACEPOINT(EXCEPTION_TLB_MISS);
 
+NORETURN INLINE void
+halt_user_thread(continuation_t continuation)
+{
+    tcb_t * current = get_current_tcb();
+    scheduler_t * scheduler = get_current_scheduler();
+
+    scheduler->deactivate_sched(current, thread_state_t::halted,
+                                current, continuation,
+                                scheduler_t::sched_default);
+}
+
+
 INLINE static void
-handle_exception(word_t ecode, addr_t addr, sh_context_t* context)
+send_exception_ipc(word_t ecode, addr_t addr, sh_context_t* context)
 {
     //TODO
     /* Call exception handler */
+}
+
+INLINE static void
+handle_invalid_exception(word_t ecode)
+{
 }
 
 INLINE static void
@@ -31,7 +48,7 @@ handle_user_break(word_t ecode, addr_t addr, sh_context_t* context)
 }
 
 extern "C" void
-do_general_exception(word_t ecode, sh_context_t* context)
+handle_general_exception(word_t ecode, sh_context_t* context)
 {
     addr_t faddr = (addr_t)mapped_reg_read(REG_TEA);
 
@@ -78,7 +95,7 @@ fill_tlb(addr_t vaddr, space_t* space, pgent_t* pg, pgent_t::pgsize_e pgsize)
 }
 
 extern "C" void
-do_tlb_exception(word_t ecode, sh_context_t* context)
+handle_tlb_exception(word_t ecode, sh_context_t* context)
 {
     addr_t              faddr;
     pgent_t*            pg;
@@ -134,7 +151,7 @@ do_tlb_exception(word_t ecode, sh_context_t* context)
 }
 
 extern "C" void
-do_syscall_exception(sh_context_t* context)
+handle_syscall_exception(sh_context_t* context)
 {
     //TODO
 }
