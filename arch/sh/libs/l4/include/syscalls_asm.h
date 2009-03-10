@@ -30,7 +30,7 @@
 #define L4_TRAP_KDEBUG              0xac
 #define L4_TRAP_GETUTCB             0xb0
 #define L4_TRAP_CKBR                0xe4
-/* L4_TRAP_KIP  was 0xb4 */
+#define L4_TRAP_KIP					0xb4
 #define L4_TRAP_KSET_THRD_NAME		0xb8
 #define L4_TRAP_KSET_OBJECT_NAME    0xb8
 #define L4_TRAP_GETCOUNTER          0xbc
