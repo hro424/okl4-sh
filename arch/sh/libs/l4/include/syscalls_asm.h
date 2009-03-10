@@ -20,10 +20,30 @@
 #define SYSCALL_interrupt_control   0x0E
 #define SYSCALL_cap_control         0x0F
 #define SYSCALL_memory_copy         0x10
+#define SYSCALL_last                0x10
+
+#define L4_TRAP_KPUTC               0xA0
+#define L4_TRAP_KGETC               0xA1
+#define L4_TRAP_KGETC_NB            0xA2
+#define L4_TRAP_KDEBUG              0xA3
+#define L4_TRAP_GETUTCB             0xA4
+#define L4_TRAP_CKBR                0xA5
+#define L4_TRAP_KSET_OBJECT_NAME    0xA6
+#define L4_TRAP_GETCOUNTER          0xA7
+#define L4_TRAP_GETNUMTPS           0xA8
+#define L4_TRAP_GETTPNAME           0xA9
+#define L4_TRAP_TCCTRL              0xAA
+
+#define L4_TRAP_PMN_READ            0xB0
+#define L4_TRAP_PMN_WRITE           0xB1
+
+#define L4_TRAP_GETTICK             0xC0
+#define L4_TRAP_WBTEST              0xD0
 
 /**
  * Trap handler
  */
+/*
 #define L4_TRAP_KPUTC               0xa0
 #define L4_TRAP_KGETC               0xa4
 #define L4_TRAP_KGETC_NB            0xa8
@@ -45,6 +65,7 @@
 
 #define L4_TRAP_GETTICK             0xe0
 #define L4_TRAP_WBTEST              0xec
+*/
 
 #define SYSCALL_TRAPANUM			0x31
 #define SYSCALL_TRAPNUM_IPC			0x30

@@ -12,6 +12,7 @@
 #include <timer.h>
 #include <interrupt.h>
 
+void simplesoc_init(int num_irqs);
 
 /**
  * Initializes the platform specific mappings needed to start the kernel.
@@ -22,10 +23,7 @@ soc_init()
 {
     //TODO: Initialize mapped I/O registers
 
-    /*
-    simplesoc_init(IRQS);
-    */
-
+    init_intc();
     init_clocks();
 }
 
@@ -35,6 +33,15 @@ soc_do_platform_control(tcb_h current, plat_control_t control,
                         continuation_t cont)
 {
     //TODO
+
+    /*
+    switch (control) {
+        case 1:
+        case 2:
+        default:
+    }
+    */
+
     utcb_t* current_utcb = kernel_get_utcb(current);
     current_utcb->error_code = ENOT_IMPLEMENTED;
     return 0;

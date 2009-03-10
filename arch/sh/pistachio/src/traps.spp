@@ -1,90 +1,24 @@
-/* $Id$ */
-
 /**
- * @brief   SH7780 Trap Handling
- * @file    pistachio/src/traps.spp
+ * @brief   SH7780 trap handling routine
+ * @file    arch/sh/pistachio/src/traps.spp
  * @since   December 8, 2008
+ * @author  Hiroo Ishikawa <hiroo.ishikawa@gmail.com>
  */
 
 #include <asmsyms.h>
 #include <tcb_layout.h>
+#include <arch/asm.h>
 #include <arch/config.h>
 #include <arch/exception.h>
 #include <arch/globals.h>
 #include <arch/syscalls.h>
 #include <arch/thread.h>
-#include <kernel/arch/asm.h>
+#include <kernel/arch/asm.h> //TODO: Integrate this with asm.h
 #include <kernel/arch/config.h>
 
 
 #define KERNEL_STACK                __stack + STACK_TOP
-#define GENERAL_EXCEPTION_HANDLER   do_general_exception
-#define SYSCALL_EXCEPTION_HANDLER   do_syscall_exception
-#define TLB_HANDLER                 do_tlb_miss
-#define IRQ_HANDLER                 soc_handle_interrupt
-
-#define SWITCH_BANK_1_TO_0              \
-    stc     sr, r0;                     \
-    /* Make the mask to switch the bank */  \
-    mov     #0x20, r1;                  \
-    shll8   r1;                         \
-    shll16  r1;                         \
-    not     r1, r1;                     \
-    /* Switch bank 1 to bank 0 */       \
-    and     r1, r0;                     \
-    ldc     r0, sr
-
-#define SAVE_CONTEXT                    \
-    stc.l   sgr, @-r15;                 \
-    stc.l   spc, @-r15;                 \
-    stc.l   ssr, @-r15;                 \
-    sts.l   pr, @-r15;                  \
-    sts.l   macl, @-r15;                \
-    sts.l   mach, @-r15;                \
-    /* The current bank is 1.  */       \
-    SWITCH_BANK_1_TO_0;                 \
-    /* Push the rest of the registers on to the stack */    \
-    PUSH(r14);                          \
-    PUSH(r13);                          \
-    PUSH(r12);                          \
-    PUSH(r11);                          \
-    PUSH(r10);                          \
-    PUSH(r9);                           \
-    PUSH(r8);                           \
-    PUSH(r7);                           \
-    PUSH(r6);                           \
-    PUSH(r5);                           \
-    PUSH(r4);                           \
-    PUSH(r3);                           \
-    PUSH(r2);                           \
-    PUSH(r1);                           \
-    PUSH(r0)
-
-
-#define RESTORE_CONTEXT                 \
-    POP(r0);                            \
-    POP(r1);                            \
-    POP(r2);                            \
-    POP(r3);                            \
-    POP(r4);                            \
-    POP(r5);                            \
-    POP(r6);                            \
-    POP(r7);                            \
-    POP(r8);                            \
-    POP(r9);                            \
-    POP(r10);                           \
-    POP(r11);                           \
-    POP(r12);                           \
-    POP(r13);                           \
-    POP(r14);                           \
-    lds.l   @r15+, mach;                \
-    lds.l   @r15+, macl;                \
-    lds.l   @r15+, pr;                  \
-    ldc.l   @r15+, ssr;                 \
-    ldc.l   @r15+, spc;                 \
-    /*XXX: Compile error: ldc.l   @r15+, sgr; */                \
-    mov.l   @r15, r15
-
+#define TLB_HANDLER                 handle_tlb_exception
 
 
 /*
@@ -100,366 +34,544 @@
 /*
  * Initialize the layout of the trap handler
  */
-    TRAPS_BEGIN_MARKER
+TRAPS_BEGIN_MARKER
 
 /*
-* GENERAL EXCEPTION HANDLER (VBR, Offset:0x100)
-*/
-    BEGIN_PROC_TRAPS(sh_exception, 0x100)
+ * GENERAL EXCEPTION HANDLER (VBR, Offset:0x100)
+ */
+BEGIN_PROC_TRAPS(sh_general_exception, 0x100)
+        /* Using register bank 1 (privileged bank) */
 
-    /* Using register bank 1 */
+        /*
+         * Store the exception event register, which includes 11-bit of
+         * exception code, to r0 in bank1.
+         */
+        mov.l   1f, r0
+        mov.l   @r0, r0
 
-    /*
-     * Read the exception event register, which includes 11-bit of
-     * exception code
-     */
-    mov.l   EXP_CONST_REG_EXPEVT, r0
-    mov.l   @r0, r0
+        /* Branch to a vector.  r0 holds EXPEVT */
+        mov.l   2f, r1
+        add     r0, r1
+        jmp     @r1
+        nop
+        /* NOT REACHED */
 
-    /* Branch to TRAPA exception handling */
-    mov.l   EXP_CONST_ECODE_TRAPA, r1
-    cmp/eq  r1, r0
-    bt      sh_handle_trapa
+        ALIGN   4
+1:      .long   REG_EXPEVT
+2:      .long   sh_general_exception
 
-#if 0
-    /* Branch TLB exception handling */
-    cmp/eq  EXP_CONST_ECODE_TLB_FAULT_R, r0
-    bt      sh_handle_tlb_fault
-    cmp/eq  EXP_CONST_ECODE_TLB_FAULT_W, r0
-    bt      sh_handle_tlb_fault
+        ALIGN   0x80
+        .skip   0x20
 
-    /* Branch to initial write exception handling */
-    cmp/qe  EXP_CONST_ECODE_INIT_WRITE, r0
-    bt      sh_handle_init_write
-#endif
+        /*
+         * General Exception Vector
+         */
+        /* Vector 1: TLB Protection Violation (read) (offset: 0xA0) */
+        EXP_VECTOR(0x20, exp_memory_exception)
 
-    /* Deal with it as general exception */
+        /* Vector 2: TLB Protection Violation (write) (offset: 0xC0) */
+        EXP_VECTOR(0x20, exp_memory_exception)
 
-    mov.l   EXP_CONST_STACK, r15
-    SAVE_CONTEXT
+        /* Vector 3: Address Error (read) (offset: 0xE0) */
+        EXP_VECTOR(0x20, exp_address_error)
 
-    /* Using register bank 0 */
+        /* Vector 4: Address Error (write) (offset: 0x100) */
+        EXP_VECTOR(0x20, exp_address_error)
 
-    /*
-     * Pass the exception code to the handler (a C function) via the
-     * first argument
-     */
-    mov.l   EXP_CONST_REG_EXPEVT, r4
-    mov.l   @r4, r4
+        /* Vector 5: FPU Exception (offset: 0x120) */
+        EXP_VECTOR(0x20, exp_instruction_exception)
 
-    /*
-     * Pass the current SP, which points at sh_context_t, to the handler
-     * via the second argument
-     */
-    mov     r15, r5
+        /* Vector 6: TRAPA (offset: 0x160) */
+        EXP_VECTOR(0x40, exp_trapa_handler)
 
-    /* Invoke the handler */
-    /* handle(uint32_t exception, sh_context_t* context) */
-    mov.l   EXP_CONST_GENERAL_EXCEPTION_HANDLER, r0
-    jsr     @r0
-    nop
+        /* Vector 7: Invalid Instruction (offset: 0x180) */
+        EXP_VECTOR(0x20, exp_instruction_exception)
 
-    RESTORE_CONTEXT
-    rte
-    nop
-    /* NOT REACHED */
+        /* Vector 8: Slot Invalid Instruction (offset: 0x1A0) */
+        EXP_VECTOR(0x20, exp_instruction_exception)
 
-    /*
-     * TRAPA Handler (Exception code: 0x160)
-     */
-LABEL(sh_handle_trapa)
-    /* Using register bank 1 */
+        /* Vector 9: User Break (offset: 0x1E0) */
+        EXP_VECTOR(0x40, exp_user_break)
 
-    /* See if the TRAPA code indicates a system call */
-    mov.l   EXP_CONST_REG_TRA, r0
-    mov.l   @r0, r0
-    /* Omit 2 LSBs.  See the manual.  */
-    shlr2   r0
-    cmp/eq  #SYSCALL_NUM, r0
-    bt      sh_handle_syscall
-
-    /* Not an OKL4 system call.  Throw a system call exception?  */
-    SAVE_CONTEXT
-
-    /*TODO: Handle non-OKL4 system calls */
-
-    /* Using register bank 0 */
-
-    mov     r15, r4
-
-    /* Set the return address */
-    mov.l   error_return, r0
-    lds     r0, pr
-
-    /* Invoke the handler */
-    /* handle(sh_context_t* context) */
-    mov.l   EXP_CONST_SYSCALL_EXCEPTION_HANDLER, r0
-    jmp     @r0
-    nop
-    /* NOT REACHED */
-
-LABEL(error_return)
-    /* Restore context from TCB */
-    mov.l   EXP_CONST_GLOBAL, r15
-    add     #OFFSET_GLOBAL_CURRENT_TCB, r15
-    mov.l   @r15, r15
-    add     #OFFSET_TCB_ARCH_CONTEXT, r15
-    RESTORE_CONTEXT
-    rte
-    nop
-    /* NOT REACHED */
+END_PROC_TRAPS(sh_general_exception)
 
 
-    /*
-     * System call handler
-     */
-LABEL(sh_handle_syscall)
-    /* Using register bank 1 */
+BEGIN_PROC(abort_return)
+BEGIN_LOCAL_PROC(common_return)
+        /* Restore the context from TCB */
+        mov.l   1f, r15
+        add     #OFS_GLOBAL_CURRENT_TCB, r15
+        mov.l   @r15, r15
+        add     #OFS_TCB_ARCH_CONTEXT, r15
+        RESTORE_CONTEXT
+        rte
+        nop
+        /* NOT REACHED */
 
-    /* Save the control and system registers to TCB */
-    mov.l   EXP_CONST_GLOBAL, r0
-    add     #OFFSET_GLOBAL_CURRENT_TCB, r0
-    mov.l   @r0, r0
-    add     #OFFSET_TCB_ARCH_CONTEXT, r0
-    mov.l   EXP_CONST_SIZEOF_CONTEXT, r1
-    add     r1, r0
-    stc.l   sgr, @-r0
-    stc.l   spc, @-r0
-    stc.l   ssr, @-r0
-    sts.l   pr, @-r0
-    sts.l   macl, @-r0
-    sts.l   mach, @-r0
+        ALIGN   4
+1:      .long   SH_GLOBAL_BASE
+END_LOCAL_PROC(common_return)
+END_PROC(abort_return)
 
-    /* Switch to the kernel stack */
-    mov.l   EXP_CONST_STACK, r15
 
-    /* Set the return address */
-    mov     r8, r0
-    cmp/eq  #SYSCALL_ipc, r0
-    mov.l   syscall_return, r0
-    bf      1f
-    mov.l   ipc_syscall_return, r0
-1:
-    lds     r0, pr
+/*
+ * Invokes the page fault handler that sends a page fault message to user.
+ */
+BEGIN_LOCAL_PROC(exp_memory_exception)
+        /* Using register bank 1 */
+        SAVE_CONTEXT
+        /* Using register bank 0 (non-privileged bank) */
 
-    SWITCH_BANK_1_TO_0
+        /* Pass EXPEVT to the handler via the first argument.  */
+        /* r0 in bank1 holds EXPEVT. */
+        stc     r0_bank, r4
 
-    /* Using register bank 0 */
+        /*
+         * Pass the current context to the handler via the second argument.
+         * The context is supposed to be saved to a TCB in the handler so that
+         * the kernel return routine restores the context.
+         */
+        mov     r15, r5
 
-    /* Restore the 5th-8th arguments */
-    mov.l   r3, @-r15
-    mov.l   r2, @-r15
-    mov.l   r1, @-r15
-    mov.l   r0, @-r15
+        /* Check whether it was raised in user or kernel mode */
+        stc     ssr, r0
+        rotl    r0
+        rotl    r0
+        bt      4f
 
-    /* Call it.  r8 holds syscall number. */
-    mov.l   sh_syscall_vectors, r0
-    shll2   r8
-    add     r8, r0
-    jmp     @r0
-    nop
-    /* NOT REACHED */
+        /* Load the kernel stack if from user mode*/
+        mov.l   1f, r15
+4:
+        clrt
 
-    /* Constant values and function pointers */
-    .align 2
-LABEL(EXP_CONST_REG_EXPEVT)
-    .long   REG_EXPEVT
+        /* Set up continuation */
+        mov.l   3f, r0
+        lds     r0, pr
 
-LABEL(EXP_CONST_REG_TRA)
-    .long   REG_TRA
+        /*
+         * Call the handler
+         */
+        mov.l   2f, r0
+        jmp     @r0
+        nop
+        /* NOT REACHED */
 
-LABEL(EXP_CONST_ECODE_TRAPA)
-    .long   ECODE_TRAPA
+        ALIGN   4
+1:      .long   KERNEL_STACK
+2:      .long   TLB_HANDLER
+3:      .long   common_return
 
-LABEL(EXP_CONST_STACK)
-    .long   KERNEL_STACK
+END_LOCAL_PROC(exp_memory_exception)
 
-LABEL(EXP_CONST_GENERAL_EXCEPTION_HANDLER)
-    .long   GENERAL_EXCEPTION_HANDLER
 
-LABEL(EXP_CONST_SYSCALL_EXCEPTION_HANDLER)
-    .long   SYSCALL_EXCEPTION_HANDLER
+BEGIN_LOCAL_PROC(exp_instruction_exception)
+        SAVE_CONTEXT
+        /* Using register bank 0 (non-privileged bank) */
 
-LABEL(EXP_CONST_SIZEOF_CONTEXT)
-    .long   SIZEOF_CONTEXT
+        /*
+         * Pass the exception code to the handler (a C function) via the
+         * first argument. r0 in bank1 holds EXPEVT.
+         */
+        stc     r0_bank, r4
+
+        /*
+         * Pass the current SP, which points at sh_context_t, to the handler
+         * via the second argument
+         */
+        mov     r15, r5
+
+        /* Check whether it was raised in user or kernel mode */
+        stc     ssr, r0
+        rotl    r0
+        rotl    r0
+        bt      4f
+
+        /* Load the kernel stack if from user mode */
+        mov.l   1f, r15
+4:
+        clrt
+
+        /* Set up continuation */
+        mov.l   3f, r0
+        lds     r0, pr
+
+        /* Call the handler */
+        /* handle(sh_context_t* context) */
+        mov.l   2f, r0
+        jmp     @r0
+        nop
+        /* NOT REACHED */
+
+        ALIGN   4
+1:      .long   KERNEL_STACK
+2:      .long   handle_instruction_exception
+3:      .long   common_return
+END_LOCAL_PROC(exp_instruction_exception)
+
+
+BEGIN_LOCAL_PROC(exp_address_error)
+        SAVE_CONTEXT
+        /* Using register bank 0 (non-privileged bank) */
+
+        /*
+         * Pass the exception code to the handler (a C function) via the
+         * first argument. r0 in bank1 holds EXPEVT.
+         */
+        stc     r0_bank, r4
+
+        /*
+         * Pass the current SP, which points at sh_context_t, to the handler
+         * via the second argument
+         */
+        mov     r15, r5
+
+        /* Load the kernel stack */
+        mov.l   1f, r15
+
+        /* Set up continuation */
+        mov.l   2f, r0
+        lds     r0, pr
+
+        /* Call the handler */
+        /* handle(sh_context_t* context) */
+        mov.l   3f, r0
+        jmp     @r0
+        nop
+        /* NOT REACHED */
+
+        ALIGN   4
+1:      .long   KERNEL_STACK
+2:      .long   common_return
+3:      .long   handle_address_error
+END_LOCAL_PROC(exp_instruction_exception)
+
+
+BEGIN_LOCAL_PROC(exp_user_break)
+        //TODO
+        mov.l   2f, r0
+        jmp     @r0
+        nop
+
+        ALIGN   4
+1:      .long   KERNEL_STACK
+2:      .long   handle_user_break
+END_LOCAL_PROC(exp_user_break)
+
+
+/*
+ * TRAPA Handler (Exception code: 0x160)
+ * Deals with three conditions:
+ * 1) System calls
+ * 2) Non-L4 system calls
+ * 3) Other
+ */
+BEGIN_LOCAL_PROC(exp_trapa_handler)
+        /* Using register bank 1 (privileged bank) */
+
+        /* See if the TRAPA code indicates a system call */
+        mov.l   2f, r0
+        mov.l   @r0, r0
+        /* Omit 2 LSBs.  See the manual.  */
+        shlr2   r0
+        cmp/eq  #SYSCALL_NUM, r0
+        bt      syscall_handler
+
+        /* Not an OKL4 system call. */
+        SAVE_CONTEXT
+        /* Using register bank 0 */
+
+        /* Pass the context via the first argument */
+        mov     r15, r4
+
+        /* Load the kernel stack */
+        mov.l   1f, r15
+
+        /* Set the return address */
+        mov.l   4f, r0
+        lds     r0, pr
+
+        /* Invoke the handler */
+        mov.l   3f, r0
+        jmp     @r0
+        nop
+        /* NOT REACHED */
+
+        ALIGN   4
+1:      .long   KERNEL_STACK
+2:      .long   REG_TRA
+3:      .long   handle_syscall_exception
+4:      .long   common_return
+
+END_LOCAL_PROC(exp_traps_handler)
+
+
+/*
+ * System call handler
+ */
+BEGIN_LOCAL_PROC(syscall_handler)
+        /* Using register bank 1 */
+
+        /* Branch to misc L4 syscalls */
+        mov.l   4f, r0
+        cmp/hi  r8, r0
+        bt      syscall_misc
+
+        /* Save the control and system registers to TCB */
+        mov.l   2f, r0
+        add     #OFS_GLOBAL_CURRENT_TCB, r0
+        mov.l   @r0, r0
+        add     #OFS_TCB_ARCH_CONTEXT, r0
+        mov.l   3f, r1
+        add     r1, r0
+        stc.l   sgr, @-r0
+        stc.l   spc, @-r0
+        stc.l   ssr, @-r0
+        sts.l   pr, @-r0
+        sts.l   macl, @-r0
+        sts.l   mach, @-r0
+
+        /* Switch to the kernel stack */
+        mov.l   1f, r15
+
+        /* Set the return address */
+        mov     r8, r0
+        cmp/eq  #SYSCALL_ipc, r0
+        mov.l   syscall_return, r0
+        bf      5f
+        mov.l   ipc_syscall_return, r0
+5:
+        lds     r0, pr
+
+        SWITCH_BANK_1_TO_0
+
+        /* Using register bank 0 (user bank) */
+
+        /* Restore the 5th-8th arguments */
+        mov.l   r3, @-r15
+        mov.l   r2, @-r15
+        mov.l   r1, @-r15
+        mov.l   r0, @-r15
+
+        /* Call it.  r8 holds syscall number. */
+        mov.l   sh_syscall_vectors, r0
+        shll2   r8
+        add     r8, r0
+        jmp     @r0
+        nop
+        /* NOT REACHED */
+
+        ALIGN   4
+1:      .long   KERNEL_STACK
+2:      .long   SH_GLOBAL_BASE
+3:      .long   SIZEOF_CONTEXT
+4:      .long   SYSCALL_limit
 
 LABEL(sh_syscall_vectors)
-    .long   sys_ipc
-    .long   sys_thread_switch
-    .long   sys_thread_control
-    .long   sys_exchange_registers
-    .long   sys_schedule
-    .long   sys_map_control
-    .long   sys_space_control
-    .long   sys_cache_control
-    .long   sys_ipc             /* lipc */
-    .long   sys_platform_control
-    .long   sys_space_switch
-    .long   sys_mutex
-    .long   sys_mutex_control
-    .long   sys_interrupt_control
-    .long   sys_cap_control
-    .long   sys_memory_copy
+        .long   sys_ipc
+        .long   sys_thread_switch
+        .long   sys_thread_control
+        .long   sys_exchange_registers
+        .long   sys_schedule
+        .long   sys_map_control
+        .long   sys_space_control
+        .long   sys_cache_control
+        .long   sys_ipc             /* lipc */
+        .long   sys_platform_control
+        .long   sys_space_switch
+        .long   sys_mutex
+        .long   sys_mutex_control
+        .long   sys_interrupt_control
+        .long   sys_cap_control
+        .long   sys_memory_copy
+END_LOCAL_PROC(syscall_handler)
 
-    END_PROC_TRAPS(sh_exception)
+
+BEGIN_LOCAL_PROC(ipc_syscall_return)
+        mov.l   1f, r15
+        add     #OFS_GLOBAL_CURRENT_TCB, r15
+        mov.l   @r15, r15
+        mov.l   2f, r14
+        add     r14, r15
+        mov.l   @r15, r0
+
+        /* FALL THROUGH */
+
+LABEL(syscall_return)
+        /* Restore the control and system registers from TCB */
+        mov.l   1f, r15
+        add     #OFS_GLOBAL_CURRENT_TCB, r15
+        mov.l   @r15, r15
+        add     #OFS_TCB_ARCH_CONTEXT, r15
+        mov.l   3f, r14
+        add     r14, r15
+        
+        lds.l   @r15+, mach
+        lds.l   @r15+, macl
+        lds.l   @r15+, pr
+        ldc.l   @r15+, ssr
+        ldc.l   @r15+, spc
+        /*ldc.l   @r15+, sgr */
+        stc     sgr, r15
+        rte
+        nop    
+        /* NOT REACHED */
+
+        ALIGN   4
+1:      .long   SH_GLOBAL_BASE
+2:      .long   OFS_TCB_PARTNER
+3:      .long   OFS_CONTEXT_MACH
+
+END_LOCAL_PROC(syscall_return)
 
 
-    BEGIN_PROC(ipc_syscall_return)
-    mov.l   EXP_CONST_GLOBAL, r15
-    add     #OFFSET_GLOBAL_CURRENT_TCB, r15
-    mov.l   @r15, r15
-    mov.l   EXP_CONST_OFFSET_TCB_PARTNER, r14
-    add     r14, r15
-    mov.l   @r15, r0
+BEGIN_LOCAL_PROC(syscall_misc)
+        SAVE_CONTEXT
 
-    /* FALL THROUGH */
+        /* Pass the context via the first argument */
+        mov     r15, r4
 
-    BEGIN_PROC(syscall_return)
-    /* Restore the control and system registers from TCB */
-    mov.l   EXP_CONST_GLOBAL, r15
-    add     #OFFSET_GLOBAL_CURRENT_TCB, r15
-    mov.l   @r15, r15
-    add     #OFFSET_TCB_ARCH_CONTEXT, r15
-    mov.l   EXP_CONST_OFFSET_CONTEXT_MACH, r14
-    add     r14, r15
-    
-    lds.l   @r15+, mach
-    lds.l   @r15+, macl
-    lds.l   @r15+, pr
-    ldc.l   @r15+, ssr
-    ldc.l   @r15+, spc
-    /*ldc.l   @r15+, sgr */
-    stc     sgr, r15
-    rte
-    nop    
-    /* NOT REACHED */
+        /* Load the kernel stack */
+        mov.l   1f, r15
 
-    .align 2
-LABEL(EXP_CONST_GLOBAL)
-    .long   SH_GLOBAL_BASE
+        /* Set return address */
+        mov.l   3f, r0
+        lds     r0, pr
 
-LABEL(EXP_CONST_OFFSET_TCB_PARTNER)
-    .long   OFS_TCB_PARTNER
+        mov.l   2f, r0
+        jmp     @r0
+        nop
 
-LABEL(EXP_CONST_OFFSET_CONTEXT_MACH)
-    .long   OFFSET_CONTEXT_MACH
+        ALIGN   4
+1:      .long   KERNEL_STACK
+2:      .long   sys_sh_misc
+3:      .long   common_return
+END_LOCAL_PROC(syscall_misc)
 
-    END_PROC(syscall_return)
-
-    BEGIN_PROC(abort_return)
-    //TODO
-    nop
-    END_PROC(abort_return)
-
-/*
-* TLB miss handler vector
-*/
-    BEGIN_PROC_TRAPS(sh_tlb_miss, 0x400)
-    mov.l   TLB_CONST_STACK, r15
-    SAVE_CONTEXT
-
-    /* Using register bank 0 */
-
-    /*
-     * The exception event register contains the access mode, such as
-     * read (0x40) or write (0x60).  Pass it via the first argument.
-     */
-    mov.l   TLB_CONST_REG_EXPEVT, r4
-    mov.l   @r4, r4
-
-    /* Pass SP via the second argument */
-    mov     r15, r5
-
-    /* Call the handler */
-    mov.l   TLB_CONST_TLB_HANDLER, r0
-    jsr     @r0
-    nop
-
-    RESTORE_CONTEXT
-    rte
-    nop
-    /* NOT REACHED */
-
-    /* Constant values and function pointers */
-    .align 2
-LABEL(TLB_CONST_STACK)
-    .long   KERNEL_STACK
-LABEL(TLB_CONST_REG_EXPEVT)
-    .long   REG_EXPEVT
-LABEL(TLB_CONST_TLB_HANDLER)
-    .long   TLB_HANDLER
-
-    END_PROC_TRAPS(sh_tlb_miss)
 
 /*
-* IRQ handler vector
-* NOTE: Must be placed at 0x600 (= 0x400 + 0x200)
-*/
-    BEGIN_PROC_TRAPS(sh_interrupt, 0x200)
+ * TLB miss handler vector
+ * NOTE: Must be placed at VBR + 0x400
+ */
+BEGIN_PROC_TRAPS(sh_tlb_miss, 0x400)
+        /* Using register bank 1 */
+        SAVE_CONTEXT
+        /* Using register bank 0 */
 
-    /* Check whether it is raised in user or kernel mode */
-    /*TODO: bf      allocate_kernel_stack */
-    
-    /* Handle an interrupt raised in user mode */
+        /*
+         * The exception event register contains the access mode, such as
+         * read (0x40) or write (0x60).  Pass it via the first argument.
+         */
+        mov.l   2f, r4
+        mov.l   @r4, r4
 
-    /* Use the kernel stack */
-    mov.l   IRQ_CONST_STACK, r15
+        /* Pass the context via the second argument */
+        mov     r15, r5
 
-    SAVE_CONTEXT
+        /* Check whether it is raised in user or kernel mode */
+        stc     ssr, r0
+        rotl    r0
+        rotl    r0
+        bt      5f
 
-    /* Using register bank 0 */
+        /* Load the kernel stack if from user mode*/
+        mov.l   1f, r15
+5:
+        clrt
 
-    /*
-     * Read the interrupt event register.  Pass it via the first argument.
-     */
-    mov.l   IRQ_CONST_REG_INTEVT, r4
-    mov.l   @r4, r4
+        /* Set up continuation */
+        mov.l   4f, r0
+        lds     r0, pr
 
-    /* Pass the saved context via the second argument */
-    mov     r15, r5
+        /* Call the handler */
+        mov.l   3f, r0
+        jsr     @r0
+        nop
+        /* NOT REACHED */
 
-    /* Invoke the IRQ handler */
-    mov.l   IRQ_CONST_IRQ_HANDLER, r0
-    jsr     @r0
-    nop
-    RESTORE_CONTEXT
-    rte
-    nop
-    /* NOT REACHED */
+        ALIGN   4
+1:      .long   KERNEL_STACK
+2:      .long   REG_EXPEVT
+3:      .long   TLB_HANDLER
+4:      .long   common_return
+
+END_PROC_TRAPS(sh_tlb_miss)
+
+
+/*
+ * IRQ handler vector
+ * NOTE: Must be placed at 0x600 (= 0x400 + 0x200)
+ * TODO: Handling multiple interrupts
+ */
+BEGIN_PROC_TRAPS(sh_interrupt, 0x200)
+        SAVE_CONTEXT
+        /* Using register bank 0 */
+
+        /*
+         * Read the interrupt event register.
+         * Pass it via the first argument.
+         */
+        mov.l   2f, r4
+        mov.l   @r4, r4
+
+        /* Pass the saved context via the second argument */
+        mov     r15, r5
+
+        /* Set up continuation */
+        mov.l   3f, r0
+        lds     r0, pr
+
+        /* Check whether it is raised in user or kernel mode */
+        stc     ssr, r0
+        rotl    r0
+        rotl    r0
+        bt      kernel_interrupt
+
+        /* Load the kernel stack */
+        mov.l   1f, r15
+
+        mov.l   4f, r0
+        jmp     @r0
+        nop
+        /* NOT REACHED */
 
 LABEL(kernel_interrupt)
-    /* Handle an interrupt raised in kernel mode */
+        /* Handle an interrupt raised in kernel mode */
+        clrt
+        mov.l   4f, r0
+        jsr     @r0
+        nop
 
-    /* Allocate stack */
+        /* Get current TCB to get continuation */
+        mov.l   5f, r15
+        add     #OFS_GLOBAL_CURRENT_TCB, r15
+        mov.l   @r15, r15
+        add     #OFS_TCB_PREEMPTION_CONTINUATION, r15
+        mov     r15, r0
 
-    SAVE_CONTEXT
+        /* Reset the kernel stack */
+        mov.l   1f, r15
 
-    /*
-     * Read the interrupt event register.  Pass it via the first argument.
-     */
-    mov.l   IRQ_CONST_REG_INTEVT, r4
-    mov.l   @r4, r4
+        /* Return to continuation */
+        jmp     @r0
+        nop
+        /* NOT REACHED */
 
-    /* Pass the saved context via the second argument */
-    mov     r15, r5
+        ALIGN   4
+1:      .long   KERNEL_STACK
+2:      .long   REG_INTEVT
+3:      .long   common_return
+4:      .long   soc_handle_interrupt
+5:      .long   SH_GLOBAL_BASE
 
-    /* Invoke the IRQ handler */
-    mov.l   IRQ_CONST_IRQ_HANDLER, r0
-    jsr     @r0
-    nop
-    RESTORE_CONTEXT
-    rte
-    nop
-    /* NOT REACHED */
+END_PROC_TRAPS(sh_interrupt)
 
-    /* Constant values and function pointers */
-    .align 2
-LABEL(IRQ_CONST_STACK)
-    .long   KERNEL_STACK
-LABEL(IRQ_CONST_REG_INTEVT)
-    .long   REG_INTEVT
-LABEL(IRQ_CONST_IRQ_HANDLER)
-    .long   IRQ_HANDLER
+/*
+ * The rest of general exception vectors
+ * NOTE: Must be placed at VBR + 0x800
+ */
+        /* Vector 10: Invalid FPU Instruction (offset: 0x800) */
+        EXP_VECTOR(0x200, exp_instruction_exception)
 
-    END_PROC_TRAPS(sh_interrupt)
+        /* Vector 11: Slot Invalid FPU Instruction (offset: 0x820) */
+        EXP_VECTOR(0x20, exp_instruction_exception)
 

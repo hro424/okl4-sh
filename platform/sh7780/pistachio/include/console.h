@@ -10,60 +10,72 @@
 #define SCIF0_BASE              0xFFE0000
 #define SCIF1_BASE              0xFFE1000
 
-#define SCIF_MODE               0x00
-#define SCIF_BITRATE            0x04
-#define SCIF_CONTROL            0x08
-#define SCIF_SEND_FIFO          0x0C
-#define SCIF_STATUS             0x10
-#define SCIF_RECV_FIFO          0x14
-#define SCIF_FIFO_CTRL          0x18
-#define SCIF_SEND_NUM           0x1C
-#define SCIF_RECV_NUM           0x20
-#define SCIF_PORT               0x24
-#define SCIF_LINE_STAT          0x28
-#define SCIF_ERROR              0x2C
+typedef enum {
+    SCIF_SCSMR =                0x00,
+    SCIF_SCBRR =                0x04,
+    SCIF_SCSCR =                0x08,
+    SCIF_SCFTDR =               0x0C,
+    SCIF_SCFSR =                0x10,
+    SCIF_SCFRDR =               0x14,
+    SCIF_SCFCR =                0x18,
+    SCIF_SCTFDR =               0x1C,
+    SCIF_SCRFDR =               0x20,
+    SCIF_SCSPTR =               0x24,
+    SCIF_SCLSR =                0x28,
+    SCIF_SCRER =                0x2C,
+} scif_off_e;
 
-#define SCIF_MODE_MODE          0x80
-#define SCIF_MODE_CHR           0x40
-#define SCIF_MODE_PE            0x20
-#define SCIF_MODE_OE            0x10
-#define SCIF_MODE_STOP          0x08
-#define SCIF_MODE_PCK           0x00
-#define SCIF_MODE_PCK4          0x01
-#define SCIF_MODE_PCK16         0x02
-#define SCIF_MODE_PCK64         0x03
+typedef enum {
+    SCIF_SCSMR_CA =             0x80,
+    SCIF_SCSMR_CHR =            0x40,
+    SCIF_SCSMR_PE =             0x20,
+    SCIF_SCSMR_OE =             0x10,
+    SCIF_SCSMR_STOP =           0x08,
+    SCIF_SCSMR_PCK =            0x00,
+    SCIF_SCSMR_PCK4 =           0x01,
+    SCIF_SCSMR_PCK16 =          0x02,
+    SCIF_SCSMR_PCK64 =          0x03
+} scif_scsmr_e;
 
-#define SCIF_CONTROL_TIE        0x80
-#define SCIF_CONTROL_RIE        0x40
-#define SCIF_CONTROL_TE         0x20
-#define SCIF_CONTROL_RE         0x10
-#define SCIF_CONTROL_REIE       0x08
-#define SCIF_CONTROL_CLKSRC     0x02
-#define SCIF_CONTROL_CLKDIR     0x01
+typedef enum {
+    SCIF_SCSCR_TIE =            0x80,
+    SCIF_SCSCR_RIE =            0x40,
+    SCIF_SCSCR_TE =             0x20,
+    SCIF_SCSCR_RE =             0x10,
+    SCIF_SCSCR_REIE =           0x08,
+    SCIF_SCSCR_CKE1 =           0x02,
+    SCIF_SCSCR_CKE0 =           0x01
+} scif_scscr_e;
 
-#define SCIF_STATUS_ER          0x80
-#define SCIF_STATUS_TEND        0x40
-#define SCIF_STATUS_TDFE        0x20
-#define SCIF_STATUS_BRK         0x10
-#define SCIF_STATUS_FER         0x08
-#define SCIF_STATUS_PER         0x04
-#define SCIF_STATUS_RDF         0x02
-#define SCIF_STATUS_DR          0x01
+typedef enum {
+    SCIF_SCFSR_ER =             0x80,
+    SCIF_SCFSR_TEND =           0x40,
+    SCIF_SCFSR_TDFE =           0x20,
+    SCIF_SCFSR_BRK =            0x10,
+    SCIF_SCFSR_FER =            0x08,
+    SCIF_SCFSR_PER =            0x04,
+    SCIF_SCFSR_RDF =            0x02,
+    SCIF_SCFSR_DR =             0x01
+} scif_scfsr_e;
 
-#define SCIF_FIFO_CTRL_RTRG1    0x00
-#define SCIF_FIFO_CTRL_RTRG16   0x40
-#define SCIF_FIFO_CTRL_RTRG32   0x80
-#define SCIF_FIFO_CTRL_RTRG48   0xC0
-#define SCIF_FIFO_CTRL_TTRG32   0x00
-#define SCIF_FIFO_CTRL_TTRG16   0x10
-#define SCIF_FIFO_CTRL_TTRG2    0x20
-#define SCIF_FIFO_CTRL_TTRG1    0x30
-#define SCIF_FIFO_CTRL_MCE      0x08
-#define SCIF_FIFO_CTRL_TFCL     0x04
-#define SCIF_FIFO_CTRL_RFCL     0x02
-#define SCIF_FIFO_CTRL_LOOP     0x01
+typedef enum {
+    SCIF_SCFCR_RTRG1 =          0x00,
+    SCIF_SCFCR_RTRG16 =         0x40,
+    SCIF_SCFCR_RTRG32 =         0x80,
+    SCIF_SCFCR_RTRG48 =         0xC0,
+    SCIF_SCFCR_TTRG32 =         0x00,
+    SCIF_SCFCR_TTRG16 =         0x10,
+    SCIF_SCFCR_TTRG2 =          0x20,
+    SCIF_SCFCR_TTRG1 =          0x30,
+    SCIF_SCFCR_MCE =            0x08,
+    SCIF_SCFCR_TFCL =           0x04,
+    SCIF_SCFCR_RFCL =           0x02,
+    SCIF_SCFCR_LOOP =           0x01
+} scif_scfcr_e;
 
-#define SCIF_LINE_STAT_ORER     0x01
+typedef enum {
+    SCIF_SCLSR_ORER =             0x01
+} scif_sclsr_e;
 
 /*
  * SH7780:

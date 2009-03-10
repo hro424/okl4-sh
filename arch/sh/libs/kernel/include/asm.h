@@ -39,6 +39,13 @@ name:
 
 #define END_PROC(name)
 
+#define BEGIN_LOCAL_PROC(name)          \
+    .type   name, function;             \
+    .align;                             \
+name:
+
+#define END_LOCAL_PROC(name)
+
 #endif /* ASSEMBLY */
 
 #define CHECK_ARG(a, b)                 \
