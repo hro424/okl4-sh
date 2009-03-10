@@ -168,6 +168,7 @@ handle_address_error(word_t ecode, sh_context_t* context)
 
 /**
  * Fills the specified TLB entry.
+ * NOTE: The current replacement policy is round-robin.
  *
  * @param vaddr     the virtual address
  * @param space     the address space
@@ -178,12 +179,15 @@ static void
 fill_tlb(addr_t vaddr, space_t* space, pgent_t* pg, pgent_t::pgsize_e pgsize)
 {
     static u8_t entry = 0;
+    word_t      tmp;
     word_t      reg;
 
     reg  = mapped_reg_read(REG_MMUCR);
+    // Clear the URC field
     reg &= ~(REG_MMUCR_URC_MASK);
     // TODO: mask it with URB value
-    reg |= (entry << 10) & REG_MMUCR_URC_MASK;
+    tmp = entry;
+    reg |= (tmp << 10) & REG_MMUCR_URC_MASK;
     mapped_reg_write(REG_MMUCR, reg);
     entry++;    // overflow -> go back to 0
 
@@ -214,7 +218,7 @@ handle_tlb_exception(word_t ecode, sh_context_t* context)
     space_t::access_e   access;
     continuation_t      continuation;
 
-    //TODO: Ensure the policy for TLB fault and init write is correct.
+    //TODO: Ensure the policy to TLB fault and init write is correct.
     switch (ecode) {
         case ECODE_TLB_FAULT_W:
         case ECODE_INIT_WRITE:

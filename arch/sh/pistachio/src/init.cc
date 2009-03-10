@@ -110,7 +110,7 @@ init_pagetable(pgent_t* pdir_phys, word_t* base_phys)
          i += PAGE_SIZE_1M) {
         word_t phys = virt_to_phys(i);
         add_mapping_init(pdir_phys, (addr_t)i, (addr_t)phys, writeback);
-        /*
+        /*TODO
         add_mapping_init(pdir_phys,
                          (addr_t)phys_to_page_table_init(phys, base_phys),
                          (addr_t)phys, writethrough);

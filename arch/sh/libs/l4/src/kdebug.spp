@@ -39,6 +39,8 @@
  * FIXME: Move these to libcompat, and make them more general.
  */
 
+//TODO
+
 /*
  * L4_KDB_Enter
  */
@@ -83,16 +85,11 @@ LABEL(\name)
     L4_KDB_Op(L4_TRAP_GETTPNAME, L4_KDB_GetTracepointNameIntroMRs)
     L4_KDB_Op(L4_TRAP_TCCTRL, L4_KDB_TCCtrl)
 
-    L4_KDB_Op(L4_TRAP_PMU_RESET, L4_KDB__PMU_Rese)
-    L4_KDB_Op(L4_TRAP_PMU_STOP, L4_KDB__PMU_Stop)
-    L4_KDB_Op(L4_TRAP_PMU_READ, L4_KDB_PMU_Read)
-    L4_KDB_Op(L4_TRAP_PMU_CONFIG, L4_KDB__PMU_Config)
-
 /*
  * L4_KDB_SetThreadName_ASM
  */
-    EXPORT  L4_KDB_SetThreadName_ASM
-LABEL(L4_KDB_SetThreadName_ASM)
+    EXPORT  L4_KDB_SetObjectName_ASM
+LABEL(L4_KDB_SetObjectName_ASM)
     sts.l   pr, @-r15
 //        mov.l   SYSCALL_REG, @-r15
 
