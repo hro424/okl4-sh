@@ -225,7 +225,10 @@ END_LOCAL_PROC(exp_exception_handler)
 
 /*
  * TRAPA Handler (Exception code: 0x160)
- * Deals with syscall.
+ * Deals with three conditions:
+ * 1) System calls
+ * 2) Non-L4 system calls
+ * 3) Other
  */
 BEGIN_LOCAL_PROC(exp_trapa_handler)
         /* Using register bank 1 (privileged bank) */
@@ -238,15 +241,17 @@ BEGIN_LOCAL_PROC(exp_trapa_handler)
         cmp/eq  #SYSCALL_NUM, r0
         bt      syscall_handler
 
-        /* Not an OKL4 system call.  Throw a system call exception?  */
-        mov.l   1f, r15
+        /* Not an OKL4 system call. */
         SAVE_CONTEXT
+        /* Using register bank 0 */
 
         /*TODO: Handle non-OKL4 system calls */
 
-        /* Using register bank 0 */
-
+        /* Pass the context via the first argument */
         mov     r15, r4
+
+        /* Load the kernel stack */
+        mov.l   1f, r15
 
         /* Set the return address */
         mov.l   4f, r0
@@ -272,112 +277,111 @@ END_LOCAL_PROC(exp_traps_handler)
  * System call handler
  */
 BEGIN_LOCAL_PROC(syscall_handler)
-    /* Using register bank 1 */
+        /* Using register bank 1 */
 
-    /* Save the control and system registers to TCB */
-    mov.l   3f, r0
-    add     #OFS_GLOBAL_CURRENT_TCB, r0
-    mov.l   @r0, r0
-    add     #OFS_TCB_ARCH_CONTEXT, r0
-    mov.l   4f, r1
-    add     r1, r0
-    stc.l   sgr, @-r0
-    stc.l   spc, @-r0
-    stc.l   ssr, @-r0
-    sts.l   pr, @-r0
-    sts.l   macl, @-r0
-    sts.l   mach, @-r0
+        /* Save the control and system registers to TCB */
+        mov.l   2f, r0
+        add     #OFS_GLOBAL_CURRENT_TCB, r0
+        mov.l   @r0, r0
+        add     #OFS_TCB_ARCH_CONTEXT, r0
+        mov.l   3f, r1
+        add     r1, r0
+        stc.l   sgr, @-r0
+        stc.l   spc, @-r0
+        stc.l   ssr, @-r0
+        sts.l   pr, @-r0
+        sts.l   macl, @-r0
+        sts.l   mach, @-r0
 
-    /* Switch to the kernel stack */
-    mov.l   2f, r15
+        /* Switch to the kernel stack */
+        mov.l   1f, r15
 
-    /* Set the return address */
-    mov     r8, r0
-    cmp/eq  #SYSCALL_ipc, r0
-    mov.l   syscall_return, r0
-    bf      1f
-    mov.l   ipc_syscall_return, r0
-1:
-    lds     r0, pr
+        /* Set the return address */
+        mov     r8, r0
+        cmp/eq  #SYSCALL_ipc, r0
+        mov.l   syscall_return, r0
+        bf      4f
+        mov.l   ipc_syscall_return, r0
+4:
+        lds     r0, pr
 
-    SWITCH_BANK_1_TO_0
+        SWITCH_BANK_1_TO_0
 
-    /* Using register bank 0 */
+        /* Using register bank 0 (user bank) */
 
-    /* Restore the 5th-8th arguments */
-    mov.l   r3, @-r15
-    mov.l   r2, @-r15
-    mov.l   r1, @-r15
-    mov.l   r0, @-r15
+        /* Restore the 5th-8th arguments */
+        mov.l   r3, @-r15
+        mov.l   r2, @-r15
+        mov.l   r1, @-r15
+        mov.l   r0, @-r15
 
-    /* Call it.  r8 holds syscall number. */
-    mov.l   sh_syscall_vectors, r0
-    shll2   r8
-    add     r8, r0
-    jmp     @r0
-    nop
-    /* NOT REACHED */
+        /* Call it.  r8 holds syscall number. */
+        mov.l   sh_syscall_vectors, r0
+        shll2   r8
+        add     r8, r0
+        jmp     @r0
+        nop
+        /* NOT REACHED */
 
-    /* Constant values and function pointers */
-    ALIGN   4
-2:  .long   KERNEL_STACK
-3:  .long   SH_GLOBAL_BASE
-4:  .long   SIZEOF_CONTEXT
+        ALIGN   4
+1:      .long   KERNEL_STACK
+2:      .long   SH_GLOBAL_BASE
+3:      .long   SIZEOF_CONTEXT
 
 LABEL(sh_syscall_vectors)
-    .long   sys_ipc
-    .long   sys_thread_switch
-    .long   sys_thread_control
-    .long   sys_exchange_registers
-    .long   sys_schedule
-    .long   sys_map_control
-    .long   sys_space_control
-    .long   sys_cache_control
-    .long   sys_ipc             /* lipc */
-    .long   sys_platform_control
-    .long   sys_space_switch
-    .long   sys_mutex
-    .long   sys_mutex_control
-    .long   sys_interrupt_control
-    .long   sys_cap_control
-    .long   sys_memory_copy
+        .long   sys_ipc
+        .long   sys_thread_switch
+        .long   sys_thread_control
+        .long   sys_exchange_registers
+        .long   sys_schedule
+        .long   sys_map_control
+        .long   sys_space_control
+        .long   sys_cache_control
+        .long   sys_ipc             /* lipc */
+        .long   sys_platform_control
+        .long   sys_space_switch
+        .long   sys_mutex
+        .long   sys_mutex_control
+        .long   sys_interrupt_control
+        .long   sys_cap_control
+        .long   sys_memory_copy
 END_LOCAL_PROC(syscall_handler)
 
 
 BEGIN_PROC(ipc_syscall_return)
-    mov.l   1f, r15
-    add     #OFS_GLOBAL_CURRENT_TCB, r15
-    mov.l   @r15, r15
-    mov.l   2f, r14
-    add     r14, r15
-    mov.l   @r15, r0
+        mov.l   1f, r15
+        add     #OFS_GLOBAL_CURRENT_TCB, r15
+        mov.l   @r15, r15
+        mov.l   2f, r14
+        add     r14, r15
+        mov.l   @r15, r0
 
-    /* FALL THROUGH */
+        /* FALL THROUGH */
 
 BEGIN_PROC(syscall_return)
-    /* Restore the control and system registers from TCB */
-    mov.l   1f, r15
-    add     #OFS_GLOBAL_CURRENT_TCB, r15
-    mov.l   @r15, r15
-    add     #OFS_TCB_ARCH_CONTEXT, r15
-    mov.l   3f, r14
-    add     r14, r15
-    
-    lds.l   @r15+, mach
-    lds.l   @r15+, macl
-    lds.l   @r15+, pr
-    ldc.l   @r15+, ssr
-    ldc.l   @r15+, spc
-    /*ldc.l   @r15+, sgr */
-    stc     sgr, r15
-    rte
-    nop    
-    /* NOT REACHED */
+        /* Restore the control and system registers from TCB */
+        mov.l   1f, r15
+        add     #OFS_GLOBAL_CURRENT_TCB, r15
+        mov.l   @r15, r15
+        add     #OFS_TCB_ARCH_CONTEXT, r15
+        mov.l   3f, r14
+        add     r14, r15
+        
+        lds.l   @r15+, mach
+        lds.l   @r15+, macl
+        lds.l   @r15+, pr
+        ldc.l   @r15+, ssr
+        ldc.l   @r15+, spc
+        /*ldc.l   @r15+, sgr */
+        stc     sgr, r15
+        rte
+        nop    
+        /* NOT REACHED */
 
-    ALIGN   4
-1:  .long   SH_GLOBAL_BASE
-2:  .long   OFS_TCB_PARTNER
-3:  .long   OFS_CONTEXT_MACH
+        ALIGN   4
+1:      .long   SH_GLOBAL_BASE
+2:      .long   OFS_TCB_PARTNER
+3:      .long   OFS_CONTEXT_MACH
 
 END_PROC(syscall_return)
 
