@@ -17,6 +17,8 @@
 #define EXCEPT_IPC_GEN_MR_ERRORCODE 5
 #define EXCEPT_IPC_GEN_MR_NUM       5
 
+#define EXCEPTION_TAG               0xFFFFFFB0
+
 /*
  * System call exception
  */
