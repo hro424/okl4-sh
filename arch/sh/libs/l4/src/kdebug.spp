@@ -19,10 +19,10 @@ LABEL(L4_KDB_Enter)
         .macro  __L4_KDB_Op op, name
         EXPORT  \name
 LABEL(\name)
+        trapa   #SYSCALL_NUM
+        .endm
 
-
-
-#define L4_KDB_Op(op, name)     __L4_KDB_Op     TRAPNUM(op), name)
+#define L4_KDB_Op(op, name)     __L4_KDB_Op     op, name
 
 #endif
 
@@ -62,4 +62,3 @@ LABEL(L4_Wbtest)
 
 #endif
 
-        END
