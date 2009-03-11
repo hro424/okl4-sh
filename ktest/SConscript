@@ -65,6 +65,10 @@ env.Append(CPPDEFINES = [('YEAR', tt[0]),
                          ('MONTH', tt[1]),
                          ('DAY', tt[2])])
 
+#Debug For Hiromasa
+env.scons_env["CXX_WARNINGS"].remove("error")
+env.scons_env["CC_WARNINGS"].remove("error")
+
 # XXX: need a -r for all user-land apps, but can't build the kernel with -r
 # -r entirely breaks regular ld and elf weaver, though.
 if conf.dict.get('RUN', env.machine.default_method) != "hardware":

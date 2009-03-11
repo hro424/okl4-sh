@@ -34,6 +34,7 @@
 #include <compat/asm.h>
 #include <l4/arch/syscalls_asm.h>
 #include <l4/arch/vregs.h>
+#include <l4/arch/types_asm.h>
 
 #define SAVE_CONTEXT        \
     sts.l   pr, @-r15;      \
@@ -209,43 +210,45 @@ LABEL(L4_Ipc)
     mov.l   CONST_UTCB_BASE, r10
     add     #__L4_TCR_MR_OFFSET, r10
 
+    //TODO: What's this?
     mov     r6, r0
 
     /* Only load MRs if send phase is included. */
-    cmp.eq  r4, #NILTHREAD
+	mov.l   nilthread, r1
+	mov.l   @r1, r1
+    cmp/eq  r4, r1
     bt      1f
-    mov.l   @(r10, 4), r1
-    mov.l   @(r10, 8), r2
-    mov.l   @(r10, 12), r3
-    mov.l   @(r10, 16), r6
-    mov.l   @(r10, 20), r9
+	mov.l   @(4, r10), r1
+    mov.l   @(8, r10), r2
+    mov.l   @(12, r10), r3
+    mov.l   @(16, r10), r6
+    mov.l   @(20, r10), r9
 1:
-
     mov     #SYSNUM(ipc), SYSCALL_REG
     trapa   #SYSCALL_TRAPANUM
 
     /* Load UTCB address */
     mov.l   CONST_UTCB_BASE, r10
-    add     r10, #__L4_TCR_MR_OFFSET
+    add     #__L4_TCR_MR_OFFSET, r10
 
     /* Only store MRs if recv phase is included. */
-    cmp.eq  r5, #NILTHREAD
+	mov.l	r1, @-r15
+	mov.l	nilthread, r1
+	mov.l	@r1, r1
+	cmp/eq	r1, r5
+	mov.l	@r15+, r1
     bt      2f
-    mov.l   r0, @(r10, 0)
-    mov.l   r1, @(r10, 4)
-    mov.l   r2, @(r10, 8)
-    mov.l   r3, @(r10, 12)
-    mov.l   r6, @(r10, 16)
-    mov.l   r9, @(r10, 20)
+	mov.l   r0, @(0, r10)
+    mov.l   r1, @(4, r10)
+    mov.l   r2, @(8, r10)
+    mov.l   r3, @(12, r10)
+    mov.l   r6, @(16, r10)
+    mov.l   r9, @(20, r10)
 2:
-
     RESTORE_CONTEXT
     rts
     nop
 
-LABEL(CONST_UTCB_BASE)
-    .long   USER_UTCB_REF
-    
 
 /*
  * L4_Notify
@@ -255,8 +258,10 @@ LABEL(L4_Notify)
     SAVE_CONTEXT
 
     mov     r5, r1              // mr[1] = mask
-    mov.l   #NILTHREAD, r5      // receiver = nil
-    mov.l   #(1 << 13), r0      // tag = 1 << 13
+    mov.l   nilthread, r5      // receiver = nil
+	mov.l	@r5, r5
+	mov.l	SHIFT_NOTIFY, r0	// tag = 1 << 13
+	mov.l	@r0, r0
 
     mov     #SYSNUM(ipc), SYSCALL_REG
     trapa   #SYSCALL_TRAPANUM
@@ -264,6 +269,9 @@ LABEL(L4_Notify)
     RESTORE_CONTEXT
     rts
     nop
+
+LABEL(SHIFT_NOTIFY)
+	.long	1 << 13
 
 /*
  * L4_WaitNotify
@@ -274,9 +282,12 @@ LABEL(L4_WaitNotify)
 
     mov.l   r4, @-r15
 
-    mov.l   #NILTHREAD, r4      // to_tid = nilthread
-    mov.l   #-2, r5             // from_tid = wait_notify
-    mov.l   #(1 << 14), r0      // tag = 1 << 14
+	mov.l	nilthread, r4		// to_tid = nilthread
+	mov.l	@r4, r4
+	mov.l	MINUS_2, r5			// from_tid = wait_notify
+	mov.l	@r5, r5
+	mov.l	SHIFT_WAIT_NOTIFY, r0	// tag = 1 << 14
+	mov.l	@r0, r0
 
     mov     #SYSNUM(ipc), SYSCALL_REG
     trapa   #SYSCALL_TRAPANUM
@@ -287,6 +298,11 @@ LABEL(L4_WaitNotify)
     RESTORE_CONTEXT
     rts
     nop
+
+LABEL(SHIFT_WAIT_NOTIFY)
+	.long	1 << 14
+LABEL(MINUS_2)
+	.long	-2
 
 /*
  * L4_Lipc  ( same as L4_ipc, the 4th arg L4_TrheadID_t *from is NOT USED why?)
@@ -302,13 +318,15 @@ LABEL(L4_Lipc)
     mov     r6, r0
 
     /* Only load MRs if send phase is included. */
-    cmp.eq  r4, #NILTHREAD
+	mov.l	nilthread, r1
+	mov.l	@r1, r1
+    cmp/eq  r4, r1
     bt      1f
-    mov.l   @(r10, 4), r1
-    mov.l   @(r10, 8), r2
-    mov.l   @(r10, 12), r3
-    mov.l   @(r10, 16), r6
-    mov.l   @(r10, 20), r9
+    mov.l   @(4, r10), r1
+    mov.l   @(8, r10), r2
+    mov.l   @(12, r10), r3
+    mov.l   @(16, r10), r6
+    mov.l   @(20, r10), r9
 1:
 
     mov     #SYSNUM(lipc), SYSCALL_REG
@@ -316,23 +334,29 @@ LABEL(L4_Lipc)
 
     /* Load UTCB address */
     mov.l   CONST_UTCB_BASE, r10
-    add     r10, #__L4_TCR_MR_OFFSET
+    add     #__L4_TCR_MR_OFFSET, r10
 
     /* Only store MRs if recv phase is included. */
-    cmp.eq  r5, #NILTHREAD
+	mov.l	r4, @-r15 
+	mov.l	nilthread, r4
+	mov.l	@r4, r4
+    cmp/eq  r5, r4
+	mov.l	@r15+, r4
     bt      2f
-    mov.l   r0, @(r10, 0)
-    mov.l   r1, @(r10, 4)
-    mov.l   r2, @(r10, 8)
-    mov.l   r3, @(r10, 12)
-    mov.l   r6, @(r10, 16)
-    mov.l   r9, @(r10, 20)
+	mov.l   r0, @(0, r10)
+    mov.l   r1, @(4, r10)
+    mov.l   r2, @(8, r10)
+    mov.l   r3, @(12, r10)
+    mov.l   r6, @(16, r10)
+    mov.l   r9, @(20, r10)
+
 2:
 
     RESTORE_CONTEXT
     rts
     nop
 
+    ALIGN   4
 LABEL(CONST_UTCB_BASE)
     .long   USER_UTCB_REF
     
@@ -471,4 +495,12 @@ LABEL(L4_MemoryCopy)
     RESTORE_CONTEXT
     rts
     nop
+
+/*
+ *  Defined NILTHREAD
+ */
+
+    ALIGN   4
+nilthread:
+	.long   0xfffffffc
 
