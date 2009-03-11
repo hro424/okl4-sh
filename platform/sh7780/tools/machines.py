@@ -17,8 +17,8 @@ class sh7780(sh4a):
     virtual = False
     platform = "sh7780"
     platform_dir = "sh7780"
-    timer_driver = ""
-    serial_driver = ""
+    timer_driver = "sh7780_timer"
+    serial_driver = "sh7780_scif"
     drivers = [timer_driver, serial_driver] + sh4a.drivers
 
     # Define memory layout based on the configuration of sh7780
