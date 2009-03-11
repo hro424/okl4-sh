@@ -1,7 +1,7 @@
-/* $Id$ */
-
 /**
+ *  @brief  Architecture-specific address space implementation
  *  @since  February 2009
+ *  @author Hiroo Ishikawa <hiroo.ishikawa@gmail.com>
  */
 
 #include <l4.h>

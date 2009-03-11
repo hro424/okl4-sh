@@ -1,7 +1,7 @@
-/* $Id$ */
-
 /**
+ * @brief   Collection of kernel initialization routines
  * @since   February 2009
+ * @author  Hiroo Ishikawa <hiroo.ishikawa@gmail.com>
  */
 
 #include <l4.h>

@@ -1,7 +1,7 @@
-/* $Id$ */
-
 /**
+ *  @brief  Architecture-specific startup routine
  *  @since  February 2009
+ *  @author Hiroo Ishikawa <hiroo.ishikawa@gmail.com>
  */
 
 #include <soc/interface.h>

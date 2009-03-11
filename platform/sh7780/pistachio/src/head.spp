@@ -1,8 +1,7 @@
-/* $Id$ */
-
 /**
  *  @brief  Kernel entry point
  *  @since  December 2008
+ *  @author Hiroo Ishikawa <hiroo.ishikawa@gmail.com>
  */
 
 #include <soc/interface.h>
