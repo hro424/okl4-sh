@@ -103,9 +103,8 @@ generic_space_t::arch_free(kmem_resource_t *kresource)
     asid->release();
 }
 
-//TODO
-//#define PAGE_COLOR_ALIGN ((DCACHE_SIZE/PAGE_SIZE_4K/DCACHE_WAYS - 1UL) << PAGE_BITS_4K)
-#define PAGE_COLOR_ALIGN    0
+#define PAGE_COLOR_ALIGN    \
+    ((CACHE_SIZE/PAGE_SIZE_4K/CACHE_WAYS - 1UL) << PAGE_BITS_4K)
 
 /**
  * Allocate a UTCB
@@ -348,8 +347,7 @@ space_t::add_mapping(addr_t vaddr, addr_t paddr, pgent_t::pgsize_e size,
             }
         }
 
-        pg = pg->subtree(this,
-                         pgsize)->next(this, pgsize - 1,
+        pg = pg->subtree(this, pgsize)->next(this, pgsize - 1,
                                        page_table_index(pgsize - 1, vaddr));
         pgsize--;
     }
@@ -358,10 +356,9 @@ space_t::add_mapping(addr_t vaddr, addr_t paddr, pgent_t::pgsize_e size,
     bool w = (word_t)rwx & 2;
     bool x = (word_t)rwx & 1;
 
-    //TODO: Check if this is correct to modify the page table.
     pg->set_entry(this, pgsize, paddr, r, w, x, kernel, attrib);
 
-    //TODO: Maintain the cache
+    //TODO: Need to maintain the cache?
 
     return true;
 }

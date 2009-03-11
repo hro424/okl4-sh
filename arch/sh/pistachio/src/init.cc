@@ -110,11 +110,6 @@ init_pagetable(pgent_t* pdir_phys, word_t* base_phys)
          i += PAGE_SIZE_1M) {
         word_t phys = virt_to_phys(i);
         add_mapping_init(pdir_phys, (addr_t)i, (addr_t)phys, writeback);
-        /*TODO
-        add_mapping_init(pdir_phys,
-                         (addr_t)phys_to_page_table_init(phys, base_phys),
-                         (addr_t)phys, writethrough);
-                         */
     }
 }
 
@@ -123,8 +118,6 @@ activate_mmu()
 {
     mapped_reg_write(REG_MMUCR, REG_MMUCR_SQMD | REG_MMUCR_TI | REG_MMUCR_AT);
     UPDATE_REG();
-
-    /*TODO: Set ASID */
 }
 
 extern "C" void NORETURN SECTION(".init")
