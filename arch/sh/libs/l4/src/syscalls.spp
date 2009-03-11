@@ -210,6 +210,7 @@ LABEL(L4_Ipc)
     mov.l   CONST_UTCB_BASE, r10
     add     #__L4_TCR_MR_OFFSET, r10
 
+    //TODO: What's this?
     mov     r6, r0
 
     /* Only load MRs if send phase is included. */
@@ -222,9 +223,7 @@ LABEL(L4_Ipc)
     mov.l   @(12, r10), r3
     mov.l   @(16, r10), r6
     mov.l   @(20, r10), r9
-
 1:
-
     mov     #SYSNUM(ipc), SYSCALL_REG
     trapa   #SYSCALL_TRAPANUM
 
@@ -246,16 +245,10 @@ LABEL(L4_Ipc)
     mov.l   r6, @(16, r10)
     mov.l   r9, @(20, r10)
 2:
-
     RESTORE_CONTEXT
     rts
     nop
 
-/*
-LABEL(CONST_UTCB_BASE)
-    .long   USER_UTCB_REF
-*/
-    
 
 /*
  * L4_Notify
@@ -341,7 +334,6 @@ LABEL(L4_Lipc)
 
     /* Load UTCB address */
     mov.l   CONST_UTCB_BASE, r10
-    /* add     r10, #__L4_TCR_MR_OFFSET */
     add     #__L4_TCR_MR_OFFSET, r10
 
     /* Only store MRs if recv phase is included. */
@@ -364,6 +356,7 @@ LABEL(L4_Lipc)
     rts
     nop
 
+    ALIGN   4
 LABEL(CONST_UTCB_BASE)
     .long   USER_UTCB_REF
     
@@ -507,6 +500,7 @@ LABEL(L4_MemoryCopy)
  *  Defined NILTHREAD
  */
 
+    ALIGN   4
 nilthread:
-	.long 0xfffffffc
+	.long   0xfffffffc
 

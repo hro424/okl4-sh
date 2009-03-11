@@ -1,7 +1,7 @@
-/* $Id$ */
-
 /**
+ * @brief   Utilities to access memory mapped registers
  * @since   February 2009
+ * @author  Hiroo Ishikawa <hiroo.ishikawa@gmail.com>
  */
 
 #ifndef OKL4_ARCH_SH_KERNEL_REGISTERS_H

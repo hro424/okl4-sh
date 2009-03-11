@@ -1,7 +1,7 @@
-/* $Id$ */
-
 /**
+ * @brief   Interface to control the platform specific features
  * @since   February 2009
+ * @author  Hiroo Ishikawa <hiroo.ishikawa@gmail.com>
  */
 
 #include <soc/interface.h>

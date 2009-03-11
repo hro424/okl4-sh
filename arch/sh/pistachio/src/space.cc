@@ -1,7 +1,7 @@
-/* $Id$ */
-
 /**
+ *  @brief  Architecture-specific address space implementation
  *  @since  February 2009
+ *  @author Hiroo Ishikawa <hiroo.ishikawa@gmail.com>
  */
 
 #include <l4.h>
@@ -103,15 +103,16 @@ generic_space_t::arch_free(kmem_resource_t *kresource)
     asid->release();
 }
 
-//#define PAGE_COLOR_ALIGN ((DCACHE_SIZE/PAGE_SIZE_4K/DCACHE_WAYS - 1UL) << PAGE_BITS_4K)
-#define PAGE_COLOR_ALIGN    0
+#define PAGE_COLOR_ALIGN    \
+    ((CACHE_SIZE/PAGE_SIZE_4K/CACHE_WAYS - 1UL) << PAGE_BITS_4K)
 
 /**
  * Allocate a UTCB
+ *
  * @param tcb   Owner of the utcb
  */
 utcb_t*
-generic_space_t::allocate_utcb(tcb_t * tcb, kmem_resource_t *kresource)
+generic_space_t::allocate_utcb(tcb_t* tcb, kmem_resource_t* kresource)
 {
     ASSERT (DEBUG, tcb);
 
@@ -122,7 +123,7 @@ generic_space_t::allocate_utcb(tcb_t * tcb, kmem_resource_t *kresource)
     bool    is_valid;
     addr_t  page;
 
-    utcb = (addr_t) tcb->get_utcb_location ();
+    utcb = (addr_t)tcb->get_utcb_location ();
 
     /* Try lookup the UTCB page for this utcb */
     section = (word_t)utcb >> PAGE_BITS_1M;
@@ -156,8 +157,8 @@ generic_space_t::allocate_utcb(tcb_t * tcb, kmem_resource_t *kresource)
         addr_t  kaddr;
         utcb_t* retv;
 
-        kaddr = addr_mask (leaf.address(this, UTCB_AREA_PGSIZE),
-                           ~page_mask (UTCB_AREA_PGSIZE));
+        kaddr = addr_mask(leaf.address(this, UTCB_AREA_PGSIZE),
+                          ~page_mask (UTCB_AREA_PGSIZE));
         retv = (utcb_t *)ram_to_virt(
              addr_offset(kaddr, (word_t)utcb & page_mask(UTCB_AREA_PGSIZE)));
         memset(retv, 0, UTCB_SIZE);
@@ -172,19 +173,18 @@ generic_space_t::allocate_utcb(tcb_t * tcb, kmem_resource_t *kresource)
         return NULL;
     }
 
-    /*TODO
-    if (! ((space_t *)this)->add_mapping((addr_t)addr_align(utcb, UTCB_AREA_PAGESIZE),
-                                         virt_to_phys(page), UTCB_AREA_PGSIZE,
-                                         space_t::read_write, false, kresource))
+    if (! ((space_t *)this)->add_mapping(
+                                (addr_t)addr_align(utcb, UTCB_AREA_PAGESIZE),
+                                virt_to_phys(page), UTCB_AREA_PGSIZE,
+                                space_t::read_write, false, kresource))
     {
         get_current_tcb()->set_error_code(ENO_MEM);
         kresource->free(kmem_group_utcb, page, page_size(UTCB_AREA_PGSIZE));
         return NULL;
     }
-    */
 
-    return (utcb_t *)
-        addr_offset(page, addr_mask(utcb, page_mask(UTCB_AREA_PGSIZE)));
+    return (utcb_t*)addr_offset(page,
+                                addr_mask(utcb, page_mask(UTCB_AREA_PGSIZE)));
 }
 
 /** 
@@ -321,4 +321,45 @@ generic_space_t::readmem_phys(addr_t vaddr, addr_t paddr)
     return *(word_t*)paddr;
 }
 #endif /* CONFIG_DEBUG */
+
+
+bool
+space_t::add_mapping(addr_t vaddr, addr_t paddr, pgent_t::pgsize_e size,
+                     rwx_e rwx, bool kernel, memattrib_e attrib,
+                     kmem_resource_t* kresource)
+{
+    pgent_t::pgsize_e   pgsize;
+    pgent_t*            pg;
+
+    pgsize = pgent_t::size_max;
+    pg = this->pgent(0);
+    pg = pg->next(this, pgsize, page_table_index(pgsize, vaddr));
+
+    /* Lookup mapping */
+    for (;;) {
+        if (pgsize == size) {
+            break;
+        }
+
+        if (!pg->is_valid(this, pgsize)) {
+            if (!pg->make_subtree(this, pgsize, kernel, kresource)) {
+                return false;
+            }
+        }
+
+        pg = pg->subtree(this, pgsize)->next(this, pgsize - 1,
+                                       page_table_index(pgsize - 1, vaddr));
+        pgsize--;
+    }
+
+    bool r = (word_t)rwx & 4;
+    bool w = (word_t)rwx & 2;
+    bool x = (word_t)rwx & 1;
+
+    pg->set_entry(this, pgsize, paddr, r, w, x, kernel, attrib);
+
+    //TODO: Need to maintain the cache?
+
+    return true;
+}
 

@@ -57,17 +57,30 @@
 /**
  * Location of TCRs within UTCB
  */
-#define __L4_TCR_USER_NUM           (10)
-#define __L4_TCR_PLATFORM_NUM       (5)
-#define __L4_TCR_RESERVED_NUM       (2)
+#define __L4_TCR_USER_NUM               (10)
+#define __L4_TCR_PLATFORM_NUM           (5)
+#define __L4_TCR_RESERVED_NUM           (2)
 
-#define __L4_TCR_MR_OFFSET          (64)
+#define __L4_TCR_USER_OFFSET            (54)
+#define __L4_TCR_PLATFORM_OFFSET        (49)
+#define __L4_TCR_PLAT_TLS               (48)
 
-// Below lines are added by Hiromasa Shimada
+#define __L4_TCR_MR_OFFSET              (16)
+
+#define __L4_TCR_SENDER_SPACE           (12)
+#define __L4_TCR_SHARE_FAULT_ADDR       (11)
 #define __L4_TCR_PREEMPTED_IP			(10)
+#define __L4_TCR_PREEMPT_CALLBACK_IP    (9)
 #define __L4_TCR_ERROR_CODE				(7)
+#define __L4_TCR_PROCESSOR_NO           (6)
+#define __L4_TCR_NOTIFY_BITS            (5)
+#define __L4_TCR_NOTIFY_MASK            (4)
+#define __L4_TCR_ACCEPTOR               (3)
+#define __L4_TCR_COP_FLAGS              (2)
+#define __L4_TCR_PREEMPT_FLAGS          (2)
 #define __L4_TCR_USER_DEFINED_HANDLE	(1)
 
+//TODO
 //#define USER_UTCB_REF               (SYS_AREA_START + 0xFF0)
 #define USER_UTCB_REF               (0x7F000FF0)
 

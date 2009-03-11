@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /**
  * @brief   Address space implementation
  * @file    arch/sh/pistachio/include/space.h

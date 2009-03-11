@@ -1,7 +1,7 @@
-/* $Id$ */
-
 /**
+ * @brief   Interrupt handlers and utilities
  * @since   January 2009
+ * @author  Hiroo Ishikawa <hiroo.ishikawa@gmail.com>
  */
 
 #include <soc/interface.h>

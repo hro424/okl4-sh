@@ -1,7 +1,7 @@
-/* $Id$ */
-
 /**
+ * @brief   Utilities for manipulating TCB
  * @since   December 2008
+ * @author  Hiroo Ishikawa <hiroo.ishikawa@gmail.com>
  */
 
 #ifndef OKL4_ARCH_SH_TCB_H
@@ -86,30 +86,55 @@ tcb_t::set_acceptor(const acceptor_t value)
     get_utcb()->acceptor = value;
 }
 
+/**
+ * copies a set of message registers from one UTCB to another
+ * @param dest destination TCB
+ * @param start MR start index
+ * @param count number of MRs to be copied
+ * @return whether operation succeeded
+ */
 INLINE bool
 tcb_t::copy_mrs(tcb_t* dest, word_t start, word_t count)
 {
-    //TODO:
-    return false;
+    word_t* dest_mr;
+    word_t* src_mr;
+
+    dest_mr = &dest->get_utcb()->mr[start];
+    src_mr = &get_utcb()->mr[start];
+
+    if ((start + count) > IPC_NUM_MR) {
+        return false;
+    }
+
+    //TODO: Optimization by inline assembly
+    do {
+        *dest_mr++ = *src_mr++;
+    } while (--count > 0);
+
+    return true;
 }
 
 INLINE void
 tcb_t::set_exception_ipc(word_t num)
 {
-    //TODO:
+    arch.exc_num = num;
 }
 
 INLINE bool
 tcb_t::in_exception_ipc()
 {
-    //TODO:
-    return false;
+    //TODO:  Fast path exception handling requires this.
+    //return (resource_bits & (1UL << (word_t)EXCEPTIONFP)) ||
+    //    (arch.exc_num != 0);
+    return (arch.exc_num != 0);
 }
 
 INLINE void
 tcb_t::clear_exception_ipc()
 {
-    //TODO:
+    arch.exc_num = 0;
+    //TODO: Fast path exception handling requires this.
+    //resources.clear_except_fp(this);
 }
 
 INLINE void
@@ -180,26 +205,58 @@ initial_switch_to (tcb_t * tcb)
 extern "C" void* abort_return();
 extern "C" void* ipc_syscall_return();
 
+/*
+ * Return back to user_land when an IPC is aborted
+ * We short circuit the restoration of any saved registers/state
+ */
 INLINE void
 tcb_t::return_from_ipc()
 {
-    //TODO
     ACTIVATE_CONTINUATION(ipc_syscall_return);
 }
 
+/**
+ * Short circuit a return path from a user-level interruption or
+ * exception.  That is, restore the complete exception context and
+ * resume execution at user-level.
+ */
 INLINE void
 tcb_t::return_from_user_interruption()
 {
-    //TODO
+#ifdef CONFIG_IPC_FASTPATH
+    tcb_t*  current = get_current_tcb();
+    current->resources.clear_kernel_ipc(current);
+    current->resources.clear_except_fp(current);
+#endif // CONFIG_IPC_FASTPATH
     ACTIVATE_CONTINUATION(abort_return);
 }
 
+/**
+ * intialize stack for given thread
+ */
 INLINE void
 tcb_t::init_stack()
 {
-    //TODO
-}
+    sh_context_t*   context = &arch.context;
+    word_t*         t;
+    word_t*         end;
+    word_t          size = sizeof(arch.context);
 
+    /* Clear whole context */
+    t = (word_t*)context;
+    end = (word_t*)((word_t)context + (size & ~(0xF)));
+
+    do {
+        *t++ = 0;
+        *t++ = 0;
+        *t++ = 0;
+        *t++ = 0;
+    } while (t < end);
+
+    while (t < (word_t*)(context + 1)) {
+        *t++ = 0;
+    }
+}
 
 
 /**

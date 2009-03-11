@@ -1,7 +1,7 @@
-/* $Id$ */
-
 /**
+ * @brief   SH4A cache management
  * @since   December 2008
+ * @author  Hiroo Ishikawa <hiroo.ishikawa@gmail.com>
  */
 
 #ifndef OKL4_ARCH_SH_7780_CACHE_H
@@ -12,10 +12,10 @@
 class generic_space_t;
 
 #define CACHE_LINE_SIZE     (32)
-#define CACHE_WAY           (4)
+#define CACHE_WAYS          (4)
 #define CACHE_ENTRIES       (256)
 #define CACHE_WAY_SIZE      CACHE_LINE_SIZE * CACHE_ENTRIES
-#define CACHE_SIZE          CACHE_WAY_SIZE * CACHE_WAY
+#define CACHE_SIZE          CACHE_WAY_SIZE * CACHE_WAYS
 
 #define ROUND_UP(var, x)    (((var) + x - 1) / x * x)
 

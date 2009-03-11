@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /**
  * @since   February 2009
  */
@@ -10,5 +8,6 @@
 void SECTION(".init")
 init_sh_interrupts()
 {
-    //TODO
+    // nop
 }
+
