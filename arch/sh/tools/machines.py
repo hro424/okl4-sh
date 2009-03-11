@@ -31,4 +31,3 @@ class sh4a(sh):
     memory = sh.memory.copy();
     memory['virtual'] = [Region(0x1000, 0x7ef00000)]
     arch_version = 4
-

@@ -181,41 +181,41 @@ L4_Word_t L4_SpaceSwitch(L4_ThreadId_t dest,
 /*
  * L4_Mutex
  */
-word_t L4_Mutex(L4_MutexId_t MutexSpecifier,
-                L4_Word_t flags,
-                word_t * state_p);
+word_t L4_Mutex(L4_MutexId_t    MutexSpecifier,
+                L4_Word_t       flags,
+                word_t*         state_p);
 
 /*
  * L4_MutexControl
  */
-L4_Word_t L4_MutexControl(L4_MutexId_t MutexSpecifier,
-                          L4_Word_t control);
+L4_Word_t L4_MutexControl(L4_MutexId_t  MutexSpecifier,
+                          L4_Word_t     control);
 
 
 /*
  * L4_InterruptControl
  */
 L4_Word_t L4_InterruptControl(L4_ThreadId_t dest,
-                              L4_Word_t control);
+                              L4_Word_t     control);
 
 /*
  * L4_CapControl
  */
-L4_Word_t L4_CapControl(L4_ClistId_t clist,
-                        L4_Word_t control);
+L4_Word_t L4_CapControl(L4_ClistId_t    clist,
+                        L4_Word_t       control);
 
 /*
  * L4_MemoryCopy
  */
-L4_Word_t L4_MemoryCopy(L4_ThreadId_t remote,
-                        L4_Word_t local,
-                        L4_Word_t *size,
-                        L4_Word_t direction);
+L4_Word_t L4_MemoryCopy(L4_ThreadId_t   remote,
+                        L4_Word_t       local,
+                        L4_Word_t*      size,
+                        L4_Word_t       direction);
 
 
-L4_Word_t L4_Wbtest(L4_Word_t op,
-                    L4_Word_t *arg0,
-                    L4_Word_t *arg1,
-                    L4_Word_t *arg2);
+L4_Word_t L4_Wbtest(L4_Word_t   op,
+                    L4_Word_t*  arg0,
+                    L4_Word_t*  arg1,
+                    L4_Word_t*  arg2);
 
 #endif /* OKL4_ARCH_SH_L4_SYSCALLS_H */

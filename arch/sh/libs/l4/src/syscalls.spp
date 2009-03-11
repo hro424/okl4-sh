@@ -65,7 +65,7 @@ LABEL(__L4_SH4A_Utcb)
     mov.l   r8, @-r15
 
     mov     #L4_TRAP_GETUTCB, SYSCALL_REG
-    trapa   #SYSCALL_TRAPANUM
+    trapa   #SYSCALL_NUM
 
     /* result into r0 */
     mov.l   @r15+, r8
@@ -80,8 +80,8 @@ EXPORT L4_KernelInterface
 LABEL(L4_KernelInterface)
     SAVE_CONTEXT
 
-    mov     #L4_TRAP_KIP, SYSCALL_REG
-    trapa   #SYSCALL_TRAPANUM
+    /* mov     #L4_TRAP_KIP, SYSCALL_REG */
+    trapa   #SYSCALL_NUM
 
     tst     r4, r4      // if (ApiVersion)
     bt      1f
@@ -119,7 +119,7 @@ LABEL(L4_ExchangeRegisters)
     SAVE_CONTEXT
 
     mov     #SYSNUM(exchange_registers), SYSCALL_REG
-    trapa   #SYSCALL_TRAPANUM
+    trapa   #SYSCALL_NUM
 
     /* r0 holds result */
 
@@ -156,7 +156,7 @@ LABEL(L4_ThreadControl)
 
     SAVE_CONTEXT
     mov     #SYSNUM(thread_control), SYSCALL_REG
-    trapa   #SYSCALL_TRAPANUM
+    trapa   #SYSCALL_NUM
     RESTORE_CONTEXT
     rts
     nop
@@ -167,7 +167,7 @@ EXPORT L4_ThreadSwitch
 LABEL(L4_ThreadSwitch)
     SAVE_CONTEXT
     mov     #SYSNUM(thread_switch), SYSCALL_REG
-    trapa   #SYSCALL_TRAPANUM
+    trapa   #SYSCALL_NUM
     RESTORE_CONTEXT
     rts
     nop
@@ -189,7 +189,7 @@ LABEL(L4_Schedule)
     SAVE_CONTEXT
 
     mov     #SYSNUM(schedule), SYSCALL_REG
-    trapa   #SYSCALL_TRAPANUM
+    trapa   #SYSCALL_NUM
 
     RESTORE_CONTEXT
 
@@ -225,7 +225,7 @@ LABEL(L4_Ipc)
     mov.l   @(20, r10), r9
 1:
     mov     #SYSNUM(ipc), SYSCALL_REG
-    trapa   #SYSCALL_TRAPANUM
+    trapa   #SYSCALL_NUM
 
     /* Load UTCB address */
     mov.l   CONST_UTCB_BASE, r10
@@ -264,7 +264,7 @@ LABEL(L4_Notify)
 	mov.l	@r0, r0
 
     mov     #SYSNUM(ipc), SYSCALL_REG
-    trapa   #SYSCALL_TRAPANUM
+    trapa   #SYSCALL_NUM
 
     RESTORE_CONTEXT
     rts
@@ -290,7 +290,7 @@ LABEL(L4_WaitNotify)
 	mov.l	@r0, r0
 
     mov     #SYSNUM(ipc), SYSCALL_REG
-    trapa   #SYSCALL_TRAPANUM
+    trapa   #SYSCALL_NUM
 
     mov.l   @r15+, r4
     mov.l   r1, @r4
@@ -299,6 +299,7 @@ LABEL(L4_WaitNotify)
     rts
     nop
 
+    .balign 4
 LABEL(SHIFT_WAIT_NOTIFY)
 	.long	1 << 14
 LABEL(MINUS_2)
@@ -330,7 +331,7 @@ LABEL(L4_Lipc)
 1:
 
     mov     #SYSNUM(lipc), SYSCALL_REG
-    trapa   #SYSCALL_TRAPANUM
+    trapa   #SYSCALL_NUM
 
     /* Load UTCB address */
     mov.l   CONST_UTCB_BASE, r10
@@ -356,7 +357,7 @@ LABEL(L4_Lipc)
     rts
     nop
 
-    ALIGN   4
+    .balign 4
 LABEL(CONST_UTCB_BASE)
     .long   USER_UTCB_REF
     
@@ -368,7 +369,7 @@ EXPORT L4_MapControl
 LABEL(L4_MapControl)
     SAVE_CONTEXT
     mov     #SYSNUM(map_control), SYSCALL_REG
-    trapa   #SYSCALL_TRAPANUM
+    trapa   #SYSCALL_NUM
     RESTORE_CONTEXT
     rts
     nop
@@ -389,7 +390,7 @@ LABEL(L4_SpaceControl)
     SAVE_CONTEXT
 
     mov     #SYSNUM(space_control),SYSCALL_REG
-    trapa   #SYSCALL_TRAPANUM
+    trapa   #SYSCALL_NUM
 
     RESTORE_CONTEXT
 
@@ -406,7 +407,7 @@ EXPORT L4_CacheControl
 LABEL(L4_CacheControl)
     SAVE_CONTEXT
     mov     #SYSNUM(cache_control), SYSCALL_REG
-    trapa   #SYSCALL_TRAPANUM
+    trapa   #SYSCALL_NUM
     RESTORE_CONTEXT
     rts
     nop
@@ -418,7 +419,7 @@ EXPORT L4_PlatformControl
 LABEL(L4_PlatformControl)
     SAVE_CONTEXT
     mov     #SYSNUM(platform_control), SYSCALL_REG
-    trapa   #SYSCALL_TRAPANUM
+    trapa   #SYSCALL_NUM
     RESTORE_CONTEXT
     rts
     nop
@@ -430,7 +431,7 @@ EXPORT L4_SpaceSwitch
 LABEL(L4_SpaceSwitch)
     SAVE_CONTEXT
     mov     #SYSNUM(space_switch), SYSCALL_REG
-    trapa   #SYSCALL_TRAPANUM
+    trapa   #SYSCALL_NUM
     RESTORE_CONTEXT
     rts
     nop
@@ -442,7 +443,7 @@ EXPORT L4_Mutex
 LABEL(L4_Mutex)
     SAVE_CONTEXT
     mov     #SYSNUM(mutex), SYSCALL_REG
-    trapa   #SYSCALL_TRAPANUM
+    trapa   #SYSCALL_NUM
     RESTORE_CONTEXT
     rts
     nop
@@ -454,7 +455,7 @@ EXPORT L4_MutexControl
 LABEL(L4_MutexControl)
     SAVE_CONTEXT
     mov     #SYSNUM(mutex_control), SYSCALL_REG
-    trapa   #SYSCALL_TRAPANUM
+    trapa   #SYSCALL_NUM
     RESTORE_CONTEXT
     rts
     nop
@@ -466,7 +467,7 @@ EXPORT L4_InterruptControl
 LABEL(L4_InterruptControl)
     SAVE_CONTEXT
     mov     #SYSNUM(interrupt_control), SYSCALL_REG
-    trapa   #SYSCALL_TRAPANUM
+    trapa   #SYSCALL_NUM
     RESTORE_CONTEXT
     rts
     nop
@@ -479,7 +480,7 @@ EXPORT L4_CapControl
 LABEL(L4_CapControl)
     SAVE_CONTEXT
     mov     #SYSNUM(cap_control), SYSCALL_REG
-    trapa   #SYSCALL_TRAPANUM
+    trapa   #SYSCALL_NUM
     RESTORE_CONTEXT
     rts
     nop
@@ -491,7 +492,7 @@ EXPORT L4_MemoryCopy
 LABEL(L4_MemoryCopy)
     SAVE_CONTEXT
     mov     #SYSNUM(memory_copy), SYSCALL_REG
-    trapa   #SYSCALL_TRAPANUM
+    trapa   #SYSCALL_NUM
     RESTORE_CONTEXT
     rts
     nop
@@ -500,7 +501,7 @@ LABEL(L4_MemoryCopy)
  *  Defined NILTHREAD
  */
 
-    ALIGN   4
+    .balign 4
 nilthread:
 	.long   0xfffffffc
 

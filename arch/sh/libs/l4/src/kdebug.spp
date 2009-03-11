@@ -1,34 +1,7 @@
-/*
- * Copyright (c) 2006, National ICT Australia
- */
-/*
- * Copyright (c) 2007, Open Kernel Labs, Inc.
- * 
- * All rights reserved.
- * 
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- * 
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in the
- *       documentation and/or other materials provided with the distribution.
- *     * Neither the name of the Open Kernel Labs, Inc. nor the names of
- *       its contributors may be used to endorse or promote products derived
- *       from this software without specific prior written permission.
- * 
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER
- * OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
- * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
- * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
- * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
- * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
- * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
- * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+/**
+ *  @brief  Implementation of the kernel debugger interface
+ *  @since  March 2009
+ *  @author Hiroo Ishikawa <hiroo.ishikawa@gmail.com>
  */
 
 #include <compat/asm.h>
@@ -36,75 +9,103 @@
 #include <l4/arch/syscalls_asm.h>
 
 /*
- * FIXME: Move these to libcompat, and make them more general.
- */
-
-//TODO
-
-/*
  * L4_KDB_Enter
  */
-    EXPORT L4_KDB_Enter
+        EXPORT  L4_KDB_Enter
 LABEL(L4_KDB_Enter)
-    sts.l   pr, @-r15
-//        mov.l   SYSCALL_REG, @-r15
-    mov r4, r0
-    
-    mov #L4_TRAP_KDEBUG, SYSCALL_REG
-    trapa   #SYSCALL_TRAPANUM
+        sts     pr, r6
+        mov     #L4_TRAP_KDEBUG, r8
+        trapa   #SYSCALL_NUM
+        jmp     @r6
+        nop
 
-//        mov.l   @r15+, SYSCALL_REG
-    lds.l   @r15+, pr
-    rts
-    nop
 
-    .macro __L4_KDB_Op op, name
-
-    EXPORT  \name
+#if defined(__GNUC__)
+        .macro  __L4_KDB_Op op, name
+        EXPORT  \name
 LABEL(\name)
-    sts.l   pr, @-r15
-//        mov.l   SYSCALL_REG, @-r15
-    mov r4, r0
-    mov #\op, SYSCALL_REG
-    trapa   #SYSCALL_TRAPANUM
-
-//        mov.l   @r15+, SYSCALL_REG
-    lds.l   @r15+, pr
-    rts
-    nop
-    .endm
+        sts     pr, r6
+        mov     #\op, r8
+        trapa   #SYSCALL_NUM
+        jmp     @r6
+        nop
+        .endm
 
 #define L4_KDB_Op(op, name)     __L4_KDB_Op     op, name
 
-    L4_KDB_Op(L4_TRAP_GETTICK, L4_KDB_GetTick)
-    L4_KDB_Op(L4_TRAP_KGETC, L4_KDB_ReadChar_Blocked_ASM)
-    L4_KDB_Op(L4_TRAP_KGETC_NB, L4_KDB_ReadChar_ASM)
-    L4_KDB_Op(L4_TRAP_KPUTC, L4_KDB_PrintChar_ASM)
-    L4_KDB_Op(L4_TRAP_GETCOUNTER, L4_KDB_GetTracepointCount)
-    L4_KDB_Op(L4_TRAP_GETNUMTPS, L4_KDB_GetNumTracepoints)
-    L4_KDB_Op(L4_TRAP_GETTPNAME, L4_KDB_GetTracepointNameIntroMRs)
-    L4_KDB_Op(L4_TRAP_TCCTRL, L4_KDB_TCCtrl)
+#endif
+
+
+        L4_KDB_Op(L4_TRAP_GETTICK, L4_KDB_GetTick)
+        L4_KDB_Op(L4_TRAP_KGETC, L4_KDB_ReadChar_Blocked_ASM)
+        L4_KDB_Op(L4_TRAP_KGETC_NB, L4_KDB_ReadChar_ASM)
+        L4_KDB_Op(L4_TRAP_KPUTC, L4_KDB_PrintChar_ASM)
+#if defined(CONFIG_DEBUG)
+        L4_KDB_Op(L4_TRAP_CKBR, L4_KDB_Set_Breakin_ASM)
+#endif
+        L4_KDB_Op(L4_TRAP_GETCOUNTER, L4_KDB_GetTracepointCount)
+        L4_KDB_Op(L4_TRAP_GETNUMTPS, L4_KDB_GetNumTracepoints)
+        L4_KDB_Op(L4_TRAP_GETTPNAME, L4_KDB_GetTracepointNameIntroMRs)
+        L4_KDB_Op(L4_TRAP_TCCTRL, L4_KDB_TCCtrl)
+
+        /*TODO: Get the NDA code
+        L4_KDB_Op(L4_TRAP_PMN_READ, L4_KDB_PMN_Read)
+        L4_KDB_Op(L4_TRAP_PMN_WRITE, L4_KDB_PMN_Write)
+        L4_KDB_Op(L4_TRAP_PMN_OFL_READ, L4_KDB_PMN_Ofl_Read)
+        L4_KDB_Op(L4_TRAP_PMN_OFL_WRITE, L4_KDB_PMN_Ofl_Write)
+        */
 
 /*
- * L4_KDB_SetThreadName_ASM
+ * L4_KDB_SetObjectName_ASM(word_t type, word_t id, const char* name)
  */
-    EXPORT  L4_KDB_SetObjectName_ASM
+        EXPORT  L4_KDB_SetObjectName_ASM
 LABEL(L4_KDB_SetObjectName_ASM)
-    sts.l   pr, @-r15
-//        mov.l   SYSCALL_REG, @-r15
+        sts     pr, r1
+        mov.l   r1, @-r15
+        mov.l   r9, @-r15
+        mov.l   @(0, r6), r7
+        mov.l   @(4, r6), r1
+        mov.l   @(8, r6), r2
+        mov.l   @(12, r6), r3
 
-    mov r4, r0
-    mov.l   @r5,r1
-    mov.l   @(4,r5),r2
-    mov.l   @(8,r5),r3
-    mov.l   @(12,r5),r4
+        mov     #L4_TRAP_KSET_OBJECT_NAME, r8
+        trapa   #SYSCALL_NUM
+        mov.l   @r15+, r9
+        mov.l   @r15+, r1
+        jmp     @r1
+        nop
 
-//    mov #L4_TRAP_KSET_THRD_NAME, SYSCALL_REG
-    mov #L4_TRAP_KSET_OBJECT_NAME, SYSCALL_REG
-    trapa   #SYSCALL_TRAPANUM
+#if defined(CONFIG_WBTEST)
+/*
+ * White box text functions
+ * L4_Wbtest(L4_Word_t op, L4_Word_t* arg0, L4_Word_t* arg1, L4_Word_t* arg2)
+ */
+        EXPORT L4_Wbtest
+LABEL(L4_Wbtest)
+        sts     pr, r1
+        mov.l   r1, @-r15
+        mov.l   r5, @-r15
+        mov.l   r6, @-r15
+        mov.l   r7, @-r15
 
-//        mov.l   @r15+, SYSCALL_REG
-    lds.l   @r15+, pr
-    rts
-    nop
+        /* Pass values */
+        mov.l   @r5, r5
+        mov.l   @r6, r6
+        mov.l   @r7, r7
 
+        mov     #L4_TRAP_WBTEST, r8
+        trapa   #SYSCALL_NUM
+
+        /* Write back to output addresses */
+        mov.l   @r15+, r1
+        mov.l   r7, @r1
+        mov.l   @r15+, r1
+        mov.l   r6, @r1
+        mov.l   @r15+, r1
+        mov.l   r5, @r1
+
+        mov.l   @r15+, r1
+        jmp     @r1
+        nop
+
+#endif
