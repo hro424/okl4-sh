@@ -43,3 +43,5 @@
 #define SYSNUM(name)                SYSCALL_ ## name
 #define SYSCALL_REG                 r8
 #define SYSCALL_NUM                 0x31
+/* FIXME: I don't know collect value. */
+#define SYSCALL_TRAPANUM             0xE1

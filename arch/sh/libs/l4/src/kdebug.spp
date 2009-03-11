@@ -99,7 +99,8 @@ LABEL(L4_KDB_SetObjectName_ASM)
     mov.l   @(8,r5),r3
     mov.l   @(12,r5),r4
 
-    mov #L4_TRAP_KSET_THRD_NAME, SYSCALL_REG
+//    mov #L4_TRAP_KSET_THRD_NAME, SYSCALL_REG
+    mov #L4_TRAP_KSET_OBJECT_NAME, SYSCALL_REG
     trapa   #SYSCALL_TRAPANUM
 
 //        mov.l   @r15+, SYSCALL_REG
