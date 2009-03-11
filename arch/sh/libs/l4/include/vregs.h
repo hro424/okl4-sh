@@ -63,6 +63,11 @@
 
 #define __L4_TCR_MR_OFFSET          (64)
 
+// Below lines are added by Hiromasa Shimada
+#define __L4_TCR_PREEMPTED_IP			(10)
+#define __L4_TCR_ERROR_CODE				(7)
+#define __L4_TCR_USER_DEFINED_HANDLE	(1)
+
 //#define USER_UTCB_REF               (SYS_AREA_START + 0xFF0)
 #define USER_UTCB_REF               (0x7F000FF0)
 

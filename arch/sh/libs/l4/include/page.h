@@ -34,5 +34,6 @@
 
 // deprecated
 #define USER_HW_PAGE_PERMS          3
+#define USER_MIN_PAGE_BITS			__L4_MIN_PAGE_BITS
 
 #endif /* OKL4_ARCH_SH_L4_PAGE_H */
