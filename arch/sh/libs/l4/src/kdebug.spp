@@ -13,13 +13,22 @@
  */
         EXPORT  L4_KDB_Enter
 LABEL(L4_KDB_Enter)
+        sts     pr, r6
+        mov     #L4_TRAP_KDEBUG, r8
+        trapa   #SYSCALL_NUM
+        jmp     @r6
+        nop
 
 
 #if defined(__GNUC__)
         .macro  __L4_KDB_Op op, name
         EXPORT  \name
 LABEL(\name)
+        sts     pr, r6
+        mov     #\op, r8
         trapa   #SYSCALL_NUM
+        jmp     @r6
+        nop
         .endm
 
 #define L4_KDB_Op(op, name)     __L4_KDB_Op     op, name
@@ -47,18 +56,57 @@ LABEL(\name)
         */
 
 /*
- * L4_KDB_SetObjectName_ASM
+ * L4_KDB_SetObjectName_ASM(word_t type, word_t id, const char* name)
  */
         EXPORT  L4_KDB_SetObjectName_ASM
 LABEL(L4_KDB_SetObjectName_ASM)
+        sts     pr, r1
+        mov.l   r1, @-r15
+        mov.l   r9, @-r15
+        mov.l   @(0, r6), r7
+        mov.l   @(4, r6), r1
+        mov.l   @(8, r6), r2
+        mov.l   @(12, r6), r3
 
+        mov     #L4_TRAP_KSET_OBJECT_NAME, r8
+        trapa   #SYSCALL_NUM
+        mov.l   @r15+, r9
+        mov.l   @r15+, r1
+        jmp     @r1
+        nop
 
 #if defined(CONFIG_WBTEST)
 /*
  * White box text functions
+ * L4_Wbtest(L4_Word_t op, L4_Word_t* arg0, L4_Word_t* arg1, L4_Word_t* arg2)
  */
         EXPORT L4_Wbtest
 LABEL(L4_Wbtest)
+        sts     pr, r1
+        mov.l   r1, @-r15
+        mov.l   r5, @-r15
+        mov.l   r6, @-r15
+        mov.l   r7, @-r15
+
+        /* Pass values */
+        mov.l   @r5, r5
+        mov.l   @r6, r6
+        mov.l   @r7, r7
+
+        mov     #L4_TRAP_WBTEST, r8
+        trapa   #SYSCALL_NUM
+
+        /* Write back to output addresses */
+        mov.l   @r15+, r1
+        mov.l   r7, @r1
+        mov.l   @r15+, r1
+        mov.l   r6, @r1
+        mov.l   @r15+, r1
+        mov.l   r5, @r1
+
+        mov.l   @r15+, r1
+        jmp     @r1
+        nop
 
 #endif
 
