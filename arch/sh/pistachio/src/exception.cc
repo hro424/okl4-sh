@@ -13,6 +13,7 @@
 #include <tcb.h>
 #include <tracebuffer.h>
 #include <arch/exception.h>
+#include <arch/ipc.h>
 #include <kdb/check_breakin.h>
 #include <kdb/names.h>
 #include <kdb/tracepoints.h>

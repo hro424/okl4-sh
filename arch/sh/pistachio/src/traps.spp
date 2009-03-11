@@ -386,7 +386,7 @@ LABEL(sh_syscall_vectors)
 END_LOCAL_PROC(syscall_handler)
 
 
-BEGIN_LOCAL_PROC(ipc_syscall_return)
+BEGIN_PROC(ipc_syscall_return)
         mov.l   1f, r15
         add     #OFS_GLOBAL_CURRENT_TCB, r15
         mov.l   @r15, r15
@@ -421,7 +421,7 @@ LABEL(syscall_return)
 2:      .long   OFS_TCB_PARTNER
 3:      .long   OFS_CONTEXT_MACH
 
-END_LOCAL_PROC(syscall_return)
+END_PROC(syscall_return)
 
 
 BEGIN_LOCAL_PROC(syscall_misc)

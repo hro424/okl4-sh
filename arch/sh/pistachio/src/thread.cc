@@ -81,6 +81,6 @@ tcb_t::create_startup_stack(void (*func)())
     init_stack();
     notify(func);
     context = &(arch.context);
-    //TODO
-    //context->cpsr = CPSR_USER_MODE;
+    context->sr &= ~REG_SR_MD;
 }
+
