@@ -260,6 +260,9 @@ device_disable_impl
     struct sh7780_scif      *device
 )
 {
+    device->state = STATE_DISABLED;
+    serial_set_params(device, DEFAULT_BAUD, DEFAULT_SIZE, DEFAULT_PARITY,
+                      DEFAULT_STOP);
     return 0;
 }
 
@@ -271,6 +274,9 @@ device_interrupt_impl
     int                     irq
 )
 {
+    /*
+     * not implemented yet.
+     */ 
     return 0;
 }
 
@@ -281,8 +287,8 @@ device_poll_impl
     struct sh7780_scif      *device
     )
 {
-    // return device_interrupt_impl(di, device, -1);
-    return 0;
+    return device_interrupt_impl(di, device, -1);
+    /*return 0;*/
 }
 
 static int
@@ -292,7 +298,7 @@ device_num_interfaces_impl
     struct sh7780_scif      *dev
     )
 {
-    return 0;
+    return 2;
 }
 
 static struct generic_interface *
@@ -303,5 +309,12 @@ device_get_interface_impl
     int                     interface
 )
 {
-    return NULL;
+    switch(interface) {
+        case 0:
+            return (struct generic_interface *)(void *)&device->tx;
+        case 1:
+            return (struct generic_interface *)(void *)&device->rx;
+        default:
+            return NULL;
+    }
 }
