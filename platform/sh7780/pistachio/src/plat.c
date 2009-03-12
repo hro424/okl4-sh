@@ -12,6 +12,8 @@
 #include <timer.h>
 #include <interrupt.h>
 
+word_t soc_api_version=SOC_API_VERSION;
+
 void simplesoc_init(int num_irqs);
 
 /**
