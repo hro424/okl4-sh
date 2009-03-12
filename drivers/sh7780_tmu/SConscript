@@ -1,0 +1,3 @@
+Import("*")
+lib = env.KengeLibrary("sh7780_tmu", LIBS=["c", "driver"])
+Return("lib")
