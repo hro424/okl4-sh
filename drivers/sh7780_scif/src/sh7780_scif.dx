@@ -88,9 +88,19 @@
     </block>
 
     <block name="scif0_8" space_type="mem" space="scif0" register_size="8">
+
         <register name="scbrr0" offset="0x4" type="rw">
             <field name="data" bits="0:7" />
         </register>
+
+        <register name="scftdr0" offset="0xc" type="wo">
+            <field name="data" bits="0:7" />
+        </register>
+
+        <register name="scfrdr0" offset="0x14" type="ro">
+            <field name="data" bits="0:7" />
+        </register>
+
     </block>
 
     <block name="scif1_16" space_type="mem" space="scif1" register_size="16">
@@ -168,6 +178,15 @@
         <register name="scbrr1" offset="0x4" type="rw">
             <field name="data" bits="0:7" />
         </register>
+
+        <register name="scftdr1" offset="0xc" type="wo">
+            <field name="data" bits="0:7" />
+        </register>
+
+        <register name="scfrdr1" offset="0x14" type="ro">
+            <field name="data" bits="0:7" />
+        </register>
+
     </block>
 
 
