@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /**
  *  @since  December 2008
  */
@@ -10,14 +8,13 @@ ENTRY(_start)
 
 MEMORY
 {
-    ram(RWX) : ORIGIN = VIRT_ADDR_RAM, LENGTH = 128M
+    ram(RWX) : ORIGIN = VIRT_ADDR_RAM, LENGTH = 0x08000000
 }
 
 #define rom     ram
 
 SECTIONS
 {
-    . = VIRT_ADDR_RAM;
     .text :
     {
         . = ALIGN(64K);
@@ -99,7 +96,7 @@ SECTIONS
     . = ALIGN(16K);
     .kspace . :
     {
-        *(data.kspace)
+        *(.data.kspace)
     } > ram
 
     . = ALIGN(4K);

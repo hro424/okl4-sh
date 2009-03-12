@@ -2,6 +2,6 @@
 ##
 
 Import("env")
-lib = env.KengeLibrary("sh7780_scif", LIBS=["c", "driver"])
+lib = env.KengeLibrary("sh7780_scif", LIBS=["c", "driver", "util"])
 Return("lib")
 
