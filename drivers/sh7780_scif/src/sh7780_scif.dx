@@ -7,7 +7,9 @@
     <interface name="tx" interface_type="stream" />
 
     <resource name="scif0" rtype="mem_space_t" />
+    <!--
     <resource name="scif1" rtype="mem_space_t" />
+    -->
 
     <datafield ftype="int" name="writec" />
     <datafield ftype="int" name="txen" />
@@ -87,12 +89,13 @@
 
     </block>
 
-    <block name="scif0" space_type="mem" space="scif0" register_size="8">
+    <block name="scif0_scbrr" space_type="mem" space="scif0" register_size="8">
         <register name="scbrr" offset="0x4" type="rw">
             <field name="data" bits="0:7" />
         </register>
     </block>
 
+    <!--
     <block name="scif1" space_type="mem" space="scif1" register_size="16">
 
         <register name="scsmr" offset="0x0" type="rw">
@@ -169,6 +172,7 @@
             <field name="data" bits="0:7" />
         </register>
     </block>
+    -->
 
 
 </device>

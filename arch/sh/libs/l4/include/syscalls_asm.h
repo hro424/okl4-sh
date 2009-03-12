@@ -1,8 +1,9 @@
-/* $Id$ */
-
 /**
  *  @since  December 2008
  */
+
+#ifndef OKL4_ARCH_L4_SYSCALL_ASM_H
+#define OKL4_ARCH_L4_SYSCALL_ASM_H
 
 #define SYSCALL_ipc                 0x01
 #define SYSCALL_thread_switch       0x02
@@ -43,3 +44,5 @@
 #define SYSNUM(name)                SYSCALL_ ## name
 #define SYSCALL_REG                 r8
 #define SYSCALL_NUM                 0x31
+
+#endif /* OKL4_ARCH_L4_SYSCALL_ASM_H */
