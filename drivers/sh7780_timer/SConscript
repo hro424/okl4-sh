@@ -1,3 +1,0 @@
-Import("*")
-lib = env.KengeLibrary("sh7780_timer", LIBS=["c", "driver"])
-Return("lib")

@@ -1,0 +1,104 @@
+<device name="sh7780_tmu">
+
+    <interface interface_type="timer", name="timer" />
+
+    <state name="disabled" />
+    <state name="timekeep" />
+    <state name="periodic" />
+    <state name="shot_long" />
+    <state name="shot_short" />
+
+    <resource name="main" rtype="mem_space_t" />
+
+    <block name="tmu_32" space_type="mem" space="main" register_size="32">
+        <register name="tcor0" offset="0xD80008" type="rw" />
+        <register name="tcnt0" offset="0xD8000C" type="rw" />
+        <register name="tcor1" offset="0xD80014" type="rw" />
+        <register name="tcnt1" offset="0xD80018" type="rw" />
+        <register name="tcor2" offset="0xD80020" type="rw" />
+        <register name="tcnt2" offset="0xD80024" type="rw" />
+        <register name="tcpr2" offset="0xD8002C" type="ro" />
+        <register name="tcor3" offset="0xDC0008" type="rw" />
+        <register name="tcnt3" offset="0xDC000C" type="rw" />
+        <register name="tcor4" offset="0xDC0014" type="rw" />
+        <register name="tcnt4" offset="0xDC0018" type="rw" />
+        <register name="tcor5" offset="0xDC0020" type="rw" />
+        <register name="tcnt5" offset="0xDC0024" type="rw" />
+    </block>
+
+    <block name="tmu_16" space_type="mem" space="main" register_size="16">
+        <register name="tcr0" offset="0xD80010" type="rw">
+            <field name="icpf"  bits="9" />
+            <field name="unf"   bits="8" />
+            <field name="icpe"  bits="6:7" />
+            <field name="unie"  bits="5" />
+            <field name="ckeg"  bits="3:4" />
+            <field name="tpsc"  bits="0:2" />
+        </register>
+
+        <register name="tcr1" offset="0xD8001C" type="rw">
+            <field name="icpf"  bits="9" />
+            <field name="unf"   bits="8" />
+            <field name="icpe"  bits="6:7" />
+            <field name="unie"  bits="5" />
+            <field name="ckeg"  bits="3:4" />
+            <field name="tpsc"  bits="0:2" />
+        </register>
+
+        <register name="tcr2" offset="0xD80028" type="rw">
+            <field name="icpf"  bits="9" />
+            <field name="unf"   bits="8" />
+            <field name="icpe"  bits="6:7" />
+            <field name="unie"  bits="5" />
+            <field name="ckeg"  bits="3:4" />
+            <field name="tpsc"  bits="0:2" />
+        </register>
+
+        <register name="tcr3" offset="0xDC0010" type="rw">
+            <field name="icpf"  bits="9" />
+            <field name="unf"   bits="8" />
+            <field name="icpe"  bits="6:7" />
+            <field name="unie"  bits="5" />
+            <field name="ckeg"  bits="3:4" />
+            <field name="tpsc"  bits="0:2" />
+        </register>
+
+        <register name="tcr4" offset="0xDC001C" type="rw">
+            <field name="icpf"  bits="9" />
+            <field name="unf"   bits="8" />
+            <field name="icpe"  bits="6:7" />
+            <field name="unie"  bits="5" />
+            <field name="ckeg"  bits="3:4" />
+            <field name="tpsc"  bits="0:2" />
+        </register>
+
+        <register name="tcr5" offset="0xDC0028" type="rw">
+            <field name="icpf"  bits="9" />
+            <field name="unf"   bits="8" />
+            <field name="icpe"  bits="6:7" />
+            <field name="unie"  bits="5" />
+            <field name="ckeg"  bits="3:4" />
+            <field name="tpsc"  bits="0:2" />
+        </register>
+    </block>
+
+    <block name="tmu_8" space_type="mem" space="main" register_size="8">
+        <register name="tocr" offset="0xD80000" type="rw">
+            <field name="tcoe" bits="0" />
+        </register>
+
+        <register name="tstr0" offset="0xD80004" type="rw">
+            <field name="str2" bits="2" />
+            <field name="str1" bits="1" />
+            <field name="str0" bits="0" />
+        </register>
+
+        <register name="tstr1" offset="0xDC0004" type="rw">
+            <field name="str5" bits="2" />
+            <field name="str4" bits="1" />
+            <field name="str3" bits="0" />
+        </register>
+    </block>
+
+</device>
+
