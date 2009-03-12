@@ -1,3 +1,5 @@
 ./Makefile
 additional.lds
 build
+additional.lds
+default.lds
