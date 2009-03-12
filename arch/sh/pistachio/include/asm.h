@@ -73,6 +73,7 @@
     .balign 4;                          \
 1:  .long   handler;
 
+
 #endif // ASSEMBLY
 
 #endif /* OKL4_ARCH_SH_ASM_H */

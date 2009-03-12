@@ -1,13 +1,25 @@
-/* $Id$ */
-
 /**
  *  @since  February 2009
  */
 
+#include <asmsyms.h>
+#include <arch/asm.h>
+#include <arch/config.h>
+#include <arch/globals.h>
 #include <kernel/arch/asm.h>
 
-    BEGIN_PROC(initial_to_user)
+        /* Initial jump to a user thread */
+        BEGIN_PROC(initial_to_user)
+        /* Restore the context from TCB */
+        mov.l   1f, r15
+        add     #OFS_GLOBAL_CURRENT_TCB, r15
+        mov.l   @r15, r15
+        add     #OFS_TCB_ARCH_CONTEXT, r15
+        RESTORE_CONTEXT
+        rte
+        nop
 
-    nop
+        .balign 4
+1:      .long   SH_GLOBAL_BASE
 
-    END_PROC(initial_to_user)
+        END_PROC(initial_to_user)

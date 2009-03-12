@@ -1,6 +1,6 @@
 
 
-all:
+ktest:
 	./tools/build.py PYFREEZE=false VERBOSE_STR=true MACHINE=sh2007 PROJECT=ktest
 
 hello:
