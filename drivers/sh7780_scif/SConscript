@@ -1,0 +1,3 @@
+Import("*")
+lib = env.KengeLibrary("sh7780_scif", LIBS=["c", "driver"])
+Return("lib")
