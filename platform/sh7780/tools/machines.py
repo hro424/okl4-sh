@@ -36,7 +36,7 @@ class sh2007(sh7780):
     device_core = "sh2007"
     # Define memory layout based on the configuration of sh2007
     memory = sh4a.memory.copy()
-    memory['physical'] = [Region(0x88000000, 0x90000000)]
+    memory['physical'] = [Region(0x88210000, 0x90000000)]
     memory['rom'] = [Region(0xA0000000, 0xA8000000)]
     cpp_defines = sh7780.cpp_defines + [("PLATFORM_SH7780", 1)]
 
