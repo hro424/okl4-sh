@@ -5,8 +5,8 @@
 #ifndef OKL4_PLATFORM_SH7780_CONSOLE_H
 #define OKL4_PLATFORM_SH7780_CONSOLE_H
 
-#define SCIF0_BASE              0xFFE0000
-#define SCIF1_BASE              0xFFE1000
+#define SCIF0_BASE              0xFFE00000
+#define SCIF1_BASE              0xFFE10000
 
 typedef enum {
     SCIF_SCSMR =                0x00,

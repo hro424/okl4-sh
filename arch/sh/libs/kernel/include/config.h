@@ -27,8 +27,9 @@
 #define P1_START                (0x80000000)
 #define P2_START                (0xA0000000)
 
+#define IPL_OFFSET              (0x00210000)
 
-#define VIRT_ADDR_BASE          (P1_START + RAM_START)
+#define VIRT_ADDR_BASE          (P1_START + RAM_START + IPL_OFFSET)
 // Make the kernel page table write-through
 //#define VIRT_ADDR_PGTABLE       (P2_START + RAM_START)
 #define VIRT_ADDR_PGTABLE       VIRT_ADDR_BASE

@@ -55,11 +55,11 @@ show_processor_info()
 }
 
 INLINE void SECTION(".init")
-init_globals(word_t* base_phys)
+init_globals(word_t base_phys)
 {
     extern char __kernel_space_object[];
 
-    get_globals()->phys_addr_ram = *base_phys;
+    get_globals()->phys_addr_ram = (word_t)base_phys;
     get_globals()->kernel_space = (space_t*)&__kernel_space_object;
 }
 
@@ -106,7 +106,7 @@ init_pagetable(pgent_t* pdir_phys, word_t* base_phys)
     }
 
     for (word_t i = (word_t)VIRT_ADDR_BASE;
-         i < (word_t)VIRT_ADDR_BASE + KERNEL_AREA_SIZE;
+         i < (word_t)KERNEL_AREA_END;
          i += PAGE_SIZE_1M) {
         word_t phys = virt_to_phys(i);
         add_mapping_init(pdir_phys, (addr_t)i, (addr_t)phys, writeback);
@@ -116,7 +116,8 @@ init_pagetable(pgent_t* pdir_phys, word_t* base_phys)
 INLINE void SECTION(".init")
 activate_mmu()
 {
-    mapped_reg_write(REG_MMUCR, REG_MMUCR_SQMD | REG_MMUCR_TI | REG_MMUCR_AT);
+    //mapped_reg_write(REG_MMUCR, REG_MMUCR_SQMD | REG_MMUCR_TI | REG_MMUCR_AT);
+    mapped_reg_write(REG_MMUCR, REG_MMUCR_AT);
     UPDATE_REG();
 }
 
@@ -207,7 +208,7 @@ init_memory()
     /*
      * Initialize global pointers
      */
-    init_globals((word_t*)PHYS_KERNEL_BASE);
+    init_globals(PHYS_KERNEL_BASE);
 
     run_init_script(INIT_PHASE_FIRST_HEAP);
 

@@ -41,7 +41,7 @@
  * MEMORY-MAPPED REGISTERS (VIRTUAL ADDRESS)
  */
 
-#define UPDATE_REG()        __asm__ __volatile__ ("icbi @%0" :: "r" (0x1000))
+#define UPDATE_REG()        __asm__ __volatile__ ("icbi @%0" :: "r" (0x80000000))
 
 /* TRAPA */
 #define REG_TRA             0xFF000020
@@ -112,8 +112,8 @@
 #define REG_MMUCR_LRUI_MASK 0xFC000000
 #define REG_MMUCR_URB_MASK  0x00FC0000
 #define REG_MMUCR_URC_MASK  0x0000FC00
-#define REG_MMUCR_SQMD      0x00000080
-#define REG_MMUCR_SV        0x00000040
+#define REG_MMUCR_SQMD      0x00000200
+#define REG_MMUCR_SV        0x00000100
 #define REG_MMUCR_TI        0x00000004
 #define REG_MMUCR_AT        0x00000001
 
