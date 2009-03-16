@@ -17,6 +17,7 @@
         .section .init.head
         BEGIN_PROC(_start)
 
+        nop
         /* Initialize the vector base address */
         mov.l   CONST_VBR_BASE, r0
         ldc     r0, vbr

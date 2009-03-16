@@ -8,7 +8,7 @@ ENTRY(_start)
 
 MEMORY
 {
-    ram(RWX) : ORIGIN = VIRT_ADDR_RAM, LENGTH = 0x08000000
+    ram(RWX) : ORIGIN = VIRT_ADDR_RAM, LENGTH = 0x08000000 - 0x00210000
 }
 
 #define rom     ram

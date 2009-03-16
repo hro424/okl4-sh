@@ -57,9 +57,11 @@ soc_console_putc(char c)
         reg = scif_read(SCIF_SCFSR);
     } while (!(reg & SCIF_SCFSR_TEND));
 
+    /*
     reg = scif_read(SCIF_SCSCR);
     reg &= ~SCIF_SCSCR_TE;
     scif_write(SCIF_SCSCR, reg);
+    */
 
     if (c == '\n') {
         soc_console_putc('\r');
@@ -107,9 +109,11 @@ soc_console_getc(bool can_block)
     reg &= ~SCIF_SCFSR_RDF;
     scif_write(SCIF_SCFSR, reg);
 
+    /*
     reg = scif_read(SCIF_SCSCR);
     reg &= ~SCIF_SCSCR_RE;
     scif_write(SCIF_SCSCR, reg);
+    */
 
     return c;
 }
@@ -122,7 +126,7 @@ soc_serial_init(word_t base)
     scif_write(SCIF_SCSCR, 0);
     scif_write(SCIF_SCFCR, SCIF_SCFCR_TFCL | SCIF_SCFCR_RFCL);
     scif_write(SCIF_SCSMR, SCIF_SCSMR_PCK);
-    scif_write8(SCIF_SCBRR, SCIF_BITRATE_57600);
+    scif_write8(SCIF_SCBRR, SCIF_BITRATE_115200);
 
     // Wait for one clock
 
@@ -133,6 +137,6 @@ soc_serial_init(word_t base)
 void
 soc_kdb_init()
 {
-    soc_serial_init(SCIF0_BASE);
+    soc_serial_init(SCIF1_BASE);
 }
 

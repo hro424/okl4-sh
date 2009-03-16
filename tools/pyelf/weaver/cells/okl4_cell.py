@@ -254,7 +254,6 @@ class OKL4Cell(Cell):
         self.space.utcb.attach = PF_R
 
         filename = os.path.join(okl4_el._path, okl4_el.file)
-        print "DEBUG:", filename
         self.elf = UnpreparedElfFile(filename=filename)
 
         if self.elf.elf_type != ET_EXEC:
