@@ -30,7 +30,7 @@ virt_to_phys(T x)
 template<typename T> INLINE T
 phys_to_virt(T x)
 {
-    return (T)((u32_t)x + VIRT_ADDR_RAM - get_globals()->phys_addr_ram);
+    return (T)((u32_t)x - get_globals()->phys_addr_ram + VIRT_ADDR_RAM + IPL_OFFSET);
 }
 
 template<typename T> INLINE T

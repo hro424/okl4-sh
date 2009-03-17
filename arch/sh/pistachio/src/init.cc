@@ -129,10 +129,6 @@ startup_system()
      */
     soc_init();
 
-    /*
-     * Initialize the L4 console
-     */
-    init_console();
     init_hello();
 
     get_asid_cache()->init();
@@ -209,6 +205,11 @@ init_memory()
      * Initialize global pointers
      */
     init_globals(PHYS_KERNEL_BASE);
+
+    /*
+     * Initialize the L4 console
+     */
+    init_console();
 
     run_init_script(INIT_PHASE_FIRST_HEAP);
 

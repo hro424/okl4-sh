@@ -34,7 +34,9 @@ class sh2007(sh7780):
     device_core = "sh2007"
     # Define memory layout based on the configuration of sh2007
     memory = sh4a.memory.copy()
-    memory['physical'] = [Region(0x08000000, 0x10000000)]
+    #XXX:   Temporal fix of physical base.  Need to find the way to specify
+    #       the IPL offset.
+    memory['physical'] = [Region(0x08210000, 0x10000000)]
     memory['rom'] = [Region(0x00000000, 0x08000000)]
     cpp_defines = sh7780.cpp_defines + [("PLATFORM_SH7780", 1)]
 

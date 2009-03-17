@@ -8,14 +8,16 @@ ENTRY(_start)
 
 MEMORY
 {
-    ram(RWX) : ORIGIN = VIRT_ADDR_RAM, LENGTH = 0x08000000 - 0x00210000
+    ram(RWX) : ORIGIN = VIRT_ADDR_RAM, LENGTH = 0x08000000
 }
 
 #define rom     ram
 
 SECTIONS
 {
-    .text :
+    . = VIRT_ADDR_RAM + IPL_OFFSET;
+
+    .text . :
     {
         . = ALIGN(64K);
         *(.init.head)

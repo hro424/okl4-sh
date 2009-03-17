@@ -27,9 +27,10 @@
 #define P1_START                (0x80000000)
 #define P2_START                (0xA0000000)
 
+/* SH-IPL uses 0x08000000 - 0x08210000 */
 #define IPL_OFFSET              (0x00210000)
 
-#define VIRT_ADDR_BASE          (P1_START + RAM_START + IPL_OFFSET)
+#define VIRT_ADDR_BASE          (P1_START + RAM_START)
 // Make the kernel page table write-through
 //#define VIRT_ADDR_PGTABLE       (P2_START + RAM_START)
 #define VIRT_ADDR_PGTABLE       VIRT_ADDR_BASE
@@ -37,7 +38,7 @@
 #define VIRT_ADDR_ROM           P1_START
 #define VIRT_ADDR_RAM           VIRT_ADDR_BASE
 
-#define PHYS_KERNEL_BASE        RAM_START
+#define PHYS_KERNEL_BASE        (RAM_START + IPL_OFFSET)
 
 #define STACK_BITS              (11)
 #define STACK_SIZE              (1 << STACK_BITS)

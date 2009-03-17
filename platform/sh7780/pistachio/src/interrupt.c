@@ -488,7 +488,7 @@ soc_security_control_interrupt(struct irq_desc *desc, space_h owner,
 
     /* Get the IRQ to configure. */
     intevt = *(word_t *)desc;
-    if (intevt >= IRQS) {
+    if (intevt < INTEVT_MIN || intevt > INTEVT_MAX) {
         return EINVALID_PARAM;
     }
 
