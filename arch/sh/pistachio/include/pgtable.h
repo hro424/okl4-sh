@@ -43,7 +43,7 @@ public:
                 /* Executable */
                 x               : 1,
 
-                reserved        : 11,
+                reserved        : 10,
                 /* Base address of a level-2 table or a 1M page */
                 base_address    : 12
             );
@@ -88,7 +88,7 @@ public:
                 /* Executable */
                 x               : 1,
 
-                reserved        : 7,
+                reserved        : 6,
                 /* Base address of a level-2 table or a 1M page */
                 base_address    : 16
             );
@@ -116,7 +116,7 @@ public:
                 /* Executable */
                 x               : 1,
 
-                reserved        : 3,
+                reserved        : 2,
                 /* Base address of a level-2 table or a 1M page */
                 base_address    : 20
             );
@@ -135,9 +135,10 @@ public:
     addr_t address_small() { return (addr_t)(small.base_address << 12); }
 };
 
-#define SH_L1_BITS          SH_SECTION_BITS
-#define SH_L1_SIZE          (1UL << SH_SECTION_BITS)
-#define SH_L2_BITS          (32 - SH_SECTION_BITS - PAGE_BITS_4K)
+//NOTE: +2 is the size of a pdir entry in log2.
+#define SH_L1_BITS          (SH_SECTION_BITS + 2)
+#define SH_L1_SIZE          (1UL << SH_L1_BITS)
+#define SH_L2_BITS          (32 - SH_SECTION_BITS - PAGE_BITS_4K + 2)
 #define SH_L2_SIZE          (1UL << SH_L2_BITS)
 
 #define PG_TOP_SIZE         SH_L1_SIZE

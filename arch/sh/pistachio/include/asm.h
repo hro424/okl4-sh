@@ -4,15 +4,15 @@
 #if defined(ASSEMBLY)
 
 #define SWITCH_BANK_1_TO_0              \
-    stc     sr, r0;                     \
+    stc     sr, r10;                    \
     /* Make the mask to switch the bank */  \
-    mov     #0x20, r1;                  \
-    shll8   r1;                         \
-    shll16  r1;                         \
-    not     r1, r1;                     \
+    mov     #0x20, r11;                 \
+    shll8   r11;                        \
+    shll16  r11;                        \
+    not     r11, r11;                   \
     /* Switch bank 1 to bank 0 */       \
-    and     r1, r0;                     \
-    ldc     r0, sr
+    and     r11, r10;                   \
+    ldc     r10, sr
 
 #define SAVE_CONTEXT                    \
     stc.l   sgr, @-r15;                 \
@@ -21,9 +21,6 @@
     sts.l   pr, @-r15;                  \
     sts.l   macl, @-r15;                \
     sts.l   mach, @-r15;                \
-    /* The current bank is 1.  */       \
-    SWITCH_BANK_1_TO_0;                 \
-    /* Push the rest of the registers on to the stack */    \
     PUSH(r14);                          \
     PUSH(r13);                          \
     PUSH(r12);                          \
@@ -31,6 +28,9 @@
     PUSH(r10);                          \
     PUSH(r9);                           \
     PUSH(r8);                           \
+    /* The current bank is 1.  */       \
+    SWITCH_BANK_1_TO_0;                 \
+    /* Push the rest of the registers on to the stack */    \
     PUSH(r7);                           \
     PUSH(r6);                           \
     PUSH(r5);                           \

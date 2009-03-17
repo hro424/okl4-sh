@@ -59,7 +59,7 @@ bool
 generic_space_t::init (fpage_t utcb_area, kmem_resource_t *kresource)
 {
     word_t i;
-    word_t offset = USER_AREA_SECTIONS;
+    word_t offset = USER_AREA_SECTIONS + UTCB_AREA_SECTIONS;
 
     asid_t *asid = ((space_t *)this)->get_asid();
 
@@ -85,7 +85,6 @@ generic_space_t::init (fpage_t utcb_area, kmem_resource_t *kresource)
     for (i = 0; i < VAR_AREA_SECTIONS; i++) {
         *pg_to++ = *pg_from++;
     }
-
 
     ((space_t*)this)->pgbase = (word_t)page_table_to_phys(this->pdir);
 
