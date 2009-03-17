@@ -12,7 +12,7 @@
 CONST INLINE word_t
 msb(word_t w)
 {
-    return 0;
+    return msb_binary(w);
 }
 
 #endif /* OKL4_ARCH_SH_KERNEL_SPECIAL_H */
