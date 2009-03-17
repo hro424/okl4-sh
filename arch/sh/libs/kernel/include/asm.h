@@ -21,7 +21,8 @@
     .section .data.traps;               \
     .global exception_vector;           \
     .balign 4096;                       \
-exception_vector:
+exception_vector:                       \
+    .skip 4;
 
 #define BEGIN_PROC_TRAPS(name, offset)  \
     .global name;                       \

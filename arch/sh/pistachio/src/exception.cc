@@ -161,7 +161,7 @@ handle_address_error(word_t ecode, sh_context_t* context)
     continuation = ASM_CONTINUATION;
     instr = *(u16_t*)(PC(context->pc));
 
-    printf("Address error at %p\n", (addr_t)PC(context->pc));
+    printf("Address error (0x%x) at %p\n", ecode, (addr_t)PC(context->pc));
     enter_kdebug("exception");
 
     send_exception_ipc(ecode, instr, context, continuation);

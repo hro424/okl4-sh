@@ -152,7 +152,7 @@ public:
     }
 
     /**
-     * Flush all caches.
+     * Invalidates the instruction cache and writes back the data cache.
      */
     static void flush() {
         invalidate_i();
@@ -198,19 +198,21 @@ public:
     static void flush_d() {
         word_t  addr0, addr1, addr2, addr3, end;
 
-        addr0 = VIRT_ADDR_BASE;
+        addr0 = KERNEL_AREA_START;
         addr1 = addr0 + CACHE_WAY_SIZE;
         addr2 = addr1 + CACHE_WAY_SIZE;
         addr3 = addr2 + CACHE_WAY_SIZE;
-        end = VIRT_ADDR_BASE + CACHE_WAY_SIZE;
+        end = KERNEL_AREA_START + CACHE_WAY_SIZE;
 
         /*
-         * NOTE: Use the 32KiB range at VIRT_ADDR_BASE, because
-         * (1)  TLB miss is not thrown because P1 is a non-TLB area.
-         * (2)  movca.l writes r0 to a cache block, not directly to memory,
-         *      if write-back cache is enabled.
-         * (3)  ocbi immediately invalidates the cache block, so that the
-         *      cache block is not written back to memory.
+         *  NOTE: Use the 32KiB range at KERNEL_AREA_START, because
+         *  (1)  TLB miss is not thrown because P1 is a non-TLB area.
+         *  (2)  movca.l writes r0 to a cache block, not directly to memory,
+         *       if write-back cache is enabled.
+         *  (3)  ocbi immediately invalidates the cache block, so that the
+         *       cache block is not written back to memory.
+         *
+         *  Do not use VIRT_ADDR_BASE where the global data is stored.
          */
         /*
          * NOTE: flush 4 entries at the same time, because SH-4A's cache is 
