@@ -567,7 +567,7 @@ extern bool map_region (space_t * space, word_t vaddr, word_t paddr, word_t size
 
 // XXX : use segment
 static void SECTION(SEC_INIT)
-    ki_map_memory(space_t* space, ki_map_memory_t *args, kmem_resource_t *cur_heap)
+ki_map_memory(space_t* space, ki_map_memory_t *args, kmem_resource_t *cur_heap)
 {
     word_t size = args->desc.size.X.num_pages * MAP_PGSIZE(args->desc.size.X.page_size);
     phys_segment_t *segment = space->phys_segment_list->lookup_segment(args->desc.seg.X.segment);

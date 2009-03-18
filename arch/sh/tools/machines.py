@@ -11,7 +11,7 @@ from toolchains import gnu_sh_toolchain
 
 # SuperH Family
 class sh(Machine):
-    page_sizes = [0x400, 0x1000, 0x10000, 0x100000]
+    page_sizes = [0x1000, 0x10000, 0x100000]
     preferred_alignment = 0x10000L
     wordsize = 32
     arch = "sh"
