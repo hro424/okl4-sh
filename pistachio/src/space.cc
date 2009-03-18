@@ -604,7 +604,6 @@ map_region (space_t * space, word_t vaddr, word_t paddr, word_t size,
             break;
         }
 
-        TRACE_INIT("page size = %u\n", pagesize);
         fpg.set(vaddr, pgsize, false, false, false);
         fpg.set_rwx(rwx);
 
