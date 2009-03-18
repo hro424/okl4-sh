@@ -46,8 +46,9 @@ public:
     void set_pid(sh_pid_t pid);
 
     bool add_mapping(addr_t vaddr, addr_t paddr, pgent_t::pgsize_e size,
-                     rwx_e rwx, bool kernel,
-                     memattrib_e attrib, kmem_resource_t* kresource);
+                     rwx_e rwx, bool kernel, memattrib_e attrib,
+                     kmem_resource_t* kresource);
+
     inline bool add_mapping(addr_t vaddr, addr_t paddr, pgent_t::pgsize_e size,
                             rwx_e rwx, bool kernel, kmem_resource_t* kresource)
     {

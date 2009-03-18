@@ -195,7 +195,7 @@ fill_tlb(addr_t vaddr, space_t* space, pgent_t* pg, pgent_t::pgsize_e pgsize)
     mapped_reg_write(REG_PTEH,
                  (word_t)vaddr & REG_PTEH_VPN_MASK |
                  (word_t)space->get_asid()->get(space) & REG_PTEH_ASID_MASK);
-    mapped_reg_write(REG_PTEL, pg->raw & REG_PTEL_MASK);
+    mapped_reg_write(REG_PTEL, pg->get_ptel());
 
     __asm__ __volatile__ ("ldtlb");
 

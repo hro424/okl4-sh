@@ -50,8 +50,6 @@ public:
         } large;
     };
 
-    void clear() { raw = 0; }
-
     memattrib_e attributes() {
         return (memattrib_e)((large.shared << 5) | (large.cache << 4)
                              | large.wt);
@@ -122,8 +120,6 @@ public:
             );
         } small;
     };
-
-    void clear() { raw = 0; }
 
     memattrib_e attributes() {
         return (memattrib_e)((small.shared << 5) | (small.cache << 4)
