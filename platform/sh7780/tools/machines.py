@@ -18,7 +18,7 @@ class sh7780(sh4a):
     timer_driver = "sh7780_tmu"
     serial_driver = "sh7780_scif"
     drivers = [timer_driver, serial_driver]
-    memory_serial = [Region(0xFFE00000, 0xFFE20000, "all", "uncached")]
+    memory_serial = [Region(0xFF000000, 0xFFF00000, "all", "uncached")]
     interrupt_serial = [0x700, 0x720, 0x740, 0x760, 0xB80, 0xBA0, 0xBC0, 0xBE0]
     memory_timer = [Region(0xFF000000, 0xFFFF0000, "all", "uncached")]
     interrupt_timer = [0x580, 0x5A0, 0x5C0, 0x5E0, 0xE00, 0xE20, 0xE40]

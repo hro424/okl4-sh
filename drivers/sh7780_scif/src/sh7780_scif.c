@@ -5,216 +5,257 @@
 
 #include <sh7780_scif.h>
 
-enum parity { PARITY_NONE, PARITY_EVEN, PARITY_ODD };
-
-#define DEFAULT_BAUD        115200
-#define DEFAULT_SIZE        8
-#define DEFAULT_PARITY      PARITY_NONE
-#define DEFAULT_STOP        1
 
 #define TX_FIFO_DEPTH       64
 
-/* Seven or eight bits for parity */
-/* One or two stop bits */
-/*
-static int serial_set_params(struct sh7780_scif *self, unsigned baud, int data_size,
-                      enum parity parity, int stop_bits);
-*/
+#define SCIF_BITRATE_9600       161     /* n: 0, Error rate: 0.47 */
+#define SCIF_BITRATE_19200      80      /* n: 0, Error rate: 0.47 */
+#define SCIF_BITRATE_38400      39      /* n: 0, Error rate: 1.72 */
+#define SCIF_BITRATE_57600      26      /* n: 0, Error rate: 0.47 */
+#define SCIF_BITRATE_115200     12      /* n: 0, Error rate: 4.33 */
+#define SCIF_BITRATE_230400     5       /* n: 0, Error rate: 13.0 */
+#define SCIF_BITRATE_460800     2       /* n: 0, Error rate: 13.0 */
+#define SCIF_BITRATE_500000     2       /* n: 0, Error rate: 4.17 */
+#define SCIF_BITRATE_576000     1       /* n: 0, Error rate: 35.6 */
 
+typedef enum {
+    SCIF_SCFCR_RTRG1 =          0x00,
+    SCIF_SCFCR_RTRG16 =         0x40,
+    SCIF_SCFCR_RTRG32 =         0x80,
+    SCIF_SCFCR_RTRG48 =         0xC0,
+    SCIF_SCFCR_TTRG32 =         0x00,
+    SCIF_SCFCR_TTRG16 =         0x10,
+    SCIF_SCFCR_TTRG2 =          0x20,
+    SCIF_SCFCR_TTRG0 =          0x30,
+} scif_scfcr_e;
+
+
+/**
+ * Delivers the given data to a serial port.  A private function.
+ */
 static void
 do_tx_work
 (
     struct sh7780_scif *device
 )
 {
-    struct stream_interface *si = &device->tx;
-    struct stream_pkt *packet = stream_get_head(si);
+    struct stream_interface*    si;
+    struct stream_pkt*          packet;
+    uint8_t*                    ptr;
+    size_t                      len;
 
-    if(packet == NULL)
-        goto out;
+    si = &device->tx;
 
-    // to write
-    if (scfsr0_get_tdfe() ){ 
-        while (packet->xferred < packet->length) {
-            assert(packet->data);
-            // write to buffer register
-            scftdr0_write(packet->data[packet->xferred++]);
+    while ((packet = stream_get_head(si)) != NULL) {
+        assert(packet->data);
+        ptr = packet->data;
+        do {
+            while (!scfsr1_get_tdfe()) ;
+
+            len = packet->length - packet->xferred;
+
+            if (len > TX_FIFO_DEPTH) {
+                len = TX_FIFO_DEPTH;
+            }
+
+            for (size_t i = 0; i < len; i++) {
+                scftdr1_write(ptr[i]);
+            }
+
+            scfsr1_set_tdfe(0);
+            scfsr1_set_tend(0);
+            ptr += len;
+            packet->xferred += len;
             assert(packet->xferred <= packet->length);
-            if (packet->xferred == packet->length &&
-                    (packet = stream_switch_head(si)) == NULL)
-                break;
-        }
+        } while (packet->xferred < packet->length);
+
+        stream_switch_head(si);
     }
-out:
+
     return;
 }
 
+/**
+ * Receives data from a serial port.  A private function.
+ */
 static int 
 do_rx_work
 (
     struct sh7780_scif *device
 )
 {
-    struct stream_interface *si = &device->rx;
-    struct stream_pkt *packet = stream_get_head(si);
-    uint8_t data;
-    int got_some = 0;
+    struct stream_interface*    si;
+    struct stream_pkt*          packet;
+    uint8_t                     data;
 
-    while (scrfdr0_get_r()){
-        got_some = 1;
-        data = scfrdr0_get_data();
+    si = &device->rx;
+    packet = stream_get_head(si);
+
+    do {
+        if (scfsr1_get_er()) {
+            scfsr1_set_er(0);
+            return -1;
+        }
+
+        if (scfsr1_get_dr()) {
+            scfsr1_set_dr(0);
+            return -1;
+        }
+
+        if (scfsr1_get_brk()) {
+            scfsr1_set_brk(0);
+            return -1;
+        }
+
+        if (sclsr1_get_orer()) {
+            sclsr1_set_orer(0);
+            return -1;
+        }
+
+        // Nothing in the buffer
+        if (!scfsr1_get_rdf()) {
+            break;
+        }
+
+        data = scfrdr1_read();
+        scfsr1_set_rdf(0);
 
 #if defined(OKL4_KERNEL_MICRO)
-        /* Check for the magic Ctrl-k kernel break-in keyboard shortcut. */
-        if( data == 0xb ) { // Ctrl-k
+        if (data == 0xb) {  /* Ctrl-k */
+            /* Check for the magic Ctrl-k kernel break-in keyboard shortcut. */
             L4_KDB_Enter("breakin");
             continue;
         }
 #endif
-
-        if (!packet)
+        if (!packet) {
             continue;
+        }
 
         /* Save the received byte. */
         packet->data[packet->xferred++] = data;
 
-        /* Have we reaced the end of the buffer? */
         if (packet->xferred == packet->length) {
-            /* Yes, swap streams. */
             packet = stream_switch_head(si);
+            break;
         }
-    }
+    } while (scfsr1_get_rdf());
 
-    if (packet && packet->xferred)
+    if (packet && packet->xferred) {
         packet = stream_switch_head(si);
-
-    if (got_some) {
-        // clear error status
-        // short status = *SCFSR(self->base);
-        // status &= ~(SCFSR_ER|SCFSR_TEND|SCFSR_TDFE|SCFSR_BRK|SCFSR_FER|SCFSR_PER|SCFSR_DR|SCFSR_RDF);
-        // *SCFSR(self->base) = status;
-        scfsr0_set_er(0);
-        scfsr0_set_tend(0);
-        scfsr0_set_tdfe(0);
-        scfsr0_set_brk(0);
-        scfsr0_set_fer(0);
-        scfsr0_set_per(0);
-        scfsr0_set_dr(0);
-        scfsr0_set_rdf(0);
     }
 
     return 0;
 }
 
+/**
+ * Triggers delivery or receive of data.
+ */
 static int
 stream_sync_impl
 (
-    struct stream_interface *si,
-    struct sh7780_scif      *device
+    struct stream_interface*    si,
+    struct sh7780_scif*         device
 )
 {
     int retval = 0;
     
-    if(si == &device->tx)
+    if(si == &device->tx) {
         do_tx_work(device);
-    else if (si == &device->rx)
+    }
+    else if (si == &device->rx) {
         retval = do_rx_work(device);
+    }
     
     return retval;
 }
 
-/* Seven or eight bits for parity */
-/* One or two stop bits */
-static int serial_set_params(struct sh7780_scif *device, unsigned baud, int data_size,
-                      enum parity parity, int stop_bits)
+/**
+ * Handles interrupt
+ */
+static int
+device_interrupt_impl
+(
+    struct device_interface*    di,
+    struct sh7780_scif*         device,
+    int                         irq
+)
 {
-    if (data_size < 7 || data_size > 8) {
-        /* Invalid data_size */
-        return -1;
-    }
-
-    if (stop_bits < 1 || stop_bits > 2) {
-        /* Invalid # of stop bits */
-        return -1;
-    }
-
-    if (parity != PARITY_NONE &&
-            parity != PARITY_EVEN &&
-            parity != PARITY_ODD) {
-        /* Invalid parity setting */
-        return -1;
-    }
-
     /*
-     * Pck = 50MHz, n=0 (use Pck)
-     * N = Pck / (64 * 2^(2n-1) * bps) * 10^6 -1
-     */
-
-    int brt = (50/64*2*1000000*10/baud+5-10)/10;
-
-    scscr0_write(0);
-    
-    scfcr0_set_rfcl(1);
-    scfcr0_set_tfcl(1);
-    scfcr0_set_ttrg(1);
-    scfcr0_set_rtrg(1);
-//    scfcr0_write = SCFCR_RFCL | SCFCR_TFCL | /* clear FIFO */
-//        SCFCR_TTRG_0 | SCFCR_RTRG_1; /* set FIFO trigger */
-        
-
-    /*uint16_t mode = 0;*/
-    if (data_size == 7) {
-        scsmr0_set_chr(1);
-        /*mode |= SCSMR_CHR; *//* 7bit data */
-    }
-
-    switch(parity) {
-        case PARITY_EVEN:
-            scsmr0_set_pe(1);
-            /*mode |= (SCSMR_PE);*/
-            break;
-        case PARITY_ODD:
-            scsmr0_set_pe(1);
-            scsmr0_set_oe(1);
-            /*mode |= (SCSMR_PE|SCSMR_OE);*/
-        case PARITY_NONE:
-        default:
-            break;
-    }
-
-    if (stop_bits == 2) {
-        scsmr0_set_stop(1);
-        /*mode |= SCSMR_STOP;*/
-    }
-
-    /*scsmr0_write(mode);*/
-    scbrr0_write(brt);
-    /*scsptr0_write(SCSPTR_RTSIO);*/
-    scsptr0_set_rtsio(1);
-    scfcr0_write(0);
-    /*scscr0_write(SCSCR_TE | SCSCR_RE);*/
-    scscr0_set_te(1);
-    scscr0_set_re(1);
-
+     * not implemented yet.
+     */ 
     return 0;
 }
 
 static int
-device_setup_impl
+device_poll_impl
+(
+    struct device_interface*    di,
+    struct sh7780_scif*         device
+)
+{
+    return device_interrupt_impl(di, device, -1);
+    /*return 0;*/
+}
+
+/**
+ * Otains the number of interfaces of this device driver.
+ */
+static int
+device_num_interfaces_impl
 (
     struct device_interface *di,
-    struct sh7780_scif      *device,
-    struct resource         *resources
+    struct sh7780_scif      *dev
+)
+{
+    return 2;
+}
+
+/**
+ * Obtains an interface of this device driver.
+ */
+static struct generic_interface*
+device_get_interface_impl
+(
+    struct device_interface*    di,
+    struct sh7780_scif*         device,
+    int                         interface
+)
+{
+    switch(interface) {
+        case 0:
+            return (struct generic_interface *)(void *)&device->tx;
+        case 1:
+            return (struct generic_interface *)(void *)&device->rx;
+        default:
+            return NULL;
+    }
+}
+
+/**
+ * Initializes the device.
+ *
+ * @param di        the device interface
+ * @param device    the device
+ * @param resources the resource that this driver occupies
+ */
+static int
+device_setup_impl
+(
+    struct device_interface*    di,
+    struct sh7780_scif*         device,
+    struct resource*            resources
 )
 {
     int i, n_mem = 0;
     for (i = 0; i < 8; i++) {
         switch(resources->type) {
             case MEMORY_RESOURCE:
-                if (n_mem == 0)
-                    device->scif0 = *resources;
-                else
+                if (n_mem == 0) {
+                    device->main = *resources;
+                }
+                else {
                     printf("sh7780_scif: got more memory than expected!\n");
+                }
                 n_mem++;
                 break;
             case INTERRUPT_RESOURCE:
@@ -233,21 +274,29 @@ device_setup_impl
     device->tx.ops    = stream_ops;
     device->rx.ops    = stream_ops;
 
-    // set parameter
-    serial_set_params(device, DEFAULT_BAUD, DEFAULT_SIZE, DEFAULT_PARITY,
-                      DEFAULT_STOP);
+    // 115200 8N1
+    scscr1_write(0);
+    scfcr1_set_tfcl(1);
+    scfcr1_set_rfcl(1);
+    scsmr1_set_cks(0);
+
+    scbrr1_write(SCIF_BITRATE_115200);
+
+    scfcr1_set_rtrg(SCIF_SCFCR_RTRG1);
+    scfcr1_set_ttrg(SCIF_SCFCR_TTRG0);
+
     return DEVICE_SUCCESS;
 }
 
 static int
 device_enable_impl
 (
-    struct device_interface *di,
-    struct sh7780_scif      *device
+    struct device_interface*    di,
+    struct sh7780_scif*         device
 )
 {
-    serial_set_params(device, DEFAULT_BAUD, DEFAULT_SIZE, DEFAULT_PARITY,
-                      DEFAULT_STOP);
+    scscr1_set_te(1);
+    scscr1_set_re(1);
     device->state = STATE_ENABLED;
 
     return 0;
@@ -256,65 +305,13 @@ device_enable_impl
 static int
 device_disable_impl
 (
-    struct device_interface *di,
-    struct sh7780_scif      *device
+    struct device_interface*    di,
+    struct sh7780_scif*         device
 )
 {
     device->state = STATE_DISABLED;
-    serial_set_params(device, DEFAULT_BAUD, DEFAULT_SIZE, DEFAULT_PARITY,
-                      DEFAULT_STOP);
+    scscr1_set_te(0);
+    scscr1_set_re(0);
     return 0;
 }
 
-static int
-device_interrupt_impl
-(
-    struct device_interface *di,
-    struct sh7780_scif      *device,
-    int                     irq
-)
-{
-    /*
-     * not implemented yet.
-     */ 
-    return 0;
-}
-
-static int
-device_poll_impl
-(
-    struct device_interface *di,
-    struct sh7780_scif      *device
-    )
-{
-    return device_interrupt_impl(di, device, -1);
-    /*return 0;*/
-}
-
-static int
-device_num_interfaces_impl
-(
-    struct device_interface *di,
-    struct sh7780_scif      *dev
-    )
-{
-    return 2;
-}
-
-static struct generic_interface *
-device_get_interface_impl
-(
-    struct device_interface *di,
-    struct sh7780_scif      *device,
-    int                     interface
-)
-{
-    switch(interface) {
-        case 0:
-            return (struct generic_interface *)(void *)&device->tx;
-        case 1:
-            return (struct generic_interface *)(void *)&device->rx;
-        default:
-            return NULL;
-    }
-}

@@ -1,12 +1,35 @@
-/* $Id$ */
-
 /**
  * @since   February 2009
+ * @author  Hiroo Ishikawa <hiroo.ishikawa@gmail.com>
  */
 
 #include <schedule.h>
 #include <tcb.h>
 #include <arch/thread.h>
+
+#if defined(__GNUC__)
+#define asm_switch_to(cont, dest)                           \
+    do {                                                    \
+        __asm__ __volatile__ (                              \
+            "    mov     %3, r0          \n"                \
+            "    add     %4, r0          \n"                \
+            "    mov.l   %2, @r0         \n"                \
+            "    mov     %1, r15         \n"                \
+            "    jmp     @%0             \n"                \
+            "    nop                     \n"                \
+            :                                               \
+            : "r" (cont),                                   \
+              "r" (STACK_TOP),                              \
+              "r" (dest),                                   \
+              "r" (get_globals()),                          \
+              "i" (offsetof(globals_t, current_tcb))        \
+            : "memory"                                      \
+        );                                                  \
+        while (true);                                       \
+    } while (false)
+#else
+#error "Unknown compiler"
+#endif
 
 void
 switch_from(tcb_t* current, continuation_t continuation)
@@ -24,7 +47,6 @@ void
 switch_to(tcb_t* dest, tcb_t* schedule)
 {
     ASSERT(ALWAYS, dest->ready_list.next == NULL);
-    //space_t*    dest_space = dest->get_space();
 
     /* Update the global schedule variable. */
     set_active_schedule(schedule);
@@ -34,9 +56,16 @@ switch_to(tcb_t* dest, tcb_t* schedule)
         dest->resources.load(dest);
     }
 
-    /* Perform the context switch for real. */
+    /* Setup the destination's address space. */
+    space_t* space = dest->get_space();
+    if (EXPECT_FALSE(space == NULL)) {
+        space = get_kernel_space();
+    }
+    space->activate(dest);
 
-    while (1);
+    /* Perform the context switch for real. */
+    asm_switch_to(dest->cont, (word_t)dest);
+    /* NOT REACHED */
 }
 
 

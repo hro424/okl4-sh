@@ -64,7 +64,7 @@ typedef enum {
     SCIF_SCFCR_TTRG32 =         0x00,
     SCIF_SCFCR_TTRG16 =         0x10,
     SCIF_SCFCR_TTRG2 =          0x20,
-    SCIF_SCFCR_TTRG1 =          0x30,
+    SCIF_SCFCR_TTRG0 =          0x30,
     SCIF_SCFCR_MCE =            0x08,
     SCIF_SCFCR_TFCL =           0x04,
     SCIF_SCFCR_RFCL =           0x02,

@@ -59,7 +59,7 @@ bool
 generic_space_t::init (fpage_t utcb_area, kmem_resource_t *kresource)
 {
     word_t i;
-    word_t offset = USER_AREA_SECTIONS;
+    word_t offset = USER_AREA_SECTIONS + UTCB_AREA_SECTIONS;
 
     asid_t *asid = ((space_t *)this)->get_asid();
 
@@ -85,7 +85,6 @@ generic_space_t::init (fpage_t utcb_area, kmem_resource_t *kresource)
     for (i = 0; i < VAR_AREA_SECTIONS; i++) {
         *pg_to++ = *pg_from++;
     }
-
 
     ((space_t*)this)->pgbase = (word_t)page_table_to_phys(this->pdir);
 
@@ -194,12 +193,51 @@ generic_space_t::allocate_utcb(tcb_t* tcb, kmem_resource_t* kresource)
 void
 generic_space_t::free_utcb(utcb_t* utcb)
 {
-    /* do nothing, since in arm v6, utcb isn't allocated by kernel,
+    /* Do nothing, because in SH, UTCB isn't allocated by kernel,
      * kernel isn't responsible for removing utcb mapping from space
      * when delting or switching thread from the space,
      * the mapping will only be removed when space is deleted.
      */
 }
+
+/**
+ * Fills the specified TLB entry.
+ * NOTE: The current replacement policy is round-robin.
+ *
+ * @param vaddr     the virtual address
+ * @param space     the address space
+ * @param pg        the page entry
+ * @param pgsize    the size of the page
+ */
+static void
+fill_tlb(addr_t vaddr, space_t* space, pgent_t* pg, pgent_t::pgsize_e pgsize)
+{
+    static u8_t entry = 0;
+    word_t      tmp;
+    word_t      reg;
+
+    reg  = mapped_reg_read(REG_MMUCR);
+    // Clear the URC field
+    reg &= ~(REG_MMUCR_URC_MASK);
+    // TODO: mask it with URB value
+    tmp = entry;
+    reg |= (tmp << 10) & REG_MMUCR_URC_MASK;
+    mapped_reg_write(REG_MMUCR, reg);
+    entry++;    // overflow -> go back to 0
+
+    TRACE_INIT("vaddr: %p, asid: %d, pgraw: %x\n",
+               vaddr, (word_t)space->get_asid()->get(space), pg->raw);
+    mapped_reg_write(REG_PTEH,
+                 (word_t)vaddr & REG_PTEH_VPN_MASK |
+                 (word_t)space->get_asid()->get(space) & REG_PTEH_ASID_MASK);
+    mapped_reg_write(REG_PTEL, pg->get_ptel());
+
+    __asm__ __volatile__ ("ldtlb");
+
+    UPDATE_REG();
+}
+
+static unsigned char user_utcb_ref_page[4096] __attribute__ ((aligned (4096)));
 
 /**
  * Set up hardware context to run the tcb in this space.
@@ -210,14 +248,28 @@ generic_space_t::activate(tcb_t *tcb)
     word_t  dest_asid;
     word_t  new_pt;
 
-    *(word_t*)USER_UTCB_REF = tcb->get_utcb_location();
-
     dest_asid = ((space_t *)this)->get_asid()->get((space_t *)this);
     get_globals()->current_clist = this->get_clist();
     new_pt = ((space_t*)this)->pgbase;
 
     set_hw_asid(dest_asid);
     mapped_reg_write(REG_TTB, new_pt);
+
+    TRACE_INIT("utcb location 0x%x, utcb page 0x%x 0x%x\n",
+               tcb->get_utcb_location(),
+               USER_UTCB_REF,
+               virt_to_phys(user_utcb_ref_page));
+    //TODO: Set the TLB entry of USER_UTCB_REF
+    ((space_t*)this)->add_mapping((void*)USER_UTCB_REF,
+                                  virt_to_phys(user_utcb_ref_page),
+                                  pgent_t::size_4k, space_t::read_write,
+                                  false, writeback_shared,
+                                  get_current_kmem_resource());
+    pgent_t*            pg;
+    pgent_t::pgsize_e   pgsize;
+    this->lookup_mapping((void*)USER_UTCB_REF, &pg, &pgsize);
+    fill_tlb((void*)USER_UTCB_REF, (space_t*)this, pg, pgsize);
+    *(word_t*)USER_UTCB_REF = tcb->get_utcb_location();
 }
 
 /**
@@ -322,7 +374,17 @@ generic_space_t::readmem_phys(addr_t vaddr, addr_t paddr)
 }
 #endif /* CONFIG_DEBUG */
 
-
+/**
+ * Add mapping information.
+ *
+ * @param vaddr         the destination address
+ * @param paddr         the source address
+ * @param size          the size of mapping
+ * @param rwx           the access rights of the mapping
+ * @param kernel        whether it's privileged or not
+ * @param attrib        the caching policy
+ * @param kresource     used when a subtree is created
+ */
 bool
 space_t::add_mapping(addr_t vaddr, addr_t paddr, pgent_t::pgsize_e size,
                      rwx_e rwx, bool kernel, memattrib_e attrib,

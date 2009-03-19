@@ -82,7 +82,7 @@
 
 //TODO
 //#define USER_UTCB_REF               (SYS_AREA_START + 0xFF0)
-#define USER_UTCB_REF               (0x7F000FF0)
+#define USER_UTCB_REF                   (0x7F000FF0)
 
 #if !defined(__ASSEMBLER__)
 
