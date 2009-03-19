@@ -172,6 +172,7 @@ pgent_t::is_subtree(generic_space_t* s, pgsize_e pgsize)
         case size_1m:
             return (l1.large.size0 != 1) || (l1.large.size1 != 1);
         case size_64k:
+            return (l2.medium.size0 != 1) && (l2.medium.size1 != 0);
         case size_4k:
         default:
             return false;
@@ -258,13 +259,14 @@ pgent_t::set_entry(generic_space_t* s, pgsize_e pgsize, addr_t paddr,
         perm = writable ? 1 : 0;
     }
     else {
-        perm = 0x10 | (writable ? 1 : 0);
+        perm = 2 | (writable ? 1 : 0);
     }
 
     if (EXPECT_TRUE(pgsize == size_4k)) {
         l2_entry_t l2_entry;
 
         l2_entry.raw = 0;
+        l2_entry.small.size0 = 1;
         l2_entry.small.present = 1;
         l2_entry.small.x = executable;
         l2_entry.small.perm = perm;
@@ -281,6 +283,8 @@ pgent_t::set_entry(generic_space_t* s, pgsize_e pgsize, addr_t paddr,
         l1_entry_t l1_entry;
 
         l1_entry.raw = 0;
+        l1_entry.large.size0 = 1;
+        l1_entry.large.size1 = 1;
         l1_entry.large.present = 1;
         l1_entry.large.x = executable;
         l1_entry.large.perm = perm;
@@ -293,10 +297,12 @@ pgent_t::set_entry(generic_space_t* s, pgsize_e pgsize, addr_t paddr,
 
         l1.raw = l1_entry.raw;
     }
+    // size_64k
     else {
         l2_entry_t l2_entry;
 
         l2_entry.raw = 0;
+        l2_entry.medium.size1 = 1;
         l2_entry.medium.present = 1;
         l2_entry.medium.x = executable;
         l2_entry.medium.perm = perm;
