@@ -27,7 +27,7 @@ exception_vector:                       \
 #define BEGIN_PROC_TRAPS(name, offset)  \
     .global name;                       \
     .type   name,function;              \
-    .balign offset;                     \
+    .balign offset, 0, offset;          \
 name:
 
 #define END_PROC_TRAPS(name)

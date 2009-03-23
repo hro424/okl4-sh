@@ -192,6 +192,7 @@ initial_switch_to (tcb_t * tcb)
     *pteh = (new_asid & REG_PTEH_ASID_MASK) | (*pteh & REG_PTEH_VPN_MASK);
     UPDATE_REG();
 
+    //TODO?
     /* keep stack aligned for RVCT */
     stack_top = ((tcb_t **)(&__stack + 1)) - 2;
 
@@ -199,7 +200,7 @@ initial_switch_to (tcb_t * tcb)
     asm_initial_switch_to((addr_t)stack_top, tcb->cont);
 
     ASSERT(ALWAYS, !"We shouldn't get here!");
-    while(true) {}
+    while(true) ;
 }
 
 extern "C" void* abort_return();
