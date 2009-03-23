@@ -16,6 +16,8 @@
         mov.l   @r15, r15
         add     #OFS_TCB_ARCH_CONTEXT, r15
         RESTORE_CONTEXT
+        /* r15 - 4 */
+        add     #0xFC, r15
         rte
         nop
 

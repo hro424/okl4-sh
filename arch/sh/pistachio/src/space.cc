@@ -209,6 +209,7 @@ generic_space_t::free_utcb(utcb_t* utcb)
  * @param pg        the page entry
  * @param pgsize    the size of the page
  */
+// TODO: Merge this with fill_tlb@exception.cc
 static void
 fill_tlb(addr_t vaddr, space_t* space, pgent_t* pg, pgent_t::pgsize_e pgsize)
 {
@@ -242,7 +243,6 @@ fill_tlb(addr_t vaddr, space_t* space, pgent_t* pg, pgent_t::pgsize_e pgsize)
     sh_cache::flush();
 }
 
-/*
 static void
 dump_utlb()
 {
@@ -267,7 +267,6 @@ dump_utlb()
                    (utlb_data >> 4) & 0xF);
     }
 }
-*/
 
 static unsigned char utcb_ref_page[4096] __attribute__ ((aligned (4096)));
 
@@ -290,19 +289,25 @@ generic_space_t::activate(tcb_t *tcb)
     set_hw_asid(dest_asid);
     mapped_reg_write(REG_TTB, new_pt);
 
-    ((space_t*)this)->add_mapping((void*)USER_UTCB_REF,
+    // Map the UTCB reference page
+    ((space_t*)this)->add_mapping((addr_t)USER_UTCB_REF,
                                   virt_to_phys(utcb_ref_page),
                                   pgent_t::size_4k, space_t::read_write,
                                   false, writeback_shared,
                                   get_current_kmem_resource());
 
-    if (!this->lookup_mapping((void*)USER_UTCB_REF, &pg, &pgsize)) {
-        enter_kdebug("not found");
-    }
+    this->lookup_mapping((addr_t)USER_UTCB_REF, &pg, &pgsize);
 
-    fill_tlb((void*)USER_UTCB_REF, (space_t*)this, pg, pgsize);
+    fill_tlb((addr_t)USER_UTCB_REF, (space_t*)this, pg, pgsize);
 
     *(volatile word_t*)USER_UTCB_REF = tcb->get_utcb_location();
+
+    // Map the stack page
+    addr_t  sp = (addr_t)((word_t)tcb->get_user_sp() - 4);
+    this->lookup_mapping(sp, &pg, &pgsize);
+    fill_tlb(sp, (space_t*)this, pg, pgsize);
+
+    dump_utlb();
 }
 
 /**
