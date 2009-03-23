@@ -14,7 +14,7 @@
             "    mov     %3, r0          \n"                \
             "    add     %4, r0          \n"                \
             "    mov.l   %2, @r0         \n"                \
-            "    mov     %1, r15         \n"                \
+            "    or      %1, r15         \n"                \
             "    jmp     @%0             \n"                \
             "    nop                     \n"                \
             :                                               \
@@ -48,6 +48,7 @@ switch_to(tcb_t* dest, tcb_t* schedule)
 {
     ASSERT(ALWAYS, dest->ready_list.next == NULL);
 
+    //TODO: Unnecessary?
     /* Update the global schedule variable. */
     set_active_schedule(schedule);
 

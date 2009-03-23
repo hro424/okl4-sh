@@ -116,7 +116,7 @@ public:
 
     memattrib_e get_attributes(generic_space_t* s, pgsize_e pgsize);
 
-    u32_t get_ptel();
+    u32_t ptel(pgsize_e pgsize);
 
     pgent_t* next(generic_space_t* s, pgsize_e pgsize, word_t num);
 
@@ -134,6 +134,7 @@ pgent_t::is_valid(generic_space_t* s, pgsize_e pgsize)
         case size_1m:
             return (l1.large.present == 1);
         case size_64k:
+            return (l2.medium.present == 1);
         case size_4k:
             return (l2.small.present == 1);
         default:
@@ -144,25 +145,62 @@ pgent_t::is_valid(generic_space_t* s, pgsize_e pgsize)
 INLINE bool
 pgent_t::is_writable(generic_space_t* s, pgsize_e pgsize)
 {
-    return pgsize == size_1m ? l1.large.perm >= 3 : l2.small.perm >= 3;
+    switch (pgsize) {
+        case size_1m:
+            return (l1.large.perm == 3);
+        case size_64k:
+            return (l2.medium.perm == 3);
+        case size_4k:
+            return (l2.small.perm == 3);
+        default:
+            return false;
+    }
 }
 
 INLINE bool
 pgent_t::is_readable(generic_space_t* s, pgsize_e pgsize)
 {
-    return pgsize == size_1m ? l1.large.perm >= 2 : l2.small.perm >= 2;
+    switch (pgsize) {
+        case size_1m:
+            return (l1.large.perm > 2);
+        case size_64k:
+            return (l2.medium.perm > 2);
+        case size_4k:
+            return (l2.small.perm > 2);
+        default:
+            return false;
+    }
 }
 
 INLINE bool
 pgent_t::is_executable(generic_space_t* s, pgsize_e pgsize)
 {
-    return pgsize == size_1m ? l1.large.x == 1 : l2.small.x == 1;
+    switch (pgsize) {
+        case size_1m:
+            return (l1.large.x == 1);
+        case size_64k:
+            return (l2.medium.x == 1);
+        case size_4k:
+            return (l2.small.x == 1);
+        default:
+            return false;
+    }
 }
 
 INLINE bool
 pgent_t::is_kernel(generic_space_t* s, pgsize_e pgsize)
 {
     return pgsize == size_1m ?  l1.large.perm <= 1 : l2.small.perm <= 1;
+    switch (pgsize) {
+        case size_1m:
+            return (l1.large.perm <= 1);
+        case size_64k:
+            return (l2.medium.perm <= 1);
+        case size_4k:
+            return (l2.small.perm <= 1);
+        default:
+            return false;
+    }
 }
 
 INLINE bool
@@ -170,8 +208,9 @@ pgent_t::is_subtree(generic_space_t* s, pgsize_e pgsize)
 {
     switch (pgsize) {
         case size_1m:
-            return (l1.large.size0 != 1) || (l1.large.size1 != 1);
+            return (l1.large.tree == 1);
         case size_64k:
+            return (l2.medium.tree == 1);
         case size_4k:
         default:
             return false;
@@ -190,12 +229,6 @@ pgent_t::address(generic_space_t* s, pgsize_e pgsize)
         default:
             return l2.address_small();
     }
-}
-
-INLINE pgent_t*
-pgent_t::subtree(generic_space_t* s, pgsize_e pgsize)
-{
-    return this;
 }
 
 INLINE word_t
@@ -229,7 +262,9 @@ pgent_t::make_subtree(generic_space_t* s, pgsize_e pgsize, bool kernel,
             return false;
         }
         l1.raw = 0;
-        l1.large.base_address = (word_t)virt_to_phys(base) >> 10;
+        l1.table.present = 1;
+        l1.table.tree = 1;
+        l1.table.base_address = (word_t)virt_to_phys(base) >> SH_L2_BITS;
         sh_cache::flush_d(base, SH_L2_BITS);
     }
     return true;
@@ -241,10 +276,19 @@ pgent_t::remove_subtree(generic_space_t* s, pgsize_e pgsize, bool kernel,
 {
     if (pgsize == size_1m) {
         kresource->free(kmem_group_pgtab,
-                        phys_to_virt((addr_t)l1.large.base_address),
+                        phys_to_virt((addr_t)l1.table.base_address),
                         SH_L2_SIZE);
     }
     clear(s, pgsize, kernel);
+}
+
+INLINE pgent_t*
+pgent_t::subtree(generic_space_t* s, pgsize_e pgsize)
+{
+    if (pgsize == size_1m) {
+        return (pgent_t*)phys_to_virt(l1.address_table());
+    }
+    return this;
 }
 
 INLINE void
@@ -258,15 +302,17 @@ pgent_t::set_entry(generic_space_t* s, pgsize_e pgsize, addr_t paddr,
         perm = writable ? 1 : 0;
     }
     else {
-        perm = 0x10 | (writable ? 1 : 0);
+        perm = 2 | (writable ? 1 : 0);
     }
 
     if (EXPECT_TRUE(pgsize == size_4k)) {
         l2_entry_t l2_entry;
 
         l2_entry.raw = 0;
-        l2_entry.small.present = 1;
+        l2_entry.small.tree = 1;
         l2_entry.small.x = executable;
+        l2_entry.small.size0 = 1;
+        l2_entry.small.present = 1;
         l2_entry.small.perm = perm;
         l2_entry.small.shared =
             ((word_t)attrib >> CACHE_ATTRIB_SHARED_BIT) & 0x1;
@@ -281,6 +327,8 @@ pgent_t::set_entry(generic_space_t* s, pgsize_e pgsize, addr_t paddr,
         l1_entry_t l1_entry;
 
         l1_entry.raw = 0;
+        l1_entry.large.size0 = 1;
+        l1_entry.large.size1 = 1;
         l1_entry.large.present = 1;
         l1_entry.large.x = executable;
         l1_entry.large.perm = perm;
@@ -293,10 +341,12 @@ pgent_t::set_entry(generic_space_t* s, pgsize_e pgsize, addr_t paddr,
 
         l1.raw = l1_entry.raw;
     }
+    // size_64k
     else {
         l2_entry_t l2_entry;
 
         l2_entry.raw = 0;
+        l2_entry.medium.size1 = 1;
         l2_entry.medium.present = 1;
         l2_entry.medium.x = executable;
         l2_entry.medium.perm = perm;
@@ -370,9 +420,17 @@ pgent_t::get_attributes(generic_space_t* s, pgsize_e pgsize)
 }
 
 INLINE u32_t
-pgent_t::get_ptel()
+pgent_t::ptel(pgsize_e pgsize)
 {
-    return raw & REG_PTEL_MASK;
+    switch (pgsize) {
+        case size_1m:
+            return l1.ptel_large();
+        case size_64k:
+            return l2.ptel_medium();
+        case size_4k:
+        default:
+            return l2.ptel_small();
+    }
 }
 
 INLINE pgent_t*

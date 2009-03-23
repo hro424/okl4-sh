@@ -116,8 +116,14 @@ init_pagetable(pgent_t* pdir_phys, word_t* base_phys)
 INLINE void SECTION(".init")
 activate_mmu()
 {
-    //mapped_reg_write(REG_MMUCR, REG_MMUCR_SQMD | REG_MMUCR_TI | REG_MMUCR_AT);
-    mapped_reg_write(REG_MMUCR, REG_MMUCR_AT);
+    mapped_reg_write(REG_MMUCR, REG_MMUCR_TI | REG_MMUCR_AT);
+    // UTLB cleanup
+    for (word_t i = 0; i < 64; i++) {
+        mapped_reg_write(REG_MMUCR, REG_MMUCR_AT | (i << 10));
+        mapped_reg_write(REG_PTEH, 0);
+        mapped_reg_write(REG_PTEL, 0);
+        __asm__ __volatile__ ("ldtlb");
+    }
     UPDATE_REG();
 }
 

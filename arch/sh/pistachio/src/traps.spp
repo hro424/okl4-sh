@@ -114,6 +114,134 @@ END_LOCAL_PROC(common_return)
 END_PROC(abort_return)
 
 
+
+/*
+ * TLB miss handler vector
+ * NOTE: Must be placed at VBR + 0x400
+ */
+BEGIN_PROC_TRAPS(sh_tlb_miss, 0x400)
+        /* Using register bank 1 */
+        SAVE_CONTEXT
+        /* Using register bank 0 */
+
+        /*
+         * The exception event register contains the access mode, such as
+         * read (0x40) or write (0x60).  Pass it via the first argument.
+         */
+        mov.l   2f, r4
+        mov.l   @r4, r4
+
+        /* Pass the context via the second argument */
+        mov     r15, r5
+
+        /* Check whether it is raised in user or kernel mode */
+        stc     ssr, r0
+        rotl    r0
+        rotl    r0
+        bt      5f
+
+        /* Load the kernel stack if from user mode*/
+        mov.l   1f, r15
+5:
+        clrt
+
+        /* Set up continuation */
+        mov.l   4f, r0
+        lds     r0, pr
+
+        /* Call the handler */
+        mov.l   3f, r0
+        jsr     @r0
+        nop
+        /* NOT REACHED */
+
+        ALIGN   4
+1:      .long   KERNEL_STACK
+2:      .long   REG_EXPEVT
+3:      .long   TLB_HANDLER
+4:      .long   common_return
+
+END_PROC_TRAPS(sh_tlb_miss)
+
+
+/*
+ * IRQ handler vector
+ * NOTE: Must be placed at 0x600 (= 0x400 + 0x200)
+ * TODO: Handling multiple interrupts
+ */
+BEGIN_PROC_TRAPS(sh_interrupt, 0x200)
+        SAVE_CONTEXT
+        /* Using register bank 0 */
+
+        /*
+         * Read the interrupt event register.
+         * Pass it via the first argument.
+         */
+        mov.l   2f, r4
+        mov.l   @r4, r4
+
+        /* Pass the saved context via the second argument */
+        mov     r15, r5
+
+        /* Set up continuation */
+        mov.l   3f, r0
+        lds     r0, pr
+
+        /* Check whether it is raised in user or kernel mode */
+        stc     ssr, r0
+        rotl    r0
+        rotl    r0
+        bt      kernel_interrupt
+
+        /* Load the kernel stack */
+        mov.l   1f, r15
+
+        mov.l   4f, r0
+        jmp     @r0
+        nop
+        /* NOT REACHED */
+
+LABEL(kernel_interrupt)
+        /* Handle an interrupt raised in kernel mode */
+        clrt
+        mov.l   4f, r0
+        jsr     @r0
+        nop
+
+        /* Get current TCB to get continuation */
+        mov.l   5f, r15
+        add     #OFS_GLOBAL_CURRENT_TCB, r15
+        mov.l   @r15, r15
+        add     #OFS_TCB_PREEMPTION_CONTINUATION, r15
+        mov     r15, r0
+
+        /* Reset the kernel stack */
+        mov.l   1f, r15
+
+        /* Return to continuation */
+        jmp     @r0
+        nop
+        /* NOT REACHED */
+
+        ALIGN   4
+1:      .long   KERNEL_STACK
+2:      .long   REG_INTEVT
+3:      .long   common_return
+4:      .long   soc_handle_interrupt
+5:      .long   SH_GLOBAL_BASE
+
+END_PROC_TRAPS(sh_interrupt)
+
+/*
+ * The rest of general exception vectors
+ * NOTE: Must be placed at VBR + 0x800
+ */
+        /* Vector 10: Invalid FPU Instruction (offset: 0x800) */
+        EXP_VECTOR(0x200, exp_instruction_exception)
+
+        /* Vector 11: Slot Invalid FPU Instruction (offset: 0x820) */
+        EXP_VECTOR(0x20, exp_instruction_exception)
+
 /*
  * Invokes the page fault handler that sends a page fault message to user.
  */
@@ -447,131 +575,4 @@ BEGIN_LOCAL_PROC(syscall_misc)
 3:      .long   common_return
 END_LOCAL_PROC(syscall_misc)
 
-
-/*
- * TLB miss handler vector
- * NOTE: Must be placed at VBR + 0x400
- */
-BEGIN_PROC_TRAPS(sh_tlb_miss, 0x400)
-        /* Using register bank 1 */
-        SAVE_CONTEXT
-        /* Using register bank 0 */
-
-        /*
-         * The exception event register contains the access mode, such as
-         * read (0x40) or write (0x60).  Pass it via the first argument.
-         */
-        mov.l   2f, r4
-        mov.l   @r4, r4
-
-        /* Pass the context via the second argument */
-        mov     r15, r5
-
-        /* Check whether it is raised in user or kernel mode */
-        stc     ssr, r0
-        rotl    r0
-        rotl    r0
-        bt      5f
-
-        /* Load the kernel stack if from user mode*/
-        mov.l   1f, r15
-5:
-        clrt
-
-        /* Set up continuation */
-        mov.l   4f, r0
-        lds     r0, pr
-
-        /* Call the handler */
-        mov.l   3f, r0
-        jsr     @r0
-        nop
-        /* NOT REACHED */
-
-        ALIGN   4
-1:      .long   KERNEL_STACK
-2:      .long   REG_EXPEVT
-3:      .long   TLB_HANDLER
-4:      .long   common_return
-
-END_PROC_TRAPS(sh_tlb_miss)
-
-
-/*
- * IRQ handler vector
- * NOTE: Must be placed at 0x600 (= 0x400 + 0x200)
- * TODO: Handling multiple interrupts
- */
-BEGIN_PROC_TRAPS(sh_interrupt, 0x200)
-        SAVE_CONTEXT
-        /* Using register bank 0 */
-
-        /*
-         * Read the interrupt event register.
-         * Pass it via the first argument.
-         */
-        mov.l   2f, r4
-        mov.l   @r4, r4
-
-        /* Pass the saved context via the second argument */
-        mov     r15, r5
-
-        /* Set up continuation */
-        mov.l   3f, r0
-        lds     r0, pr
-
-        /* Check whether it is raised in user or kernel mode */
-        stc     ssr, r0
-        rotl    r0
-        rotl    r0
-        bt      kernel_interrupt
-
-        /* Load the kernel stack */
-        mov.l   1f, r15
-
-        mov.l   4f, r0
-        jmp     @r0
-        nop
-        /* NOT REACHED */
-
-LABEL(kernel_interrupt)
-        /* Handle an interrupt raised in kernel mode */
-        clrt
-        mov.l   4f, r0
-        jsr     @r0
-        nop
-
-        /* Get current TCB to get continuation */
-        mov.l   5f, r15
-        add     #OFS_GLOBAL_CURRENT_TCB, r15
-        mov.l   @r15, r15
-        add     #OFS_TCB_PREEMPTION_CONTINUATION, r15
-        mov     r15, r0
-
-        /* Reset the kernel stack */
-        mov.l   1f, r15
-
-        /* Return to continuation */
-        jmp     @r0
-        nop
-        /* NOT REACHED */
-
-        ALIGN   4
-1:      .long   KERNEL_STACK
-2:      .long   REG_INTEVT
-3:      .long   common_return
-4:      .long   soc_handle_interrupt
-5:      .long   SH_GLOBAL_BASE
-
-END_PROC_TRAPS(sh_interrupt)
-
-/*
- * The rest of general exception vectors
- * NOTE: Must be placed at VBR + 0x800
- */
-        /* Vector 10: Invalid FPU Instruction (offset: 0x800) */
-        EXP_VECTOR(0x200, exp_instruction_exception)
-
-        /* Vector 11: Slot Invalid FPU Instruction (offset: 0x820) */
-        EXP_VECTOR(0x20, exp_instruction_exception)
 

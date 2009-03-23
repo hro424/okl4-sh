@@ -215,6 +215,7 @@ fill_tlb(addr_t vaddr, space_t* space, pgent_t* pg, pgent_t::pgsize_e pgsize)
     static u8_t entry = 0;
     word_t      tmp;
     word_t      reg;
+    word_t      addr;
 
     reg  = mapped_reg_read(REG_MMUCR);
     // Clear the URC field
@@ -225,19 +226,50 @@ fill_tlb(addr_t vaddr, space_t* space, pgent_t* pg, pgent_t::pgsize_e pgsize)
     mapped_reg_write(REG_MMUCR, reg);
     entry++;    // overflow -> go back to 0
 
-    TRACE_INIT("vaddr: %p, asid: %d, pgraw: %x\n",
-               vaddr, (word_t)space->get_asid()->get(space), pg->raw);
+    addr = (word_t)vaddr;
+    addr = (addr >> hw_pgshifts[pgsize]) << hw_pgshifts[pgsize];
+
     mapped_reg_write(REG_PTEH,
-                 (word_t)vaddr & REG_PTEH_VPN_MASK |
-                 (word_t)space->get_asid()->get(space) & REG_PTEH_ASID_MASK);
-    mapped_reg_write(REG_PTEL, pg->get_ptel());
+                 (addr & REG_PTEH_VPN_MASK) |
+                 ((word_t)space->get_asid()->get(space) & REG_PTEH_ASID_MASK));
+    // Add dirty bit to avoid the initial write exception
+    mapped_reg_write(REG_PTEL, pg->ptel(pgsize) | (1 << 2));
 
     __asm__ __volatile__ ("ldtlb");
 
     UPDATE_REG();
+
+    sh_cache::flush();
 }
 
-static unsigned char user_utcb_ref_page[4096] __attribute__ ((aligned (4096)));
+/*
+static void
+dump_utlb()
+{
+    word_t  utlb_addr;
+    word_t  utlb_data;
+
+    for (word_t i = 0; i < 64; i++) {
+        utlb_addr = mapped_reg_read(0xF6000000 | (i << 8));
+        utlb_data = mapped_reg_read(0xF7000000 | (i << 8));
+        TRACE_INIT("%x:\t%2x %.8x %c%c\t-- %.8x %c%c%c%c%c szpr:%x\n",
+                   i,
+                   utlb_addr & 0xFF,
+                   utlb_addr & 0xFFFFFC00,
+                   utlb_addr & (1 << 9) ? 'd' : ' ',
+                   utlb_addr & (1 << 8) ? 'v' : ' ',
+                   utlb_data & 0x1FFFFC00,
+                   utlb_data & (1 << 8) ? 'v' : ' ',
+                   utlb_data & (1 << 3) ? 'c' : ' ',
+                   utlb_data & (1 << 2) ? 'd' : ' ',
+                   utlb_data & (1 << 1) ? 's' : ' ',
+                   utlb_data & 1 ? 't' : 'w',
+                   (utlb_data >> 4) & 0xF);
+    }
+}
+*/
+
+static unsigned char utcb_ref_page[4096] __attribute__ ((aligned (4096)));
 
 /**
  * Set up hardware context to run the tcb in this space.
@@ -245,8 +277,11 @@ static unsigned char user_utcb_ref_page[4096] __attribute__ ((aligned (4096)));
 void
 generic_space_t::activate(tcb_t *tcb)
 {
-    word_t  dest_asid;
-    word_t  new_pt;
+    word_t              dest_asid;
+    word_t              new_pt;
+    pgent_t*            pg;
+    pgent_t::pgsize_e   pgsize;
+
 
     dest_asid = ((space_t *)this)->get_asid()->get((space_t *)this);
     get_globals()->current_clist = this->get_clist();
@@ -255,21 +290,19 @@ generic_space_t::activate(tcb_t *tcb)
     set_hw_asid(dest_asid);
     mapped_reg_write(REG_TTB, new_pt);
 
-    TRACE_INIT("utcb location 0x%x, utcb page 0x%x 0x%x\n",
-               tcb->get_utcb_location(),
-               USER_UTCB_REF,
-               virt_to_phys(user_utcb_ref_page));
-    //TODO: Set the TLB entry of USER_UTCB_REF
     ((space_t*)this)->add_mapping((void*)USER_UTCB_REF,
-                                  virt_to_phys(user_utcb_ref_page),
+                                  virt_to_phys(utcb_ref_page),
                                   pgent_t::size_4k, space_t::read_write,
                                   false, writeback_shared,
                                   get_current_kmem_resource());
-    pgent_t*            pg;
-    pgent_t::pgsize_e   pgsize;
-    this->lookup_mapping((void*)USER_UTCB_REF, &pg, &pgsize);
+
+    if (!this->lookup_mapping((void*)USER_UTCB_REF, &pg, &pgsize)) {
+        enter_kdebug("not found");
+    }
+
     fill_tlb((void*)USER_UTCB_REF, (space_t*)this, pg, pgsize);
-    *(word_t*)USER_UTCB_REF = tcb->get_utcb_location();
+
+    *(volatile word_t*)USER_UTCB_REF = tcb->get_utcb_location();
 }
 
 /**
@@ -390,11 +423,9 @@ space_t::add_mapping(addr_t vaddr, addr_t paddr, pgent_t::pgsize_e size,
                      rwx_e rwx, bool kernel, memattrib_e attrib,
                      kmem_resource_t* kresource)
 {
-    pgent_t::pgsize_e   pgsize;
-    pgent_t*            pg;
+    pgent_t::pgsize_e   pgsize = pgent_t::size_max;
+    pgent_t*            pg = this->pgent(0);
 
-    pgsize = pgent_t::size_max;
-    pg = this->pgent(0);
     pg = pg->next(this, pgsize, page_table_index(pgsize, vaddr));
 
     /* Lookup mapping */
@@ -419,8 +450,6 @@ space_t::add_mapping(addr_t vaddr, addr_t paddr, pgent_t::pgsize_e size,
     bool x = (word_t)rwx & 1;
 
     pg->set_entry(this, pgsize, paddr, r, w, x, kernel, attrib);
-
-    //TODO: Need to maintain the cache?
 
     return true;
 }

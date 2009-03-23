@@ -22,13 +22,13 @@ class sh(Machine):
 # SH-4 (in SH775X Series)
 class sh4(sh):
     memory = sh.memory.copy()
-    memory['virtual'] = [Region(0x1000, 0x7ef00000)]
+    memory['virtual'] = [Region(0x1000, 0xe0000000)]
     arch_version = 4
 
 # SH-4A (in SH778X Series)
 class sh4a(sh):
     cpu = "sh4a"
     memory = sh.memory.copy();
-    memory['virtual'] = [Region(0x1000, 0x7ef00000)]
+    memory['virtual'] = [Region(0x1000, 0xe0000000)]
     arch_version = 4
 

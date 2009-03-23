@@ -1,7 +1,6 @@
-/* $Id$ */
-
 /**
  * @since   December 2008
+ * @author  Hiroo Ishikawa <hiroo.ishikawa@gmail.com>
  */
 
 #ifndef OKL4_ARCH_SH_PGTABLE_H
@@ -15,6 +14,15 @@
  * tables like IA32 MMU does.
  */
 
+//NOTE: +2 is the size of a page table entry in log2.
+#define SH_L1_BITS          (SH_SECTION_BITS + 2)
+#define SH_L1_SIZE          (1UL << SH_L1_BITS)
+#define SH_L2_BITS          (32 - SH_SECTION_BITS - PAGE_BITS_4K + 2)
+#define SH_L2_SIZE          (1UL << SH_L2_BITS)
+
+#define PG_TOP_SIZE         SH_L1_SIZE
+
+
 class l1_entry_t
 {
 public:
@@ -23,7 +31,7 @@ public:
 
         /* Structure of 1MiB page entries */
         struct {
-            BITFIELD11(word_t,
+            BITFIELD12(word_t,
                 /* Write-through/Copy-back */
                 wt              : 1,
                 /* Shared */
@@ -40,14 +48,25 @@ public:
                 size1           : 1,
                 /* Present */
                 present         : 1,
+                /* Subtree */
+                tree            : 1,
                 /* Executable */
                 x               : 1,
 
-                reserved        : 10,
+                reserved        : 9,
                 /* Base address of a level-2 table or a 1M page */
                 base_address    : 12
             );
         } large;
+
+        struct {
+            BITFIELD4(word_t,
+                reserved        : 8,
+                present         : 1,
+                tree            : 1,
+                base_address    : 22
+            );
+        } table;
     };
 
     memattrib_e attributes() {
@@ -56,6 +75,10 @@ public:
     }
 
     addr_t address_large() { return (addr_t)(large.base_address << 20); }
+
+    addr_t address_table() { return (addr_t)(table.base_address << 10); }
+
+    word_t ptel_large() { return raw & (REG_PTEL_MASK & ~0x000FFC00); }
 };
 
 class l2_entry_t
@@ -66,7 +89,7 @@ public:
 
         /* Structure of 64KiB page entries */
         struct {
-            BITFIELD11(word_t,
+            BITFIELD12(word_t,
                 /* Write-through/Copy-back */
                 wt              : 1,
                 /* Shared */
@@ -85,8 +108,10 @@ public:
                 present         : 1,
                 /* Executable */
                 x               : 1,
+                /* Subtree */
+                tree            : 1,
 
-                reserved        : 6,
+                reserved        : 5,
                 /* Base address of a level-2 table or a 1M page */
                 base_address    : 16
             );
@@ -94,7 +119,7 @@ public:
 
         /* Structure of 4KiB page entries */
         struct {
-            BITFIELD11(word_t,
+            BITFIELD12(word_t,
                 /* Write-through(1)/Copy-back(0) */
                 wt              : 1,
                 /* Shared */
@@ -113,8 +138,10 @@ public:
                 present         : 1,
                 /* Executable */
                 x               : 1,
+                /* Subtree */
+                tree            : 1,
 
-                reserved        : 2,
+                reserved        : 1,
                 /* Base address of a level-2 table or a 1M page */
                 base_address    : 20
             );
@@ -129,15 +156,11 @@ public:
     addr_t address_medium() { return (addr_t)(medium.base_address << 16); }
 
     addr_t address_small() { return (addr_t)(small.base_address << 12); }
+
+    word_t ptel_medium() { return raw & (REG_PTEL_MASK & ~0x0000FC00); }
+
+    word_t ptel_small() { return raw & (REG_PTEL_MASK & ~0x00000C00); }
 };
-
-//NOTE: +2 is the size of a pdir entry in log2.
-#define SH_L1_BITS          (SH_SECTION_BITS + 2)
-#define SH_L1_SIZE          (1UL << SH_L1_BITS)
-#define SH_L2_BITS          (32 - SH_SECTION_BITS - PAGE_BITS_4K + 2)
-#define SH_L2_SIZE          (1UL << SH_L2_BITS)
-
-#define PG_TOP_SIZE         SH_L1_SIZE
 
 #endif /* OKL4_ARCH_SH_PGTABLE_H */
 

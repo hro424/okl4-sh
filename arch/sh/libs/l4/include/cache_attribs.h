@@ -8,8 +8,8 @@
 
 #define CACHE_ATTRIB_UNCACHED           0x00
 #define CACHE_ATTRIB_CACHED             0x01
-#define CACHE_ATTRIB_WRITETHROUGH       0x01
-#define CACHE_ATTRIB_WRITEBACK          0x03
+#define CACHE_ATTRIB_WRITEBACK          0x01
+#define CACHE_ATTRIB_WRITETHROUGH       0x03
 #define CACHE_ATTRIB_SHARED             0x80
 
 #define CACHE_ATTRIB_CACHED_BIT         0
