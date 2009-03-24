@@ -208,7 +208,8 @@ public:
          *  NOTE: Use the 32KiB range at KERNEL_AREA_START, because
          *  (1)  TLB miss is not thrown because P1 is a non-TLB area.
          *  (2)  movca.l writes r0 to a cache block, not directly to memory,
-         *       if write-back cache is enabled.
+         *       if write-back cache is enabled.  This actually writes back
+         *       the latest content of the cache block.
          *  (3)  ocbi immediately invalidates the cache block, so that the
          *       cache block is not written back to memory.
          *

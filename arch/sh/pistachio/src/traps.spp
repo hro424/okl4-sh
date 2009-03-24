@@ -98,6 +98,14 @@ END_PROC_TRAPS(sh_general_exception)
 
 BEGIN_PROC(abort_return)
 BEGIN_LOCAL_PROC(common_return)
+        /* Set the BL bit */
+        mov     #0x10, r1
+        swap.b  r1, r1
+        swap.w  r1, r1
+        stc     sr, r0
+        or      r1, r0
+        ldc     r0, sr
+
         /* Restore the context from TCB */
         mov.l   1f, r15
         add     #OFS_GLOBAL_CURRENT_TCB, r15
@@ -112,6 +120,34 @@ BEGIN_LOCAL_PROC(common_return)
 1:      .long   SH_GLOBAL_BASE
 END_LOCAL_PROC(common_return)
 END_PROC(abort_return)
+
+BEGIN_LOCAL_PROC(exception_return)
+        /* Set the BL bit */
+        mov     #0x10, r1
+        swap.b  r1, r1
+        swap.w  r1, r1
+        stc     sr, r0
+        or      r1, r0
+        ldc     r0, sr
+
+        /* Restore the context from TCB */
+        clrt
+        mov.l   1f, r15
+        add     #OFS_GLOBAL_CURRENT_TCB, r15
+        mov.l   @r15, r15
+        mov.l   2f, r0
+        add     r0, r15
+        mov.l   @r15, r15
+        RESTORE_CONTEXT
+        rte
+        nop
+        /* NOT REACHED */
+
+        ALIGN   4
+1:      .long   SH_GLOBAL_BASE
+2:      .long   OFS_TCB_ARCH_EXP_CTXT
+END_LOCAL_PROC(exception_return);
+
 
 
 /*
@@ -158,7 +194,7 @@ BEGIN_PROC_TRAPS(sh_tlb_miss, 0x400)
 1:      .long   KERNEL_STACK
 2:      .long   REG_EXPEVT
 3:      .long   TLB_HANDLER
-4:      .long   common_return
+4:      .long   exception_return
 
 END_PROC_TRAPS(sh_tlb_miss)
 
