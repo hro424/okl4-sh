@@ -66,6 +66,7 @@ Import('*')
 rootserver_env = build.KengeCell(OKL4Cell, args.get('name', 'okl4'))
 
 rootserver_env.process_global_config()
+rootserver_env.scons_env['LIBGCC'] = "/opt/crosstool/gcc-3.4.5-glibc-2.3.5/sh4-unknown-linux-gnu/lib/gcc/sh4-unknown-linux-gnu/3.4.5/libgcc.a -lgcc"
 #rootserver_env.assign_irqs(None, [1, 3, 28])
 
 # Get device details
@@ -109,7 +110,7 @@ if serial_driver:
     rootserver_env.add_use_device(None, ["serial_dev"])
 
     # Test device depends on v2 drivers
-    rootserver_env.add_use_device(None, ["test_dev"])
+# rootserver_env.add_use_device(None, ["test_dev"])
 
 if timer_driver:
     rootserver_env.Package("drivers/%s" % timer_driver)
