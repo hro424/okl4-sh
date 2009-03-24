@@ -11,28 +11,17 @@
 _start:
         mov.l   1f, r4
         mov.l   @r4, r4
-#        mov.l   @((#__L4_TCR_MR_OFFSET + 1) * 4, r4), r4
+        /* MR1 contains the pointer to okl4_env_t. */
         mov.l   2f, r0
+        add     r0, r4
+        mov.l   @r4, r4
+
+        mov.l   3f, r0
         jmp     @r0
         nop
+
         .balign 4
 1:      .long   USER_UTCB_REF
-2:      .long   __sys_entry
+2:      .long   (__L4_TCR_MR_OFFSET + 1) * 4
+3:      .long   __sys_entry
 
-
-        .global _thread_start
-_thread_start:
-        mov.l   @(4, r15), r4       /* pointer to object env */
-        mov.l   @(8, r15), r5       /* argc */
-        mov.l   @(12, r15), r6      /* argv */
-        mov.l   @(16, r15), r7      /* start */
-        /* SH abi only uses r4-r7 to pass parameters,
-         * the 5th parameter 'thread entry' is in stack.
-         */
-
-        mov.l   1f, r0
-        jmp     @r0
-        nop
-
-        .balign 4
-1:      .long   __sys_thread_entry

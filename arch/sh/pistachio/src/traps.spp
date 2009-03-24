@@ -131,7 +131,6 @@ BEGIN_LOCAL_PROC(exception_return)
         ldc     r0, sr
 
         /* Restore the context from TCB */
-        clrt
         mov.l   1f, r15
         add     #OFS_GLOBAL_CURRENT_TCB, r15
         mov.l   @r15, r15

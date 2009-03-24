@@ -203,6 +203,7 @@ handle_tlb_exception(word_t ecode, sh_context_t* context)
     current = get_current_tcb();
     current->arch.misc.exception.exception_continuation = continuation;
     current->arch.misc.exception.exception_context = context;
+    //TODO: Why does the cache have to be flushed?
     sh_cache::flush_d();
 
     faddr = (addr_t)mapped_reg_read(REG_TEA);
