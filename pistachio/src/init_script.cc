@@ -504,7 +504,7 @@ static tcb_t SECTION(SEC_INIT) *
         panic("failed to activate TCB\n");
     }
     get_current_scheduler()->set_priority(tcb, args->priority);
-    TRACE_INIT("tcb@%p ip%x sp%x\n", tcb, args->ip, args->sp);
+    TRACE_INIT("tcb@%p\n", tcb);
     tcb->set_user_ip((addr_t)args->ip);
     tcb->set_user_sp((addr_t)args->sp);
 

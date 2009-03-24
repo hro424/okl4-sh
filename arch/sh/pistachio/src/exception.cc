@@ -14,6 +14,7 @@
 #include <tracebuffer.h>
 #include <arch/exception.h>
 #include <arch/ipc.h>
+#include <arch/tlb.h>
 #include <kdb/check_breakin.h>
 #include <kdb/names.h>
 #include <kdb/tracepoints.h>
@@ -176,6 +177,7 @@ handle_address_error(word_t ecode, sh_context_t* context)
  * @param pg        the page entry
  * @param pgsize    the size of the page
  */
+/*
 static void
 fill_tlb(addr_t vaddr, space_t* space, pgent_t* pg, pgent_t::pgsize_e pgsize)
 {
@@ -201,6 +203,7 @@ fill_tlb(addr_t vaddr, space_t* space, pgent_t* pg, pgent_t::pgsize_e pgsize)
 
     UPDATE_REG();
 }
+*/
 
 /**
  * Handles TLB miss and memory access violation.  Invoked by the trap handler.
@@ -228,10 +231,9 @@ handle_tlb_exception(word_t ecode, sh_context_t* context)
             break;
         case ECODE_TLB_FAULT_R:
         case ECODE_TLB_MISS_R:
+        default:
             access = space_t::read;
             break;
-        default:
-            enter_kdebug("handle_tlb_exception");
     }
        
     continuation = ASM_CONTINUATION;
@@ -242,14 +244,23 @@ handle_tlb_exception(word_t ecode, sh_context_t* context)
         space = get_kernel_space();
     }
 
+    ecode = mapped_reg_read(REG_EXPEVT);
+    TRACE_INIT("faddr:%p ecode:%x\n", faddr, ecode);
     if (space->lookup_mapping(faddr, &pg, &pgsize)) {
         if (((access == space_t::write) && pg->is_writable(space, pgsize)) ||
             ((access == space_t::read) && pg->is_readable(space, pgsize))) {
             fill_tlb(faddr, space, pg, pgsize);
+            dump_utlb();
             //return;
             ACTIVATE_CONTINUATION(continuation);
         }
+        TRACE_INIT("permission mismatch %c%c%c%c\n",
+                   access == space_t::write ? 'w' : ' ',
+                   access == space_t::read ? 'r' : ' ',
+                   pg->is_writable(space, pgsize) ? 'W' : ' ',
+                   pg->is_readable(space, pgsize) ? 'R' : ' ');
     }
+    TRACE_INIT("mapping not found\n");
 
     /* Need to raise a page fault */
 

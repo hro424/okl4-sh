@@ -114,7 +114,6 @@ END_LOCAL_PROC(common_return)
 END_PROC(abort_return)
 
 
-
 /*
  * TLB miss handler vector
  * NOTE: Must be placed at VBR + 0x400
@@ -151,7 +150,7 @@ BEGIN_PROC_TRAPS(sh_tlb_miss, 0x400)
 
         /* Call the handler */
         mov.l   3f, r0
-        jsr     @r0
+        jmp     @r0
         nop
         /* NOT REACHED */
 
