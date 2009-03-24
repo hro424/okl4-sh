@@ -239,8 +239,6 @@ generic_space_t::activate(tcb_t *tcb)
     addr_t  sp = (addr_t)((word_t)tcb->get_user_sp());
     this->lookup_mapping(sp, &pg, &pgsize);
     fill_tlb(sp, (space_t*)this, pg, pgsize);
-
-    dump_utlb();
 }
 
 /**

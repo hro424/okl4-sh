@@ -258,6 +258,11 @@ pgent_t::make_subtree(generic_space_t* s, pgsize_e pgsize, bool kernel,
         l1.table.base_address = (word_t)virt_to_phys(base) >> SH_L2_BITS;
         sh_cache::flush_d(base, SH_L2_BITS);
     }
+    else if (pgsize == size_64k) {
+        l2.medium.tree = 1;
+        l2.medium.present = 1;
+        sync_large(s);
+    }
     return true;
 }
 

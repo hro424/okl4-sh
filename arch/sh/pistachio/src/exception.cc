@@ -250,7 +250,6 @@ handle_tlb_exception(word_t ecode, sh_context_t* context)
         if (((access == space_t::write) && pg->is_writable(space, pgsize)) ||
             ((access == space_t::read) && pg->is_readable(space, pgsize))) {
             fill_tlb(faddr, space, pg, pgsize);
-            dump_utlb();
             //return;
             ACTIVATE_CONTINUATION(continuation);
         }
