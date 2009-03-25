@@ -14,10 +14,12 @@
         EXPORT  L4_KDB_Enter
 LABEL(L4_KDB_Enter)
         sts     pr, r6
-        mov     #L4_TRAP_KDEBUG, r8
+        mov.l   1f, r8
         trapa   #SYSCALL_NUM
         jmp     @r6
         nop
+        .balign 4
+1:      .long   L4_TRAP_KDEBUG
 
 
 #if defined(__GNUC__)
@@ -25,10 +27,12 @@ LABEL(L4_KDB_Enter)
         EXPORT  \name
 LABEL(\name)
         sts     pr, r6
-        mov     #\op, r8
+        mov.l   1f, r8
         trapa   #SYSCALL_NUM
         jmp     @r6
         nop
+        .balign 4
+1:      .long   \op
         .endm
 
 #define L4_KDB_Op(op, name)     __L4_KDB_Op     op, name

@@ -481,7 +481,7 @@ BEGIN_LOCAL_PROC(syscall_handler)
 
         /* Branch to misc L4 syscalls */
         mov.l   4f, r0
-        cmp/hi  r8, r0
+        cmp/hi  r0, r8
         bt      syscall_misc
 
         /* Save the control and system registers to TCB */

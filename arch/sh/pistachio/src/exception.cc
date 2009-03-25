@@ -329,7 +329,7 @@ sys_sh_misc(sh_context_t* context)
             string = (char*)context->r4;
 
             printf(TXT_BRIGHT "---KD# ");
-            user = ((context->sr & REG_SR_MD) == REG_SR_MD);
+            user = ((context->sr & REG_SR_MD) == 0);
 
             if (user) {
                 printf("User: ");
@@ -414,7 +414,7 @@ sys_sh_misc(sh_context_t* context)
     }
 
     /* XXX - should deliver this as a exception IPC */
-    printf("Illegal misc syscall: syscall no = %ld\n", context->r12 & 0xff);
+    printf("Illegal misc syscall: syscall no = %ld\n", context->r8 & 0xff);
     halt_user_thread(continuation);
 }
 

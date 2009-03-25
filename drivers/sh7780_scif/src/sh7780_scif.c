@@ -278,6 +278,7 @@ device_setup_impl
     device->rx.ops    = stream_ops;
 
     // 115200 8N1
+    /*TODO:
     scscr1_write(0);
     scfcr1_set_tfcl(1);
     scfcr1_set_rfcl(1);
@@ -287,6 +288,7 @@ device_setup_impl
 
     scfcr1_set_rtrg(SCIF_SCFCR_RTRG1);
     scfcr1_set_ttrg(SCIF_SCFCR_TTRG0);
+    */
 
     return DEVICE_SUCCESS;
 }

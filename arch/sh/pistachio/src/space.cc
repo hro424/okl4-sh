@@ -339,7 +339,7 @@ generic_space_t::free_page_directory(kmem_resource_t *kresource)
 word_t
 generic_space_t::readmem_phys(addr_t vaddr, addr_t paddr)
 {
-    return *(word_t*)paddr;
+    return *(word_t*)((word_t)paddr + P1_START);
 }
 #endif /* CONFIG_DEBUG */
 

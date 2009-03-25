@@ -27,7 +27,6 @@ fill_tlb(addr_t vaddr, space_t* space, pgent_t* pg, pgent_t::pgsize_e pgsize)
     addr = (word_t)vaddr;
     addr = (addr >> hw_pgshifts[pgsize]) << hw_pgshifts[pgsize];
 
-    TRACE_INIT("fill TLB: %p:%x\n", vaddr, pg->ptel(pgsize));
     mapped_reg_write(REG_PTEH,
                  (addr & REG_PTEH_VPN_MASK) |
                  ((word_t)space->get_asid()->get(space) & REG_PTEH_ASID_MASK));
