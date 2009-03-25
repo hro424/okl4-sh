@@ -3,6 +3,7 @@
  * @since   March 2009
  */
 
+#include <l4/kdebug.h>
 #include <sh7780_scif.h>
 
 
@@ -246,6 +247,7 @@ device_setup_impl
     struct resource*            resources
 )
 {
+    L4_KDB_Enter("enter device_setup_impl");
     int i, n_mem = 0;
     for (i = 0; i < 8; i++) {
         switch(resources->type) {
@@ -254,7 +256,8 @@ device_setup_impl
                     device->main = *resources;
                 }
                 else {
-                    printf("sh7780_scif: got more memory than expected!\n");
+                    //printf("sh7780_scif: got more memory than expected!\n");
+                    L4_KDB_Enter("sh7780_scif: got more memory than expected!");
                 }
                 n_mem++;
                 break;
@@ -264,7 +267,8 @@ device_setup_impl
                 /* do nothing */
                 break;
             default:
-                printf("sh7780_scif: Invalid resource type %d!\n", resources->type);
+                L4_KDB_Enter("sh7780_scif: Invalid resource type");
+                //printf("sh7780_scif: Invalid resource type %d!\n", resources->type);
                 break;
         }
         resources++;
@@ -285,6 +289,7 @@ device_setup_impl
     scfcr1_set_rtrg(SCIF_SCFCR_RTRG1);
     scfcr1_set_ttrg(SCIF_SCFCR_TTRG0);
 
+    L4_KDB_Enter("exit device_setup_impl");
     return DEVICE_SUCCESS;
 }
 

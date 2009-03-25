@@ -207,6 +207,7 @@ handle_tlb_exception(word_t ecode, sh_context_t* context)
     sh_cache::flush_d();
 
     faddr = (addr_t)mapped_reg_read(REG_TEA);
+    TRACE_INIT("  faddr:%p ecode:%x\n", faddr, ecode);
     space = current->get_space();
     if (space == NULL) {
         space = get_kernel_space();

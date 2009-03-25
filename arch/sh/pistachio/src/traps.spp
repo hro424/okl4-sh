@@ -67,31 +67,35 @@ BEGIN_PROC_TRAPS(sh_general_exception, 0x100)
          * General Exception Vector
          */
         /* Vector 1: TLB Protection Violation (read) (offset: 0xA0) */
-        EXP_VECTOR(0x20, exp_memory_exception)
+        EXP_VECTOR(exp_memory_exception)
 
         /* Vector 2: TLB Protection Violation (write) (offset: 0xC0) */
-        EXP_VECTOR(0x20, exp_memory_exception)
+        EXP_VECTOR(exp_memory_exception)
 
         /* Vector 3: Address Error (read) (offset: 0xE0) */
-        EXP_VECTOR(0x20, exp_address_error)
+        EXP_VECTOR(exp_address_error)
 
         /* Vector 4: Address Error (write) (offset: 0x100) */
-        EXP_VECTOR(0x20, exp_address_error)
+        EXP_VECTOR(exp_address_error)
 
         /* Vector 5: FPU Exception (offset: 0x120) */
-        EXP_VECTOR(0x20, exp_instruction_exception)
+        EXP_VECTOR(exp_instruction_exception)
+
+        .skip   0x20
 
         /* Vector 6: TRAPA (offset: 0x160) */
-        EXP_VECTOR(0x40, exp_trapa_handler)
+        EXP_VECTOR(exp_trapa_handler)
 
         /* Vector 7: Invalid Instruction (offset: 0x180) */
-        EXP_VECTOR(0x20, exp_instruction_exception)
+        EXP_VECTOR(exp_instruction_exception)
 
         /* Vector 8: Slot Invalid Instruction (offset: 0x1A0) */
-        EXP_VECTOR(0x20, exp_instruction_exception)
+        EXP_VECTOR(exp_instruction_exception)
+
+        .skip   0x20
 
         /* Vector 9: User Break (offset: 0x1E0) */
-        EXP_VECTOR(0x40, exp_user_break)
+        EXP_VECTOR(exp_user_break)
 
 END_PROC_TRAPS(sh_general_exception)
 
@@ -270,11 +274,13 @@ END_PROC_TRAPS(sh_interrupt)
  * The rest of general exception vectors
  * NOTE: Must be placed at VBR + 0x800
  */
+        ALIGN   0x200
+
         /* Vector 10: Invalid FPU Instruction (offset: 0x800) */
-        EXP_VECTOR(0x200, exp_instruction_exception)
+        EXP_VECTOR(exp_instruction_exception)
 
         /* Vector 11: Slot Invalid FPU Instruction (offset: 0x820) */
-        EXP_VECTOR(0x20, exp_instruction_exception)
+        EXP_VECTOR(exp_instruction_exception)
 
 /*
  * Invokes the page fault handler that sends a page fault message to user.
@@ -321,7 +327,7 @@ BEGIN_LOCAL_PROC(exp_memory_exception)
         ALIGN   4
 1:      .long   KERNEL_STACK
 2:      .long   TLB_HANDLER
-3:      .long   common_return
+3:      .long   exception_return
 
 END_LOCAL_PROC(exp_memory_exception)
 
@@ -367,7 +373,7 @@ BEGIN_LOCAL_PROC(exp_instruction_exception)
         ALIGN   4
 1:      .long   KERNEL_STACK
 2:      .long   handle_instruction_exception
-3:      .long   common_return
+3:      .long   exception_return
 END_LOCAL_PROC(exp_instruction_exception)
 
 
@@ -403,9 +409,9 @@ BEGIN_LOCAL_PROC(exp_address_error)
 
         ALIGN   4
 1:      .long   KERNEL_STACK
-2:      .long   common_return
+2:      .long   exception_return
 3:      .long   handle_address_error
-END_LOCAL_PROC(exp_instruction_exception)
+END_LOCAL_PROC(exp_address_error)
 
 
 BEGIN_LOCAL_PROC(exp_user_break)
