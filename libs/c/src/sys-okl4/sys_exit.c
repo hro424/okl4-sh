@@ -73,9 +73,9 @@
 void
 _Exit(int status)
 {
-//#if !defined(NANOKERNEL)
+#if !defined(NANOKERNEL)
     L4_KDB_Enter("L4 Rootserver exit");
-//#endif
+#endif
 
     while (1);
 }

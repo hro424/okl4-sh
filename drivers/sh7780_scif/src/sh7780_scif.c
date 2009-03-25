@@ -247,7 +247,6 @@ device_setup_impl
     struct resource*            resources
 )
 {
-    L4_KDB_Enter("enter device_setup_impl");
     int i, n_mem = 0;
     for (i = 0; i < 8; i++) {
         switch(resources->type) {
@@ -289,7 +288,6 @@ device_setup_impl
     scfcr1_set_rtrg(SCIF_SCFCR_RTRG1);
     scfcr1_set_ttrg(SCIF_SCFCR_TTRG0);
 
-    L4_KDB_Enter("exit device_setup_impl");
     return DEVICE_SUCCESS;
 }
 
