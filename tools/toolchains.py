@@ -55,6 +55,7 @@
 # OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN
 # IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import commands
 import copy
 import os
 import sys
@@ -408,6 +409,10 @@ class sh_toolchain(generic_gcc):
         generic_gcc.__init__(self, *args)
         self.dict["CCFLAGS"] += ["-m4-nofpu"]
         self.dict["CXXFLAGS"] += ["-m4-nofpu"]
+        self.dict["LIBGCC_PATH"] = os.path.dirname(commands.getoutput('sh-linux-gcc -print-libgcc-file-name'))
+        self.dict["_LIBFLAGS"] = "${_concat(LIBDIRPREFIX, LIBGCC_PATH, LIBDIRSUFFIX, __env__)} "\
+                                "$_LIBDIRFLAGS --start-group $LIBGCC "\
+                                 "${_stripixes(LIBLINKPREFIX, LIBS, LIBLINKSUFFIX, LIBPREFIX, LIBSUFFIX, __env__)} --end-group"
 
 #gnu_arm_libgcc_toolchain = generic_gcc("arm-linux-")
 gnu_arm_eabi_toolchain = generic_gcc_3_4_libgcc("/opt/okl/Linux-i386/arm/gcc-4.2.4-glibc-2.7/arm-unknown-linux-gnueabi/bin/arm-unknown-linux-gnueabi-")
