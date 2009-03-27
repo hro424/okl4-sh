@@ -127,7 +127,7 @@ make_suite(void)
     TCASE(preempt);
     TCASE(cust);
     TCASE(mutex);
-    TCASE(arch);
+    //TCASE(arch);
     TCASE(chk_breakin_test);
     TCASE(platform_control);
 #if defined(CONFIG_SCHEDULE_INHERITANCE)
