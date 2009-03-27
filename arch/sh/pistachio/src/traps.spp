@@ -584,10 +584,10 @@ BEGIN_LOCAL_PROC(syscall_handler)
         /* Set the return address */
         mov     r8, r0
         cmp/eq  #SYSCALL_ipc, r0
-        mov.l   syscall_return, r0
-        bf      5f
-        mov.l   ipc_syscall_return, r0
-5:
+        mov.l   5f, r0
+        bf      10f
+        mov.l   6f, r0
+10:
         lds     r0, pr
 
         SWITCH_BANK_1_TO_0
@@ -601,9 +601,10 @@ BEGIN_LOCAL_PROC(syscall_handler)
         mov.l   r0, @-r15
 
         /* Call it.  r8 holds syscall number. */
-        mov.l   sh_syscall_vectors, r0
+        mov.l   7f, r0
         shll2   r8
         add     r8, r0
+        mov.l   @r0, r0
         jmp     @r0
         nop
         /* NOT REACHED */
@@ -613,8 +614,13 @@ BEGIN_LOCAL_PROC(syscall_handler)
 2:      .long   SH_GLOBAL_BASE
 3:      .long   SIZEOF_CONTEXT
 4:      .long   SYSCALL_limit
+5:      .long   syscall_return
+6:      .long   ipc_syscall_return
+7:      .long   sh_syscall_vectors
 
 LABEL(sh_syscall_vectors)
+        /* TODO: dummy syscall*/
+        .long   0
         .long   sys_ipc
         .long   sys_thread_switch
         .long   sys_thread_control

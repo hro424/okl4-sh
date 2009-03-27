@@ -206,7 +206,7 @@ handle_tlb_exception(word_t ecode, sh_context_t* context)
     }
 
     faddr = (addr_t)mapped_reg_read(REG_TEA);
-    //printf("  faddr:%p, ecode:0x%x, space:%p\n", faddr, ecode, space);
+    printf("  faddr:%p, ecode:0x%x, space:%p\n", faddr, ecode, space);
 
     if (space->lookup_mapping(faddr, &pg, &pgsize)) {
         if (((access == space_t::write) && pg->is_writable(space, pgsize))

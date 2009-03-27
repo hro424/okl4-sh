@@ -1,11 +1,15 @@
+
+COMMAND=	./tools/build.py
+OPTIONS=	PYFREEZE=false MACHINE=sh2007
+
 all: hello
 
 test:
-	./tools/build.py PYFREEZE=false VERBOSE_STR=true MACHINE=sh2007 PROJECT=ktest
+	${COMMAND} ${OPTIONS} VERBOSE_STR=true PROJECT=ktest VERBOSE_INIT=true
 	make img
 
 hello:
-	./tools/build.py PYFREEZE=false VERBOSE_STR=true MACHINE=sh2007 PROJECT=examples EXAMPLE=hello
+	${COMMAND} ${OPTIONS} VERBOSE_STR=true PROJECT=examples EXAMPLE=hello
 	make img
 
 img:
