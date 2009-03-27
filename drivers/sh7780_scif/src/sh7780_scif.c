@@ -247,6 +247,7 @@ device_setup_impl
     struct resource*            resources
 )
 {
+//    L4_KDB_PrintChar('!');
     int i, n_mem = 0;
     for (i = 0; i < 8; i++) {
         switch(resources->type) {
@@ -304,7 +305,7 @@ device_enable_impl
     scscr1_set_re(1);
     device->state = STATE_ENABLED;
 
-    return 0;
+    return DEVICE_ENABLED;
 }
 
 static int
@@ -317,6 +318,6 @@ device_disable_impl
     device->state = STATE_DISABLED;
     scscr1_set_te(0);
     scscr1_set_re(0);
-    return 0;
+    return DEVICE_DISABLED;
 }
 

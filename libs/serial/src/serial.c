@@ -56,6 +56,7 @@
  * IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <l4/kdebug.h>
 #include <stdlib.h>
 #include <string.h>
 #include <okl4/env.h>

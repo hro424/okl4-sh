@@ -71,7 +71,7 @@ if not os.path.exists(os.path.join(src_root, arch_path)):
     print "architecture %s is not yet supported by pistachio." % (arch)
 arch_path = "#" + arch_path
 
-provider = "Open Kernel Labs"
+provider = "DCL@Waseda"
 
 platform = env.machine.platform
 platform_dir =  "#" + os.path.join("platform", platform, args["package"])
