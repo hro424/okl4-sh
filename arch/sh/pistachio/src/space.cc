@@ -236,9 +236,11 @@ generic_space_t::activate(tcb_t *tcb)
     *(volatile word_t*)USER_UTCB_REF = tcb->get_utcb_location();
 
     // Map the stack page
+    /*
     addr_t  sp = (addr_t)((word_t)tcb->get_user_sp());
     this->lookup_mapping(sp, &pg, &pgsize);
     fill_tlb(sp, (space_t*)this, pg, pgsize);
+    */
 }
 
 /**

@@ -21,6 +21,7 @@
 #include <kernel/kdb/console.h>
 
 DECLARE_TRACEPOINT(EXCEPTION_IPC_GENERAL);
+//TODO:
 //DECLARE_TRACEPOINT(EXCEPTION_TLB_MISS);
 
 NORETURN INLINE void
@@ -169,6 +170,8 @@ handle_address_error(word_t ecode, sh_context_t* context)
     send_exception_ipc(ecode, instr, context, continuation);
 }
 
+//CONTINUATION(fill_tlb)
+
 /**
  * Handles TLB miss and memory access violation.  Invoked by the trap handler.
  *
@@ -179,12 +182,15 @@ extern "C" void
 handle_tlb_exception(word_t ecode, sh_context_t* context)
 {
     addr_t              faddr;
-    pgent_t*            pg;
-    space_t*            space;
-    tcb_t*              current;
-    pgent_t::pgsize_e   pgsize;
     space_t::access_e   access;
-    continuation_t      continuation;
+    space_t*            space = get_current_space();
+    continuation_t      continuation = ASM_CONTINUATION;
+    bool                kernel = (context->sr & REG_SR_MD) ? true : false;
+
+
+    if (space == NULL) {
+        space = get_kernel_space();
+    }
 
     //TODO: Ensure the policy to TLB fault and init write is correct.
     switch (ecode) {
@@ -200,38 +206,8 @@ handle_tlb_exception(word_t ecode, sh_context_t* context)
             break;
     }
        
-    continuation = ASM_CONTINUATION;
-    current = get_current_tcb();
-    current->arch.misc.exception.exception_continuation = continuation;
-    current->arch.misc.exception.exception_context = context;
-    //TODO: Why does the cache have to be flushed?
-    sh_cache::flush_d();
-
     faddr = (addr_t)mapped_reg_read(REG_TEA);
-    space = current->get_space();
-    if (space == NULL) {
-        space = get_kernel_space();
-    }
-
     ecode = mapped_reg_read(REG_EXPEVT);
-    if (space->lookup_mapping(faddr, &pg, &pgsize)) {
-        if (((access == space_t::write) && pg->is_writable(space, pgsize)) ||
-            ((access == space_t::read) && pg->is_readable(space, pgsize))) {
-            fill_tlb(faddr, space, pg, pgsize);
-            //return;
-            ACTIVATE_CONTINUATION(continuation);
-        }
-    }
-
-    /* Need to raise a page fault */
-
-    bool kernel;
-    if (context->sr & REG_SR_MD) {
-        kernel = true;
-    }
-    else {
-        kernel = false;
-    }
 
     space->handle_pagefault(faddr, (addr_t)context->pc, access, kernel,
                             continuation);

@@ -57,30 +57,12 @@
     lds.l   @r15+, pr
 
 /*
- * L4_Word_t *__L4_SH4A_Utcb(void)
- */
-EXPORT __L4_SH4A_Utcb
-LABEL(__L4_SH4A_Utcb)
-    sts.l   pr, @-r15
-    mov.l   r8, @-r15
-
-    mov     #L4_TRAP_GETUTCB, SYSCALL_REG
-    trapa   #SYSCALL_NUM
-
-    /* result into r0 */
-    mov.l   @r15+, r8
-    lds.l   @r15+, pr
-    rts
-    nop
-
-/*
  * L4_KernelInterface
  */
 EXPORT L4_KernelInterface
 LABEL(L4_KernelInterface)
     SAVE_CONTEXT
 
-    /* mov     #L4_TRAP_KIP, SYSCALL_REG */
     trapa   #SYSCALL_NUM
 
     tst     r4, r4      // if (ApiVersion)

@@ -7,7 +7,7 @@
 #include <sh7780_scif.h>
 
 
-#define TX_FIFO_DEPTH       64
+#define TX_FIFO_DEPTH           64
 
 #define SCIF_BITRATE_9600       161     /* n: 0, Error rate: 0.47 */
 #define SCIF_BITRATE_19200      80      /* n: 0, Error rate: 0.47 */
