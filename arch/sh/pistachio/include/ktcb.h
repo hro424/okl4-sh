@@ -26,11 +26,13 @@ public:
         } irq;
 
         struct {
+            sh_context_t*   tlb_miss_context;
             continuation_t  tlb_miss_continuation;
             addr_t          fault_addr;
         } fault;
     } ktcb_misc;
 
+    // Used to store syscall context
     sh_context_t    context;
     ktcb_misc       misc;
     word_t          exc_code;

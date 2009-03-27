@@ -67,37 +67,49 @@ BEGIN_PROC_TRAPS(sh_general_exception, 0x100)
          * General Exception Vector
          */
         /* Vector 1: TLB Protection Violation (read) (offset: 0xA0) */
-        EXP_VECTOR(0x20, exp_memory_exception)
+        EXP_VECTOR(exp_memory_exception)
 
         /* Vector 2: TLB Protection Violation (write) (offset: 0xC0) */
-        EXP_VECTOR(0x20, exp_memory_exception)
+        EXP_VECTOR(exp_memory_exception)
 
         /* Vector 3: Address Error (read) (offset: 0xE0) */
-        EXP_VECTOR(0x20, exp_address_error)
+        EXP_VECTOR(exp_address_error)
 
         /* Vector 4: Address Error (write) (offset: 0x100) */
-        EXP_VECTOR(0x20, exp_address_error)
+        EXP_VECTOR(exp_address_error)
 
         /* Vector 5: FPU Exception (offset: 0x120) */
-        EXP_VECTOR(0x20, exp_instruction_exception)
+        EXP_VECTOR(exp_instruction_exception)
+
+        .skip   0x20
 
         /* Vector 6: TRAPA (offset: 0x160) */
-        EXP_VECTOR(0x40, exp_trapa_handler)
+        EXP_VECTOR(exp_trapa_handler)
 
         /* Vector 7: Invalid Instruction (offset: 0x180) */
-        EXP_VECTOR(0x20, exp_instruction_exception)
+        EXP_VECTOR(exp_instruction_exception)
 
         /* Vector 8: Slot Invalid Instruction (offset: 0x1A0) */
-        EXP_VECTOR(0x20, exp_instruction_exception)
+        EXP_VECTOR(exp_instruction_exception)
+
+        .skip   0x20
 
         /* Vector 9: User Break (offset: 0x1E0) */
-        EXP_VECTOR(0x40, exp_user_break)
+        EXP_VECTOR(exp_user_break)
 
 END_PROC_TRAPS(sh_general_exception)
 
 
 BEGIN_PROC(abort_return)
 BEGIN_LOCAL_PROC(common_return)
+        /* Set the BL bit */
+        mov     #0x10, r1
+        swap.b  r1, r1
+        swap.w  r1, r1
+        stc     sr, r0
+        or      r1, r0
+        ldc     r0, sr
+
         /* Restore the context from TCB */
         mov.l   1f, r15
         add     #OFS_GLOBAL_CURRENT_TCB, r15
@@ -112,6 +124,33 @@ BEGIN_LOCAL_PROC(common_return)
 1:      .long   SH_GLOBAL_BASE
 END_LOCAL_PROC(common_return)
 END_PROC(abort_return)
+
+BEGIN_LOCAL_PROC(exception_return)
+        /* Set the BL bit */
+        mov     #0x10, r1
+        swap.b  r1, r1
+        swap.w  r1, r1
+        stc     sr, r0
+        or      r1, r0
+        ldc     r0, sr
+
+        /* Restore the context from TCB */
+        mov.l   1f, r15
+        add     #OFS_GLOBAL_CURRENT_TCB, r15
+        mov.l   @r15, r15
+        mov.l   2f, r0
+        add     r0, r15
+        mov.l   @r15, r15
+        RESTORE_CONTEXT
+        rte
+        nop
+        /* NOT REACHED */
+
+        ALIGN   4
+1:      .long   SH_GLOBAL_BASE
+2:      .long   OFS_TCB_ARCH_EXP_CTXT
+END_LOCAL_PROC(exception_return);
+
 
 
 /*
@@ -158,7 +197,7 @@ BEGIN_PROC_TRAPS(sh_tlb_miss, 0x400)
 1:      .long   KERNEL_STACK
 2:      .long   REG_EXPEVT
 3:      .long   TLB_HANDLER
-4:      .long   common_return
+4:      .long   exception_return
 
 END_PROC_TRAPS(sh_tlb_miss)
 
@@ -235,11 +274,13 @@ END_PROC_TRAPS(sh_interrupt)
  * The rest of general exception vectors
  * NOTE: Must be placed at VBR + 0x800
  */
+        ALIGN   0x200
+
         /* Vector 10: Invalid FPU Instruction (offset: 0x800) */
-        EXP_VECTOR(0x200, exp_instruction_exception)
+        EXP_VECTOR(exp_instruction_exception)
 
         /* Vector 11: Slot Invalid FPU Instruction (offset: 0x820) */
-        EXP_VECTOR(0x20, exp_instruction_exception)
+        EXP_VECTOR(exp_instruction_exception)
 
 /*
  * Invokes the page fault handler that sends a page fault message to user.
@@ -286,7 +327,7 @@ BEGIN_LOCAL_PROC(exp_memory_exception)
         ALIGN   4
 1:      .long   KERNEL_STACK
 2:      .long   TLB_HANDLER
-3:      .long   common_return
+3:      .long   exception_return
 
 END_LOCAL_PROC(exp_memory_exception)
 
@@ -332,7 +373,7 @@ BEGIN_LOCAL_PROC(exp_instruction_exception)
         ALIGN   4
 1:      .long   KERNEL_STACK
 2:      .long   handle_instruction_exception
-3:      .long   common_return
+3:      .long   exception_return
 END_LOCAL_PROC(exp_instruction_exception)
 
 
@@ -368,9 +409,9 @@ BEGIN_LOCAL_PROC(exp_address_error)
 
         ALIGN   4
 1:      .long   KERNEL_STACK
-2:      .long   common_return
+2:      .long   exception_return
 3:      .long   handle_address_error
-END_LOCAL_PROC(exp_instruction_exception)
+END_LOCAL_PROC(exp_address_error)
 
 
 BEGIN_LOCAL_PROC(exp_user_break)
@@ -440,7 +481,7 @@ BEGIN_LOCAL_PROC(syscall_handler)
 
         /* Branch to misc L4 syscalls */
         mov.l   4f, r0
-        cmp/hi  r8, r0
+        cmp/hi  r0, r8
         bt      syscall_misc
 
         /* Save the control and system registers to TCB */

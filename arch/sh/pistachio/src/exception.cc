@@ -164,46 +164,10 @@ handle_address_error(word_t ecode, sh_context_t* context)
 
     printf("Address error (0x%x) at %p\n", ecode, (addr_t)PC(context->pc));
     enter_kdebug("exception");
+    //TODO:
 
     send_exception_ipc(ecode, instr, context, continuation);
 }
-
-/**
- * Fills the specified TLB entry.
- * NOTE: The current replacement policy is round-robin.
- *
- * @param vaddr     the virtual address
- * @param space     the address space
- * @param pg        the page entry
- * @param pgsize    the size of the page
- */
-/*
-static void
-fill_tlb(addr_t vaddr, space_t* space, pgent_t* pg, pgent_t::pgsize_e pgsize)
-{
-    static u8_t entry = 0;
-    word_t      tmp;
-    word_t      reg;
-
-    reg  = mapped_reg_read(REG_MMUCR);
-    // Clear the URC field
-    reg &= ~(REG_MMUCR_URC_MASK);
-    // TODO: mask it with URB value
-    tmp = entry;
-    reg |= (tmp << 10) & REG_MMUCR_URC_MASK;
-    mapped_reg_write(REG_MMUCR, reg);
-    entry++;    // overflow -> go back to 0
-
-    mapped_reg_write(REG_PTEH,
-                 (word_t)vaddr & REG_PTEH_VPN_MASK |
-                 (word_t)space->get_asid()->get(space) & REG_PTEH_ASID_MASK);
-    mapped_reg_write(REG_PTEL, pg->ptel(pgsize));
-
-    __asm__ __volatile__ ("ldtlb");
-
-    UPDATE_REG();
-}
-*/
 
 /**
  * Handles TLB miss and memory access violation.  Invoked by the trap handler.
@@ -237,30 +201,27 @@ handle_tlb_exception(word_t ecode, sh_context_t* context)
     }
        
     continuation = ASM_CONTINUATION;
-    faddr = (addr_t)mapped_reg_read(REG_TEA);
     current = get_current_tcb();
+    current->arch.misc.exception.exception_continuation = continuation;
+    current->arch.misc.exception.exception_context = context;
+    //TODO: Why does the cache have to be flushed?
+    sh_cache::flush_d();
+
+    faddr = (addr_t)mapped_reg_read(REG_TEA);
     space = current->get_space();
     if (space == NULL) {
         space = get_kernel_space();
     }
 
     ecode = mapped_reg_read(REG_EXPEVT);
-    TRACE_INIT("faddr:%p ecode:%x\n", faddr, ecode);
     if (space->lookup_mapping(faddr, &pg, &pgsize)) {
         if (((access == space_t::write) && pg->is_writable(space, pgsize)) ||
             ((access == space_t::read) && pg->is_readable(space, pgsize))) {
             fill_tlb(faddr, space, pg, pgsize);
-            dump_utlb();
             //return;
             ACTIVATE_CONTINUATION(continuation);
         }
-        TRACE_INIT("permission mismatch %c%c%c%c\n",
-                   access == space_t::write ? 'w' : ' ',
-                   access == space_t::read ? 'r' : ' ',
-                   pg->is_writable(space, pgsize) ? 'W' : ' ',
-                   pg->is_readable(space, pgsize) ? 'R' : ' ');
     }
-    TRACE_INIT("mapping not found\n");
 
     /* Need to raise a page fault */
 
@@ -368,7 +329,7 @@ sys_sh_misc(sh_context_t* context)
             string = (char*)context->r4;
 
             printf(TXT_BRIGHT "---KD# ");
-            user = ((context->sr & REG_SR_MD) == REG_SR_MD);
+            user = ((context->sr & REG_SR_MD) == 0);
 
             if (user) {
                 printf("User: ");
@@ -453,7 +414,7 @@ sys_sh_misc(sh_context_t* context)
     }
 
     /* XXX - should deliver this as a exception IPC */
-    printf("Illegal misc syscall: syscall no = %ld\n", context->r12 & 0xff);
+    printf("Illegal misc syscall: syscall no = %ld\n", context->r8 & 0xff);
     halt_user_thread(continuation);
 }
 

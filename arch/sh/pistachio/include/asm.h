@@ -65,8 +65,8 @@
     /*XXX: Compile error: ldc.l   @r15+, sgr; */                \
     mov.l   @r15, r15
 
-#define EXP_VECTOR(offset, handler)     \
-    .balign offset;                     \
+#define EXP_VECTOR(handler)             \
+    .balign 0x20;                       \
     mov.l   1f, r1;                     \
     jmp     @r1;                        \
     nop;                                \
