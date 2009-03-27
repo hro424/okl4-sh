@@ -46,9 +46,6 @@ switch_from(tcb_t* current, continuation_t continuation)
 void
 switch_to(tcb_t* dest, tcb_t* schedule)
 {
-    ASSERT(ALWAYS, dest->ready_list.next == NULL);
-
-    //TODO: Unnecessary?
     /* Update the global schedule variable. */
     set_active_schedule(schedule);
 

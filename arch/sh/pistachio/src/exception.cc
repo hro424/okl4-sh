@@ -170,8 +170,6 @@ handle_address_error(word_t ecode, sh_context_t* context)
     send_exception_ipc(ecode, instr, context, continuation);
 }
 
-//CONTINUATION(fill_tlb)
-
 /**
  * Handles TLB miss and memory access violation.  Invoked by the trap handler.
  *
@@ -182,11 +180,12 @@ extern "C" void
 handle_tlb_exception(word_t ecode, sh_context_t* context)
 {
     addr_t              faddr;
+    pgent_t*            pg;
+    pgent_t::pgsize_e   pgsize;
     space_t::access_e   access;
-    space_t*            space = get_current_space();
     continuation_t      continuation = ASM_CONTINUATION;
+    space_t*            space = get_current_space();
     bool                kernel = (context->sr & REG_SR_MD) ? true : false;
-
 
     if (space == NULL) {
         space = get_kernel_space();
@@ -205,9 +204,17 @@ handle_tlb_exception(word_t ecode, sh_context_t* context)
             access = space_t::read;
             break;
     }
-       
+
     faddr = (addr_t)mapped_reg_read(REG_TEA);
-    ecode = mapped_reg_read(REG_EXPEVT);
+    //printf("  faddr:%p, ecode:0x%x, space:%p\n", faddr, ecode, space);
+
+    if (space->lookup_mapping(faddr, &pg, &pgsize)) {
+        if (((access == space_t::write) && pg->is_writable(space, pgsize))
+            || ((access == space_t::read) && pg->is_readable(space, pgsize))) {
+            fill_tlb(faddr, space, pg, pgsize);
+            ACTIVATE_CONTINUATION(continuation);
+        }
+    }
 
     space->handle_pagefault(faddr, (addr_t)context->pc, access, kernel,
                             continuation);

@@ -306,9 +306,9 @@ pgent_t::set_entry(generic_space_t* s, pgsize_e pgsize, addr_t paddr,
 
         l2_entry.raw = 0;
         l2_entry.small.tree = 1;
+        l2_entry.small.present = 1;
         l2_entry.small.x = executable;
         l2_entry.small.size0 = 1;
-        l2_entry.small.present = 1;
         l2_entry.small.perm = perm;
         l2_entry.small.shared =
             ((word_t)attrib >> CACHE_ATTRIB_SHARED_BIT) & 0x1;

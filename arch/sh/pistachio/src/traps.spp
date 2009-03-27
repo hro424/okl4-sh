@@ -141,7 +141,7 @@ BEGIN_PROC_TRAPS(sh_tlb_miss, 0x400)
         stc     ssr, r0
         rotl    r0
         rotl    r0
-        bt      6f
+        bt      7f
 
         /* From user */
         /* Get the pointer to sh_context_t in the current TCB */
@@ -149,8 +149,10 @@ BEGIN_PROC_TRAPS(sh_tlb_miss, 0x400)
         add     #OFS_GLOBAL_CURRENT_TCB, r15
         mov.l   @r15, r15
         add     #OFS_TCB_ARCH_CONTEXT, r15
+        mov.l   2f, r0
+        add     r0, r15
 
-6:
+7:
         SAVE_CONTEXT
         /* Using the register bank 0 */
 
@@ -165,9 +167,9 @@ BEGIN_PROC_TRAPS(sh_tlb_miss, 0x400)
         mov     r15, r5
 
         /* Load the kernel stack if from user mode*/
-        bt      7f
-        mov.l   2f, r15
-7:
+        bt      8f
+        mov.l   4f, r15
+8:
         clrt
 
         /* Set up continuation */
@@ -175,17 +177,18 @@ BEGIN_PROC_TRAPS(sh_tlb_miss, 0x400)
         lds     r0, pr
 
         /* Call the handler */
-        mov.l   4f, r0
+        mov.l   6f, r0
         jmp     @r0
         nop
         /* NOT REACHED */
 
         ALIGN   4
 1:      .long   SH_GLOBAL_BASE
-2:      .long   KERNEL_STACK
+2:      .long   SIZEOF_CONTEXT
 3:      .long   REG_EXPEVT
-4:      .long   TLB_HANDLER
+4:      .long   KERNEL_STACK
 5:      .long   common_return
+6:      .long   TLB_HANDLER
 
 END_PROC_TRAPS(sh_tlb_miss)
 
@@ -202,7 +205,7 @@ BEGIN_PROC_TRAPS(sh_interrupt, 0x200)
         stc     ssr, r0
         rotl    r0
         rotl    r0
-        bt      6f
+        bt      7f
 
         /* From user */
         /* Get the pointer to sh_context_t in the current TCB */
@@ -210,8 +213,10 @@ BEGIN_PROC_TRAPS(sh_interrupt, 0x200)
         add     #OFS_GLOBAL_CURRENT_TCB, r15
         mov.l   @r15, r15
         add     #OFS_TCB_ARCH_CONTEXT, r15
+        mov.l   2f, r0
+        add     r0, r15
 
-6:
+7:
         SAVE_CONTEXT
         /* Using the register bank 0 */
 
@@ -219,22 +224,22 @@ BEGIN_PROC_TRAPS(sh_interrupt, 0x200)
          * Read the interrupt event register.
          * Pass it via the first argument.
          */
-        mov.l   2f, r4
+        mov.l   3f, r4
         mov.l   @r4, r4
 
         /* Pass the saved context via the second argument */
         mov     r15, r5
 
         /* Set up continuation */
-        mov.l   3f, r0
+        mov.l   4f, r0
         lds     r0, pr
 
         bt      kernel_interrupt
 
         /* Load the kernel stack */
-        mov.l   4f, r15
+        mov.l   5f, r15
 
-        mov.l   5f, r0
+        mov.l   6f, r0
         jmp     @r0
         nop
         /* NOT REACHED */
@@ -242,7 +247,7 @@ BEGIN_PROC_TRAPS(sh_interrupt, 0x200)
 LABEL(kernel_interrupt)
         /* Handle an interrupt raised in kernel mode */
         clrt
-        mov.l   5f, r0
+        mov.l   6f, r0
         jsr     @r0
         nop
 
@@ -254,7 +259,7 @@ LABEL(kernel_interrupt)
         mov     r15, r0
 
         /* Reset the kernel stack */
-        mov.l   4f, r15
+        mov.l   5f, r15
 
         /* Go to continuation */
         jmp     @r0
@@ -263,10 +268,11 @@ LABEL(kernel_interrupt)
 
         ALIGN   4
 1:      .long   SH_GLOBAL_BASE
-2:      .long   REG_INTEVT
-3:      .long   common_return
-4:      .long   KERNEL_STACK
-5:      .long   soc_handle_interrupt
+2:      .long   SIZEOF_CONTEXT
+3:      .long   REG_INTEVT
+4:      .long   common_return
+5:      .long   KERNEL_STACK
+6:      .long   soc_handle_interrupt
 
 END_PROC_TRAPS(sh_interrupt)
 
@@ -295,14 +301,16 @@ BEGIN_LOCAL_PROC(exp_memory_exception)
         stc     ssr, r0
         rotl    r0
         rotl    r0
-        bt      5f
+        bt      10f
 
         /* Get the pointer to sh_context_t in the current TCB */
         mov.l   1f, r15
         add     #OFS_GLOBAL_CURRENT_TCB, r15
         mov.l   @r15, r15
         add     #OFS_TCB_ARCH_CONTEXT, r15
-5:
+        mov.l   5f, r0
+        add     r0, r15
+10:
         SAVE_CONTEXT
         /* Using the register bank 0 */
 
@@ -318,9 +326,9 @@ BEGIN_LOCAL_PROC(exp_memory_exception)
         mov     r15, r5
 
         /* Load the kernel stack if from user mode */
-        bt      6f
+        bt      11f
         mov.l   2f, r15
-6:
+11:
         clrt
 
         /* Set up continuation */
@@ -340,6 +348,7 @@ BEGIN_LOCAL_PROC(exp_memory_exception)
 2:      .long   KERNEL_STACK
 3:      .long   common_return
 4:      .long   TLB_HANDLER
+5:      .long   SIZEOF_CONTEXT
 
 END_LOCAL_PROC(exp_memory_exception)
 
@@ -349,14 +358,16 @@ BEGIN_LOCAL_PROC(exp_instruction_exception)
         stc     ssr, r0
         rotl    r0
         rotl    r0
-        bt      5f
+        bt      10f
 
         /* Get the pointer to sh_context_t in the current TCB */
         mov.l   1f, r15
         add     #OFS_GLOBAL_CURRENT_TCB, r15
         mov.l   @r15, r15
         add     #OFS_TCB_ARCH_CONTEXT, r15
-5:
+        mov.l   5f, r0
+        add     r0, r15
+10:
         SAVE_CONTEXT
         /* Using the register bank 0 */
 
@@ -374,9 +385,9 @@ BEGIN_LOCAL_PROC(exp_instruction_exception)
 
 
         /* Load the kernel stack if from user mode */
-        bt      6f
+        bt      11f
         mov.l   2f, r15
-6:
+11:
         clrt
 
         /* Set up continuation */
@@ -395,6 +406,7 @@ BEGIN_LOCAL_PROC(exp_instruction_exception)
 2:      .long   KERNEL_STACK
 3:      .long   common_return
 4:      .long   handle_instruction_exception
+5:      .long   SIZEOF_CONTEXT
 END_LOCAL_PROC(exp_instruction_exception)
 
 
@@ -403,14 +415,16 @@ BEGIN_LOCAL_PROC(exp_address_error)
         stc     ssr, r0
         rotl    r0
         rotl    r0
-        bt      5f
+        bt      10f
 
         /* Get the pointer to sh_context_t in the current TCB */
         mov.l   1f, r15
         add     #OFS_GLOBAL_CURRENT_TCB, r15
         mov.l   @r15, r15
         add     #OFS_TCB_ARCH_CONTEXT, r15
-5:
+        mov.l   5f, r0
+        add     r0, r15
+10:
         SAVE_CONTEXT
         /* Using register bank 0 */
 
@@ -427,9 +441,9 @@ BEGIN_LOCAL_PROC(exp_address_error)
         mov     r15, r5
 
         /* Load the kernel stack */
-        bt      6f
+        bt      11f
         mov.l   2f, r15
-6:
+11:
 
         /* Set up continuation */
         mov.l   3f, r0
@@ -447,6 +461,7 @@ BEGIN_LOCAL_PROC(exp_address_error)
 2:      .long   KERNEL_STACK
 3:      .long   common_return
 4:      .long   handle_address_error
+5:      .long   SIZEOF_CONTEXT
 END_LOCAL_PROC(exp_address_error)
 
 
@@ -457,7 +472,9 @@ BEGIN_LOCAL_PROC(exp_user_break)
         add     #OFS_GLOBAL_CURRENT_TCB, r15
         mov.l   @r15, r15
         add     #OFS_TCB_ARCH_CONTEXT, r15
-5:
+        mov.l   4f, r0
+        add     r0, r15
+
         SAVE_CONTEXT
         /* Using register bank 0 */
 
@@ -473,6 +490,7 @@ BEGIN_LOCAL_PROC(exp_user_break)
 1:      .long   SH_GLOBAL_BASE
 2:      .long   KERNEL_STACK
 3:      .long   handle_user_break
+4:      .long   SIZEOF_CONTEXT
 END_LOCAL_PROC(exp_user_break)
 
 
@@ -501,6 +519,8 @@ BEGIN_LOCAL_PROC(exp_trapa_handler)
         add     #OFS_GLOBAL_CURRENT_TCB, r15
         mov.l   @r15, r15
         add     #OFS_TCB_ARCH_CONTEXT, r15
+        mov.l   6f, r0
+        add     r0, r15
 
         SAVE_CONTEXT
         /* Using the register bank 0 */
@@ -527,6 +547,7 @@ BEGIN_LOCAL_PROC(exp_trapa_handler)
 3:      .long   KERNEL_STACK
 4:      .long   common_return
 5:      .long   handle_syscall_exception
+6:      .long   SIZEOF_CONTEXT
 
 END_LOCAL_PROC(exp_traps_handler)
 
@@ -657,6 +678,8 @@ BEGIN_LOCAL_PROC(syscall_misc)
         add     #OFS_GLOBAL_CURRENT_TCB, r15
         mov.l   @r15, r15
         add     #OFS_TCB_ARCH_CONTEXT, r15
+        mov.l   5f, r0
+        add     r0, r15
 
         SAVE_CONTEXT
 
@@ -679,5 +702,6 @@ BEGIN_LOCAL_PROC(syscall_misc)
 2:      .long   KERNEL_STACK
 3:      .long   common_return
 4:      .long   sys_sh_misc
+5:      .long   SIZEOF_CONTEXT
 END_LOCAL_PROC(syscall_misc)
 

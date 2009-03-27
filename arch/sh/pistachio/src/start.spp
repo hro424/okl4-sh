@@ -6,15 +6,23 @@
 
 #include <soc/interface.h>
 
-    .section .init.start
-    BEGIN_PROC(kernel_arch_init)
+        .section .init.start
+        BEGIN_PROC(kernel_arch_init)
 
-    mov.l   1f, r0
-    jmp     @r0
-    nop
+        /* Set the BL bit */
+        mov     #0x10, r1
+        swap.b  r1, r1
+        swap.w  r1, r1
+        stc     sr, r0
+        or      r1, r0
+        ldc     r0, sr
 
-    .align 2
+        mov.l   1f, r0
+        jmp     @r0
+        nop
+
+        .balign 2
 1:
-    .long   init_memory
+        .long   init_memory
 
-    END_PROC(kernel_arch_init)
+        END_PROC(kernel_arch_init)
