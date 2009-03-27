@@ -138,7 +138,7 @@ class Kernel(XmlCollector):
                     if virt_addr is None:
                         virt_addr = 0
 
-                    size = self.stack.size
+                    size = self.stack.size - 4
                     if size is None:
                         size = 0
 

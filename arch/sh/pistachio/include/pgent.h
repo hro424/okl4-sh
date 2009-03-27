@@ -160,16 +160,7 @@ pgent_t::is_writable(generic_space_t* s, pgsize_e pgsize)
 INLINE bool
 pgent_t::is_readable(generic_space_t* s, pgsize_e pgsize)
 {
-    switch (pgsize) {
-        case size_1m:
-            return (l1.large.perm > 2);
-        case size_64k:
-            return (l2.medium.perm > 2);
-        case size_4k:
-            return (l2.small.perm > 2);
-        default:
-            return false;
-    }
+    return true;
 }
 
 INLINE bool

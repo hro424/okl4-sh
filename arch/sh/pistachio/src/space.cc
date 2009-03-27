@@ -10,6 +10,7 @@
 #include <linear_ptab.h>
 #include <kernel/bitmap.h>
 #include <kernel/generic/lib.h>
+#include <arch/tlb.h>
 
 asid_cache_t asid_cache UNIT("cpulocal");
 
@@ -200,75 +201,6 @@ generic_space_t::free_utcb(utcb_t* utcb)
      */
 }
 
-/**
- * Fills the specified TLB entry.
- * NOTE: The current replacement policy is round-robin.
- *
- * @param vaddr     the virtual address
- * @param space     the address space
- * @param pg        the page entry
- * @param pgsize    the size of the page
- */
-static void
-fill_tlb(addr_t vaddr, space_t* space, pgent_t* pg, pgent_t::pgsize_e pgsize)
-{
-    static u8_t entry = 0;
-    word_t      tmp;
-    word_t      reg;
-    word_t      addr;
-
-    reg  = mapped_reg_read(REG_MMUCR);
-    // Clear the URC field
-    reg &= ~(REG_MMUCR_URC_MASK);
-    // TODO: mask it with URB value
-    tmp = entry;
-    reg |= (tmp << 10) & REG_MMUCR_URC_MASK;
-    mapped_reg_write(REG_MMUCR, reg);
-    entry++;    // overflow -> go back to 0
-
-    addr = (word_t)vaddr;
-    addr = (addr >> hw_pgshifts[pgsize]) << hw_pgshifts[pgsize];
-
-    mapped_reg_write(REG_PTEH,
-                 (addr & REG_PTEH_VPN_MASK) |
-                 ((word_t)space->get_asid()->get(space) & REG_PTEH_ASID_MASK));
-    // Add dirty bit to avoid the initial write exception
-    mapped_reg_write(REG_PTEL, pg->ptel(pgsize) | (1 << 2));
-
-    __asm__ __volatile__ ("ldtlb");
-
-    UPDATE_REG();
-
-    sh_cache::flush();
-}
-
-/*
-static void
-dump_utlb()
-{
-    word_t  utlb_addr;
-    word_t  utlb_data;
-
-    for (word_t i = 0; i < 64; i++) {
-        utlb_addr = mapped_reg_read(0xF6000000 | (i << 8));
-        utlb_data = mapped_reg_read(0xF7000000 | (i << 8));
-        TRACE_INIT("%x:\t%2x %.8x %c%c\t-- %.8x %c%c%c%c%c szpr:%x\n",
-                   i,
-                   utlb_addr & 0xFF,
-                   utlb_addr & 0xFFFFFC00,
-                   utlb_addr & (1 << 9) ? 'd' : ' ',
-                   utlb_addr & (1 << 8) ? 'v' : ' ',
-                   utlb_data & 0x1FFFFC00,
-                   utlb_data & (1 << 8) ? 'v' : ' ',
-                   utlb_data & (1 << 3) ? 'c' : ' ',
-                   utlb_data & (1 << 2) ? 'd' : ' ',
-                   utlb_data & (1 << 1) ? 's' : ' ',
-                   utlb_data & 1 ? 't' : 'w',
-                   (utlb_data >> 4) & 0xF);
-    }
-}
-*/
-
 static unsigned char utcb_ref_page[4096] __attribute__ ((aligned (4096)));
 
 /**
@@ -290,19 +222,25 @@ generic_space_t::activate(tcb_t *tcb)
     set_hw_asid(dest_asid);
     mapped_reg_write(REG_TTB, new_pt);
 
-    ((space_t*)this)->add_mapping((void*)USER_UTCB_REF,
+    // Map the UTCB reference page
+    ((space_t*)this)->add_mapping((addr_t)USER_UTCB_REF,
                                   virt_to_phys(utcb_ref_page),
                                   pgent_t::size_4k, space_t::read_write,
                                   false, writeback_shared,
                                   get_current_kmem_resource());
 
-    if (!this->lookup_mapping((void*)USER_UTCB_REF, &pg, &pgsize)) {
-        enter_kdebug("not found");
-    }
+    this->lookup_mapping((addr_t)USER_UTCB_REF, &pg, &pgsize);
 
-    fill_tlb((void*)USER_UTCB_REF, (space_t*)this, pg, pgsize);
+    fill_tlb((addr_t)USER_UTCB_REF, (space_t*)this, pg, pgsize);
 
     *(volatile word_t*)USER_UTCB_REF = tcb->get_utcb_location();
+
+    // Map the stack page
+    addr_t  sp = (addr_t)((word_t)tcb->get_user_sp());
+    this->lookup_mapping(sp, &pg, &pgsize);
+    fill_tlb(sp, (space_t*)this, pg, pgsize);
+
+    dump_utlb();
 }
 
 /**

@@ -1,5 +1,6 @@
 /**
  *  @since  February 2009
+ *  @author Hiroo Ishikawa <hiroo.ishikawa@gmail.com>
  */
 
 #include <asmsyms.h>
@@ -9,13 +10,25 @@
 #include <kernel/arch/asm.h>
 
         /* Initial jump to a user thread */
+
         BEGIN_PROC(initial_to_user)
-        /* Restore the context from TCB */
+        /* Obtain the context from TCB */
         mov.l   1f, r15
         add     #OFS_GLOBAL_CURRENT_TCB, r15
         mov.l   @r15, r15
         add     #OFS_TCB_ARCH_CONTEXT, r15
+
+        /* Set the BL bit */
+        mov     #0x10, r1
+        swap.b  r1, r1
+        swap.w  r1, r1
+        stc     sr, r0
+        or      r1, r0
+        ldc     r0, sr
+
         RESTORE_CONTEXT
+        /* sp - 4 */
+        /* add     #0xFC, r15 */
         rte
         nop
 
