@@ -8,6 +8,10 @@ hello:
 	./tools/build.py PYFREEZE=false VERBOSE_STR=true MACHINE=sh2007 PROJECT=examples EXAMPLE=hello
 	make img
 
+hello:
+	./tools/build.py PYFREEZE=false VERBOSE_STR=true MACHINE=rp1 PROJECT=examples EXAMPLE=hello
+	make img
+
 img:
 	./update_cs
 	cp build/images/image.boot .

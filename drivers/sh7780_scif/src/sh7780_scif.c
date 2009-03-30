@@ -4,7 +4,11 @@
  */
 
 #include <l4/kdebug.h>
+#ifdef RP1
+#include <rp1_scif.h>
+#else
 #include <sh7780_scif.h>
+#endif
 
 
 #define TX_FIFO_DEPTH           64
