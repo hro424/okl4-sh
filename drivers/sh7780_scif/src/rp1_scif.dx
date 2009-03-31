@@ -1,0 +1,103 @@
+<device name="sh7780_scif">
+
+    <state name="enabled" />
+    <state name="disabled" />
+
+    <interface name="rx" interface_type="stream" />
+    <interface name="tx" interface_type="stream" />
+
+    <resource name="main" rtype="mem_space_t" />
+
+    <datafield ftype="int" name="writec" />
+    <datafield ftype="int" name="txen" />
+    <datafield ftype="int" name="rxen" />
+    <datafield ftype="int" name="readc" />
+    <datafield ftype="int" name="writev" />
+    <datafield ftype="int" name="readv" />
+
+    <block name="scif1_16" space_type="mem" space="main" register_size="16">
+
+        <register name="scsmr1" offset="0xC40000" type="rw">
+            <field name="ca"    bits="7" />
+            <field name="chr"   bits="6" />
+            <field name="pe"    bits="5" />
+            <field name="oe"    bits="4" />
+            <field name="stop"  bits="3" />
+            <field name="cks"   bits="0:1" />
+        </register>
+
+        <register name="scscr1" offset="0xC40008" type="rw">
+            <field name="tie"   bits="7" />
+            <field name="rie"   bits="6" />
+            <field name="te"    bits="5" />
+            <field name="re"    bits="4" />
+            <field name="reie"  bits="3" />
+            <field name="cke"   bits="0:1" />
+        </register>
+
+        <register name="scfsr1" offset="0xC40010" type="rw">
+            <field name="er"    bits="7" />
+            <field name="tend"  bits="6" />
+            <field name="tdfe"  bits="5" />
+            <field name="brk"   bits="4" />
+            <field name="fer"   bits="3" />
+            <field name="per"   bits="2" />
+            <field name="rdf"   bits="1" />
+            <field name="dr"    bits="0" />
+        </register>
+
+        <register name="scfcr1" offset="0xC40018" type="rw">
+            <field name="rstrg" bits="8:10" />
+            <field name="rtrg"  bits="6:7" />
+            <field name="ttrg"  bits="4:5" />
+            <field name="mce"   bits="3" />
+            <field name="tfcl"  bits="2" />
+            <field name="rfcl"  bits="1" />
+            <field name="loop"  bits="0" />
+        </register>
+
+        <register name="sctfdr1" offset="0xC4001C" type="ro">
+            <field name="t"     bits="0:6" />
+        </register>
+
+        <register name="scrfdr1" offset="0xC40020" type="ro">
+            <field name="r"     bits="0:6" />
+        </register>
+
+        <register name="scsptr1" offset="0xC40024" type="rw">
+            <field name="rtsio" bits="7" />
+            <field name="rtsdt" bits="6" />
+            <field name="ctsio" bits="5" />
+            <field name="ctsdt" bits="4" />
+            <field name="sckio" bits="3" />
+            <field name="sckdt" bits="2" />
+            <field name="spb2io"    bits="1" />
+            <field name="spb2dt"    bits="0" />
+        </register>
+
+        <register name="sclsr1" offset="0xC40028" type="rw">
+            <field name="orer"  bits="0" />
+        </register>
+
+        <register name="screr1" offset="0xC4002C" type="ro">
+            <field name="per"   bits="8:13" />
+            <field name="fer"   bits="0:5" />
+        </register>
+
+    </block>
+
+    <block name="scif1_8" space_type="mem" space="main" register_size="8">
+        <register name="scbrr1" offset="0xC40004" type="rw">
+            <field name="data" bits="0:7" />
+        </register>
+
+        <register name="scftdr1" offset="0xC4000c" type="wo">
+            <field name="data" bits="0:7" />
+        </register>
+
+        <register name="scfrdr1" offset="0xC40014" type="ro">
+            <field name="data" bits="0:7" />
+        </register>
+
+    </block>
+</device>
