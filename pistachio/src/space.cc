@@ -247,6 +247,8 @@ SYS_SPACE_CONTROL (spaceid_t space_id, word_t control, clistid_t clist_id,
                        control, clist_id.get_raw(), utcb_area.raw, space_resources),
                 "space_control spc: %d, ctrl: 0x%lx", space_id.get_spaceno(), control);;
 
+    tcb_t *current = get_current_tcb();
+
 #ifdef CONFIG_DEBUG
     /* Functions called from here can set the error code; use this for 
        sanity checking when debug is enabled */
