@@ -148,10 +148,10 @@ void empty(word_t foo);
  * @param result The RESULT value after the system call
  */
 #define return_thread_control(result, cont) {           \
-    register word_t rslt    ASM_REG("r4") = result;     \
+    register word_t rslt    ASM_REG("r0") = result;     \
                                                         \
     __asm__ __volatile__ (                              \
-        CHECK_ARG("r4", "%0")                           \
+        CHECK_ARG("r0", "%0")                           \
         "    or      %2, r15         \n"                \
         "    jmp     @%1             \n"                \
         "    nop                     \n"                \
@@ -174,22 +174,22 @@ void empty(word_t foo);
  */
 #define return_exchange_registers(result, control, _sp, ip, flags, pager, handle, continuation)\
 {                                                                       \
-    register word_t rslt    ASM_REG("r1") = result;                     \
-    register word_t ctrl    ASM_REG("r2") = control;                    \
-    register word_t sp_r    ASM_REG("r3") = _sp;                        \
-    register word_t ip_r    ASM_REG("r4") = ip;                         \
-    register word_t fl_r    ASM_REG("r5") = flags;                      \
-    register word_t hdl_r   ASM_REG("r6") = handle;                     \
-    register word_t pgr_r   ASM_REG("r7") = (pager).get_raw();          \
+    register word_t rslt    ASM_REG("r0") = result;                     \
+    register word_t ctrl    ASM_REG("r5") = control;                    \
+    register word_t sp_r    ASM_REG("r6") = _sp;                        \
+    register word_t ip_r    ASM_REG("r7") = ip;                         \
+    register word_t fl_r    ASM_REG("r1") = flags;                      \
+    register word_t hdl_r   ASM_REG("r2") = handle;                     \
+    register word_t pgr_r   ASM_REG("r3") = (pager).get_raw();          \
                                                                         \
     __asm__ __volatile__ (                                              \
-        CHECK_ARG("r1", "%1")                                           \
-        CHECK_ARG("r2", "%2")                                           \
-        CHECK_ARG("r3", "%3")                                           \
-        CHECK_ARG("r4", "%4")                                           \
-        CHECK_ARG("r5", "%5")                                           \
-        CHECK_ARG("r6", "%6")                                           \
-        CHECK_ARG("r7", "%7")                                           \
+        CHECK_ARG("r0", "%1")                                           \
+        CHECK_ARG("r5", "%2")                                           \
+        CHECK_ARG("r6", "%3")                                           \
+        CHECK_ARG("r7", "%4")                                           \
+        CHECK_ARG("r1", "%5")                                           \
+        CHECK_ARG("r2", "%6")                                           \
+        CHECK_ARG("r3", "%7")                                           \
         "    or      %8, r15         \n"                                \
         "    jmp     @%0             \n"                                \
         "    nop                     \n"                                \
@@ -215,10 +215,10 @@ void empty(word_t foo);
  * @param result The RESULT value after the system call
  */
 #define return_map_control(result, cont) {              \
-    register word_t rslt    ASM_REG("r4") = result;     \
+    register word_t rslt    ASM_REG("r0") = result;     \
                                                         \
     __asm__ __volatile__ (                              \
-        CHECK_ARG("r4", "%0")                           \
+        CHECK_ARG("r0", "%0")                           \
         "    or      %2, r15         \n"                \
         "    jmp     @%1             \n"                \
         "    nop                     \n"                \
@@ -236,12 +236,12 @@ void empty(word_t foo);
  * @param cont The continuation function to jump to
  */
 #define return_space_control(result, space_resources, cont) {           \
-    register word_t rslt    ASM_REG("r4") = result;                     \
-    register word_t spcres  ASM_REG("r5") = space_resources;            \
+    register word_t rslt    ASM_REG("r0") = result;                     \
+    register word_t spcres  ASM_REG("r1") = space_resources;            \
                                                                         \
     __asm__ __volatile__ (                                              \
-        CHECK_ARG("r4", "%0")                                           \
-        CHECK_ARG("r5", "%1")                                           \
+        CHECK_ARG("r0", "%0")                                           \
+        CHECK_ARG("r1", "%1")                                           \
         "    or      %3, r15         \n"                                \
         "    jmp     @%2             \n"                                \
         "    nop                     \n"                                \
@@ -256,6 +256,7 @@ void empty(word_t foo);
  * Preload registers and return from sys_schedule
  * @param result The RESULT value after the system call
  */
+//TODO: Register allocation
 #define return_schedule(result, rem_ts, continuation) {                 \
     register word_t rslt    ASM_REG("r4") = result;                     \
     register word_t remts   ASM_REG("r5") = rem_ts;                     \
@@ -263,6 +264,8 @@ void empty(word_t foo);
     __asm__ __volatile__ (                                              \
         CHECK_ARG("r4", "%1")                                           \
         CHECK_ARG("r5", "%2")                                           \
+        "    mov     r4, r0          \n"                                \
+        "    mov     r5, r1          \n"                                \
         "    or      %3, r15         \n"                                \
         "    jmp     @%0             \n"                                \
         "    nop                     \n"                                \
@@ -277,10 +280,10 @@ void empty(word_t foo);
  * Return from sys_cache_control
  */
 #define return_cache_control(result, cont) {            \
-    register word_t rslt    ASM_REG("r4") = result;     \
+    register word_t rslt    ASM_REG("r0") = result;     \
                                                         \
     __asm__ __volatile__ (                              \
-        CHECK_ARG("r4", "%0")                           \
+        CHECK_ARG("r0", "%0")                           \
         "    or      %2, r15         \n"                \
         "    jmp     @%1             \n"                \
         "    nop                     \n"                \
@@ -296,10 +299,10 @@ void empty(word_t foo);
  * @param result The RESULT value after the system call
  */
 #define return_platform_control(result, cont) {         \
-    register word_t rslt    ASM_REG("r4") = result;     \
+    register word_t rslt    ASM_REG("r0") = result;     \
                                                         \
     __asm__ __volatile__ (                              \
-        CHECK_ARG("r4", "%0")                           \
+        CHECK_ARG("r0", "%0")                           \
         "    or      %2, r15         \n"                \
         "    jmp     @%1             \n"                \
         "    nop                     \n"                \
@@ -315,10 +318,10 @@ void empty(word_t foo);
  * @param result The RESULT value after the system call
  */
 #define return_space_switch(result, cont) {             \
-    register word_t rslt    ASM_REG("r4") = result;     \
+    register word_t rslt    ASM_REG("r0") = result;     \
                                                         \
     __asm__ __volatile__ (                              \
-        CHECK_ARG("r4", "%0")                           \
+        CHECK_ARG("r0", "%0")                           \
         "    or      %2, r15         \n"                \
         "    jmp     @%1             \n"                \
         "    nop                     \n"                \
@@ -335,10 +338,10 @@ void empty(word_t foo);
  * @param result The RESULT value after the system call
  */
 #define return_mutex(result, cont) {                    \
-    register word_t rslt    ASM_REG("r4") = result;     \
+    register word_t rslt    ASM_REG("r0") = result;     \
                                                         \
     __asm__ __volatile__ (                              \
-        CHECK_ARG("r4", "%0")                           \
+        CHECK_ARG("r0", "%0")                           \
         "    or      %2, r15         \n"                \
         "    jmp     @%1             \n"                \
         "    nop                     \n"                \
@@ -355,10 +358,10 @@ void empty(word_t foo);
  * @param result The RESULT value after the system call
  */
 #define return_mutex_control(result, cont) {            \
-    register word_t rslt    ASM_REG("r4") = result;     \
+    register word_t rslt    ASM_REG("r0") = result;     \
                                                         \
     __asm__ __volatile__ (                              \
-        CHECK_ARG("r4", "%0")                           \
+        CHECK_ARG("r0", "%0")                           \
         "    or      %2, r15         \n"                \
         "    jmp     @%1             \n"                \
         "    nop                     \n"                \
@@ -375,10 +378,10 @@ void empty(word_t foo);
  * @param result The RESULT value after the system call
  */
 #define return_interrupt_control(result, cont) {        \
-    register word_t rslt    ASM_REG("r4") = result;     \
+    register word_t rslt    ASM_REG("r0") = result;     \
                                                         \
     __asm__ __volatile__ (                              \
-        CHECK_ARG("r4", "%0")                           \
+        CHECK_ARG("r0", "%0")                           \
         "    or      %2, r15         \n"                \
         "    jmp     @%1             \n"                \
         "    nop                     \n"                \
@@ -394,10 +397,10 @@ void empty(word_t foo);
  * @param result The RESULT value after the system call
  */
 #define return_cap_control(result, cont) {              \
-    register word_t rslt    ASM_REG("r4") = result;     \
+    register word_t rslt    ASM_REG("r0") = result;     \
                                                         \
     __asm__ __volatile__ (                              \
-        CHECK_ARG("r4", "%0")                           \
+        CHECK_ARG("r0", "%0")                           \
         "    or      %2, r15         \n"                \
         "    jmp     @%1             \n"                \
         "    nop                     \n"                \
@@ -413,12 +416,12 @@ void empty(word_t foo);
  * @param result The RESULT value after the system call
  */
 #define return_memory_copy(result, size, cont) {                \
-    register word_t rslt    ASM_REG("r4") = result;             \
-    register word_t siz     ASM_REG("r5") = size;               \
+    register word_t rslt    ASM_REG("r0") = result;             \
+    register word_t siz     ASM_REG("r1") = size;               \
                                                                 \
     __asm__ __volatile__ (                                      \
-        CHECK_ARG("r4", "%0")                                   \
-        CHECK_ARG("r5", "%1")                                   \
+        CHECK_ARG("r0", "%0")                                   \
+        CHECK_ARG("r1", "%1")                                   \
         "    or      %3, r15         \n"                        \
         "    jmp     @%2             \n"                        \
         "    nop                     \n"                        \

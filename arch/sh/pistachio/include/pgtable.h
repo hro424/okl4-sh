@@ -16,8 +16,17 @@
 
 //NOTE: +2 is the size of a page table entry in log2.
 #define SH_L1_BITS          (SH_SECTION_BITS + 2)
+
+/**
+ * Size of L1 table
+ */
 #define SH_L1_SIZE          (1UL << SH_L1_BITS)
+
 #define SH_L2_BITS          (32 - SH_SECTION_BITS - PAGE_BITS_4K + 2)
+
+/**
+ * Size of L2 table
+ */
 #define SH_L2_SIZE          (1UL << SH_L2_BITS)
 
 #define PG_TOP_SIZE         SH_L1_SIZE

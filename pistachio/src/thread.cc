@@ -301,6 +301,7 @@ tcb_t::create_kernel_thread(utcb_t * new_utcb)
     // kernel threads have prio 0 by default
     get_current_scheduler()->set_priority(this, 0);
 
+    printf("add tcb@create_kernel_thread %p\n", get_kernel_space());
     get_kernel_space()->add_tcb(this);
     return true;
 }

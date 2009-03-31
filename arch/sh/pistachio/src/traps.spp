@@ -619,8 +619,7 @@ BEGIN_LOCAL_PROC(syscall_handler)
 7:      .long   sh_syscall_vectors
 
 LABEL(sh_syscall_vectors)
-        /* TODO: dummy syscall*/
-        .long   0
+        .long   0                   /* reserved */
         .long   sys_ipc
         .long   sys_thread_switch
         .long   sys_thread_control

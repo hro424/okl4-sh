@@ -248,6 +248,7 @@ pgent_t::make_subtree(generic_space_t* s, pgsize_e pgsize, bool kernel,
                       kmem_resource_t* kresource)
 {
     if (pgsize == size_1m) {
+        // Allocate an L2 table
         addr_t base = kresource->alloc(kmem_group_pgtab, SH_L2_SIZE, true);
         if (base == NULL) {
             return false;
@@ -271,9 +272,10 @@ pgent_t::remove_subtree(generic_space_t* s, pgsize_e pgsize, bool kernel,
                         kmem_resource_t* kresource)
 {
     if (pgsize == size_1m) {
+        // Release the L2 table
         kresource->free(kmem_group_pgtab,
-                        phys_to_virt((addr_t)l1.table.base_address),
-                        SH_L2_SIZE);
+                phys_to_virt((addr_t)(l1.table.base_address << SH_L2_BITS)),
+                SH_L2_SIZE);
     }
     clear(s, pgsize, kernel);
 }

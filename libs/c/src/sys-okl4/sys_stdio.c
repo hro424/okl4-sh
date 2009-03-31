@@ -64,6 +64,7 @@
 #include <string.h>
 #include <assert.h>
 #include <okl4/env.h>
+#include <l4/kdebug.h>
 
 #if defined SERIAL_DRIVER
 #include <serial/serial.h>

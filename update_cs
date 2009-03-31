@@ -1,6 +1,6 @@
 #!/bin/sh
 
-MAIN="arch drivers iguana libs nanokernel pistachio platform"
+MAIN="arch drivers iguana ktest libs nanokernel pistachio platform"
 
 find $MAIN -type f -name *.[chsS] -o \( -name *.cc \) -o \( -name *.[cs]pp \) > cscope.files
 

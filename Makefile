@@ -13,7 +13,6 @@ hello:
 	make img
 
 img:
-	./update_cs
 	cp build/images/image.boot .
 	sh-linux-objcopy -O binary image.boot
 	cp image.boot /nfsroot/okl4/bootimage.bin

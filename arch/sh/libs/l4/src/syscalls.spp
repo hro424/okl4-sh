@@ -192,12 +192,8 @@ LABEL(L4_Ipc)
     mov.l   CONST_UTCB_BASE, r10
     add     #__L4_TCR_MR_OFFSET, r10
 
-    //TODO: What's this?
-    mov     r6, r0
-
     /* Only load MRs if send phase is included. */
 	mov.l   nilthread, r1
-	mov.l   @r1, r1
     cmp/eq  r4, r1
     bt      1f
 	mov.l   @(4, r10), r1
@@ -216,7 +212,6 @@ LABEL(L4_Ipc)
     /* Only store MRs if recv phase is included. */
 	mov.l	r1, @-r15
 	mov.l	nilthread, r1
-	mov.l	@r1, r1
 	cmp/eq	r1, r5
 	mov.l	@r15+, r1
     bt      2f
@@ -241,9 +236,7 @@ LABEL(L4_Notify)
 
     mov     r5, r1              // mr[1] = mask
     mov.l   nilthread, r5      // receiver = nil
-	mov.l	@r5, r5
 	mov.l	SHIFT_NOTIFY, r0	// tag = 1 << 13
-	mov.l	@r0, r0
 
     mov     #SYSNUM(ipc), SYSCALL_REG
     trapa   #SYSCALL_NUM
@@ -265,11 +258,8 @@ LABEL(L4_WaitNotify)
     mov.l   r4, @-r15
 
 	mov.l	nilthread, r4		// to_tid = nilthread
-	mov.l	@r4, r4
 	mov.l	MINUS_2, r5			// from_tid = wait_notify
-	mov.l	@r5, r5
 	mov.l	SHIFT_WAIT_NOTIFY, r0	// tag = 1 << 14
-	mov.l	@r0, r0
 
     mov     #SYSNUM(ipc), SYSCALL_REG
     trapa   #SYSCALL_NUM
@@ -302,7 +292,6 @@ LABEL(L4_Lipc)
 
     /* Only load MRs if send phase is included. */
 	mov.l	nilthread, r1
-	mov.l	@r1, r1
     cmp/eq  r4, r1
     bt      1f
     mov.l   @(4, r10), r1
@@ -322,7 +311,6 @@ LABEL(L4_Lipc)
     /* Only store MRs if recv phase is included. */
 	mov.l	r4, @-r15 
 	mov.l	nilthread, r4
-	mov.l	@r4, r4
     cmp/eq  r5, r4
 	mov.l	@r15+, r4
     bt      2f
@@ -376,9 +364,12 @@ LABEL(L4_SpaceControl)
 
     RESTORE_CONTEXT
 
-    /* Assume that old_resources is returned via r1. */
+    /* TODO: Assume that old_resources is returned via r1. */
     mov.l   @(4, r15), r2
-    mov.l   r1, @r2     // *old_resources = r_old_resources;
+    tst     r2, r2
+    bt      1f
+    mov.l   r1, @r2             // *old_resources = r_old_resources;
+1:
     rts
     nop
 

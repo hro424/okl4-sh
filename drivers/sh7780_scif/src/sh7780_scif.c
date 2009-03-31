@@ -35,10 +35,7 @@ typedef enum {
  * Delivers the given data to a serial port.  A private function.
  */
 static void
-do_tx_work
-(
-    struct sh7780_scif *device
-)
+do_tx_work(struct sh7780_scif *device)
 {
     struct stream_interface*    si;
     struct stream_pkt*          packet;
@@ -80,10 +77,7 @@ do_tx_work
  * Receives data from a serial port.  A private function.
  */
 static int 
-do_rx_work
-(
-    struct sh7780_scif *device
-)
+do_rx_work(struct sh7780_scif *device)
 {
     struct stream_interface*    si;
     struct stream_pkt*          packet;
@@ -152,11 +146,7 @@ do_rx_work
  * Triggers delivery or receive of data.
  */
 static int
-stream_sync_impl
-(
-    struct stream_interface*    si,
-    struct sh7780_scif*         device
-)
+stream_sync_impl(struct stream_interface* si, struct sh7780_scif* device)
 {
     int retval = 0;
     
@@ -174,12 +164,8 @@ stream_sync_impl
  * Handles interrupt
  */
 static int
-device_interrupt_impl
-(
-    struct device_interface*    di,
-    struct sh7780_scif*         device,
-    int                         irq
-)
+device_interrupt_impl(struct device_interface* di, struct sh7780_scif* device,
+                      int irq)
 {
     /*
      * not implemented yet.
@@ -247,7 +233,6 @@ device_setup_impl
     struct resource*            resources
 )
 {
-//    L4_KDB_PrintChar('!');
     int i, n_mem = 0;
     for (i = 0; i < 8; i++) {
         switch(resources->type) {
@@ -256,7 +241,6 @@ device_setup_impl
                     device->main = *resources;
                 }
                 else {
-                    //printf("sh7780_scif: got more memory than expected!\n");
                     L4_KDB_Enter("sh7780_scif: got more memory than expected!");
                 }
                 n_mem++;
@@ -268,7 +252,6 @@ device_setup_impl
                 break;
             default:
                 L4_KDB_Enter("sh7780_scif: Invalid resource type");
-                //printf("sh7780_scif: Invalid resource type %d!\n", resources->type);
                 break;
         }
         resources++;
