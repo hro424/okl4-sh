@@ -132,9 +132,9 @@ pgent_t::is_valid(generic_space_t* s, pgsize_e pgsize)
 {
     switch (pgsize) {
         case size_1m:
-            return (l1.large.present == 1);
+            return (l1.large.present == 1) || (l1.table.tree == 1);
         case size_64k:
-            return (l2.medium.present == 1);
+            return (l2.medium.present == 1) || (l2.medium.tree == 1);
         case size_4k:
             return (l2.small.present == 1);
         default:
@@ -254,14 +254,12 @@ pgent_t::make_subtree(generic_space_t* s, pgsize_e pgsize, bool kernel,
             return false;
         }
         l1.raw = 0;
-        l1.table.present = 1;
         l1.table.tree = 1;
         l1.table.base_address = (word_t)virt_to_phys(base) >> SH_L2_BITS;
         sh_cache::flush_d(base, SH_L2_BITS);
     }
     else if (pgsize == size_64k) {
         l2.medium.tree = 1;
-        l2.medium.present = 1;
         sync_large(s);
     }
     return true;
@@ -276,6 +274,10 @@ pgent_t::remove_subtree(generic_space_t* s, pgsize_e pgsize, bool kernel,
         kresource->free(kmem_group_pgtab,
                 phys_to_virt((addr_t)(l1.table.base_address << SH_L2_BITS)),
                 SH_L2_SIZE);
+    }
+    else if (pgsize == size_64k) {
+        l2.medium.tree = 0;
+        sync_large(s);
     }
     clear(s, pgsize, kernel);
 }

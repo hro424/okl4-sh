@@ -5,7 +5,7 @@ OPTIONS=	PYFREEZE=false MACHINE=sh2007
 all: hello
 
 test:
-	${COMMAND} ${OPTIONS} VERBOSE_STR=true PROJECT=ktest VERBOSE_INIT=true
+	${COMMAND} ${OPTIONS} VERBOSE_STR=true PROJECT=ktest
 	make img
 
 hello:

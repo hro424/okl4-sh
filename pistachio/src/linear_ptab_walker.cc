@@ -106,8 +106,8 @@ DECLARE_TRACEPOINT (FPAGE_READ);
 
 #define TRACE_MAP(x...)
 //#define TRACE_MAP(x...)         printf(x);
-//#define TRACE_UNMAP(x...)
-#define TRACE_UNMAP(x...)       printf(x);
+#define TRACE_UNMAP(x...)
+//#define TRACE_UNMAP(x...)       printf(x);
 #define TRACE_READ(x...)
 //#define TRACE_READ(x...)        printf(x);
 

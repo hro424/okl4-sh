@@ -247,11 +247,6 @@ SYS_SPACE_CONTROL (spaceid_t space_id, word_t control, clistid_t clist_id,
                        control, clist_id.get_raw(), utcb_area.raw, space_resources),
                 "space_control spc: %d, ctrl: 0x%lx", space_id.get_spaceno(), control);;
 
-    printf("SYS_SPACE_CONTROL: space=%d, control=%p, clist=%d, "
-           "utcb_area=%p, spc_resc=%p\n",  space_id.get_spaceno(),
-           control, clist_id.get_raw(), utcb_area.raw, space_resources);
-    tcb_t *current = get_current_tcb();
-
 #ifdef CONFIG_DEBUG
     /* Functions called from here can set the error code; use this for 
        sanity checking when debug is enabled */
@@ -549,7 +544,6 @@ generic_space_t::free_utcb_page (pgent_t * pg, pgent_t::pgsize_e pgsize,
     kaddr = ram_to_virt(pg->address(this, pgsize));
 
     //TRACEF("Freeing Kernel memory %p %p\n", vaddr, kaddr);
-    printf("Freeing Kernel memory %p %p\n", vaddr, kaddr);
 
     /* flush from TLB */
     flush_tlbent_local(get_current_space(), vaddr, page_shift(pgsize));
