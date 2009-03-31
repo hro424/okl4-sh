@@ -8,8 +8,12 @@ hello:
 	./tools/build.py PYFREEZE=false VERBOSE_STR=true MACHINE=sh2007 PROJECT=examples EXAMPLE=hello
 	make img
 
-hello:
-	./tools/build.py PYFREEZE=false VERBOSE_STR=true MACHINE=rp1 PROJECT=examples EXAMPLE=hello
+rp1:
+	./tools/build.py PYFREEZE=false VERBOSE_STR=true MACHINE=msrp1 PROJECT=examples EXAMPLE=hello
+	make img
+
+rp1-test:
+	./tools/build.py PYFREEZE=false VERBOSE_STR=true MACHINE=msrp1 PROJECT=ktest
 	make img
 
 img:
