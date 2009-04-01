@@ -91,7 +91,7 @@
 
 #define DO_TRACE_IPC(x...) do { printf(x); } while(0)
 
-#if 0
+#if 1
 #define TRACE_IPC(x...)
 #define TRACE_XIPC(x...)
 #define TRACE_NOTIFY(x...)
@@ -297,19 +297,6 @@ SYS_IPC(capid_t to_tid, capid_t from_tid)
                    "sys_ipc %t => %t (recvfrom=%t)",
                    (word_t)current,
                    TID(to_tid), TID(from_tid));
-msg_tag_t tag = current->get_tag ();
-printf ("SYS_IPC: current: %t, to_tid: %t, "
-       "from_tid: %t, "
-       "tag: 0x%x (label=0x%x, %c%c%c, u=%d)\n",
-       current, TID(to_tid), TID(from_tid),
-       tag.raw, tag.get_label (),
-       tag.send_blocks() ? 'S' : 's',
-       tag.recv_blocks() ? 'R' : 'r',
-       tag.is_notify() ? 'N' : '~',
-       tag.get_untyped ()
-       );
-printf("  current utcb:%p(= %p), 0x%x\n",
-       current->get_utcb(), current->utcb, current->utcb_location);
 
     tcb_t * to_tcb = NULL;
     tcb_t * from_tcb = NULL;
