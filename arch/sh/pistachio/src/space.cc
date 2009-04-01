@@ -219,6 +219,7 @@ generic_space_t::activate(tcb_t *tcb)
     get_globals()->current_clist = this->get_clist();
     new_pt = ((space_t*)this)->pgbase;
 
+    // Change ASID
     set_hw_asid(dest_asid);
     mapped_reg_write(REG_TTB, new_pt);
 
@@ -226,7 +227,7 @@ generic_space_t::activate(tcb_t *tcb)
     ((space_t*)this)->add_mapping((addr_t)USER_UTCB_REF,
                                   virt_to_phys(utcb_ref_page),
                                   pgent_t::size_4k, space_t::read_write,
-                                  false, writeback_shared,
+                                  false, writeback,
                                   get_current_kmem_resource());
 
     this->lookup_mapping((addr_t)USER_UTCB_REF, &pg, &pgsize);
@@ -234,13 +235,6 @@ generic_space_t::activate(tcb_t *tcb)
     fill_tlb((addr_t)USER_UTCB_REF, (space_t*)this, pg, pgsize);
 
     *(volatile word_t*)USER_UTCB_REF = tcb->get_utcb_location();
-
-    // Map the stack page
-    /*
-    addr_t  sp = (addr_t)((word_t)tcb->get_user_sp());
-    this->lookup_mapping(sp, &pg, &pgsize);
-    fill_tlb(sp, (space_t*)this, pg, pgsize);
-    */
 }
 
 /**

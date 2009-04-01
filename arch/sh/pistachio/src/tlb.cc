@@ -49,22 +49,23 @@ dump_utlb()
     word_t  utlb_addr;
     word_t  utlb_data;
 
+    printf("id    asid   virt            phys\n");
     for (word_t i = 0; i < 64; i++) {
         utlb_addr = mapped_reg_read(0xF6000000 | (i << 8));
         utlb_data = mapped_reg_read(0xF7000000 | (i << 8));
-        TRACE_INIT("%x:\t%2x %.8x %c%c\t-- %.8x %c%c%c%c%c szpr:%x\n",
-                   i,
-                   utlb_addr & 0xFF,
-                   utlb_addr & 0xFFFFFC00,
-                   utlb_addr & (1 << 9) ? 'd' : ' ',
-                   utlb_addr & (1 << 8) ? 'v' : ' ',
-                   utlb_data & 0x1FFFFC00,
-                   utlb_data & (1 << 8) ? 'v' : ' ',
-                   utlb_data & (1 << 3) ? 'c' : ' ',
-                   utlb_data & (1 << 2) ? 'd' : ' ',
-                   utlb_data & (1 << 1) ? 's' : ' ',
-                   utlb_data & 1 ? 't' : 'w',
-                   (utlb_data >> 4) & 0xF);
+        printf("%x:\t%2x %.8x %c%c\t-- %.8x %c%c%c%c%c szpr:%x\n",
+               i,
+               utlb_addr & 0xFF,
+               utlb_addr & 0xFFFFFC00,
+               utlb_addr & (1 << 9) ? 'd' : ' ',
+               utlb_addr & (1 << 8) ? 'v' : ' ',
+               utlb_data & 0x1FFFFC00,
+               utlb_data & (1 << 8) ? 'v' : ' ',
+               utlb_data & (1 << 3) ? 'c' : ' ',
+               utlb_data & (1 << 2) ? 'd' : ' ',
+               utlb_data & (1 << 1) ? 's' : ' ',
+               utlb_data & 1 ? 't' : 'w',
+               (utlb_data >> 4) & 0xF);
     }
 }
 

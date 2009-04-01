@@ -4,4 +4,4 @@ MAIN="arch drivers iguana ktest libs nanokernel pistachio platform"
 
 find $MAIN -type f -name *.[chsS] -o \( -name *.cc \) -o \( -name *.[cs]pp \) > cscope.files
 
-cscope -qkb
+cscope -kb
