@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /**
  *  @since  February 2009
  */
@@ -162,7 +160,7 @@ tcb_t::copy_mrs_to_regs(tcb_t *dest)
     from->r12 = mr[12];
     from->sp  = mr[13];
     from->pr  = mr[14];
-    dest->set_user_flags(mr[16]);
     dest->set_user_ip((addr_t)mr[15]);
+    dest->set_user_flags(mr[16]);
 }
 

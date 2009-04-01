@@ -3,6 +3,7 @@
 
 #if defined(ASSEMBLY)
 
+// Do not use R8 and R9, which is used by system calls
 #define SWITCH_BANK_1_TO_0              \
     stc     sr, r10;                    \
     /* Make the mask to switch the bank */  \

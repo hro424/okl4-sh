@@ -15,6 +15,7 @@
 #include <arch/thread.h>
 #include <kernel/arch/asm.h> //TODO: Integrate this with asm.h
 #include <kernel/arch/config.h>
+#include <l4/arch/vregs.h>
 
 
 #define KERNEL_STACK                __stack + STACK_TOP
@@ -290,6 +291,10 @@ END_PROC_TRAPS(sh_interrupt)
         EXP_VECTOR(exp_instruction_exception)
 
 
+
+
+
+
 /*
  * Deals with TLB protection violation (read/write) (ecode: 0x0A0/0x0C0).
  * Invokes the page fault handler that sends a page fault message to user.
@@ -510,7 +515,7 @@ BEGIN_LOCAL_PROC(exp_trapa_handler)
         /* Omit 2 LSBs.  See the manual.  */
         shlr2   r0
         cmp/eq  #SYSCALL_NUM, r0
-        bt      syscall_handler
+        bt      ipc_handler
 
         /* Not an OKL4 system call. */
 
@@ -551,20 +556,18 @@ BEGIN_LOCAL_PROC(exp_trapa_handler)
 
 END_LOCAL_PROC(exp_traps_handler)
 
-
 /*
- * System call handler
+ * IPC handler
  */
-// TODO: IPC optimization
-BEGIN_LOCAL_PROC(syscall_handler)
+BEGIN_LOCAL_PROC(ipc_handler)
         /* Using the register bank 1 */
 
         /* Save the control and system registers to TCB */
-        mov.l   2f, r0
+        mov.l   1f, r0
         add     #OFS_GLOBAL_CURRENT_TCB, r0
         mov.l   @r0, r0
         add     #OFS_TCB_ARCH_CONTEXT, r0
-        mov.l   3f, r1
+        mov.l   2f, r1
         add     r1, r0
         stc.l   sgr, @-r0
         stc.l   spc, @-r0
@@ -572,6 +575,59 @@ BEGIN_LOCAL_PROC(syscall_handler)
         sts.l   pr, @-r0
         sts.l   macl, @-r0
         sts.l   mach, @-r0
+
+        /* Branch to other system calls */
+        mov     #SYSCALL_ipc, r0
+        mov     #SYSCALL_lipc, r1
+        cmp/eq  r0, r8
+        bt      10f
+        cmp/eq  r1, r8
+        bf      syscall_handler
+10:
+        SWITCH_BANK_1_TO_0
+
+        /* Save message registers to UTCB */
+        mov.l   4f, r10
+        mov.l   @r10, r10
+        mov.l   5f, r11
+        shll2   r11
+        add     r11, r10
+        mov.l   r6, @(0, r10)
+        mov.l   r1, @(4, r10)
+        mov.l   r2, @(8, r10)
+        mov.l   r3, @(12, r10)
+        mov.l   r7, @(16, r10)
+        mov.l   r9, @(20, r10)
+
+        /* Switch to the kernel stack */
+        mov.l   3f, r15
+
+        /* Set the return address */
+        mov.l   6f, r0
+        lds     r0, pr
+
+        /* Call sys_ipc */
+        mov.l   7f, r0
+        add     #4, r0
+        mov.l   @r0, r0
+        jmp     @r0
+        nop
+
+1:      .long   SH_GLOBAL_BASE
+2:      .long   SIZEOF_CONTEXT
+3:      .long   KERNEL_STACK
+4:      .long   USER_UTCB_REF
+5:      .long   __L4_TCR_MR_OFFSET
+6:      .long   ipc_syscall_return
+7:      .long   sh_syscall_vectors
+END_LOCAL_PROC(ipc_handler)
+
+/*
+ * System call handler
+ */
+// TODO: IPC optimization
+BEGIN_LOCAL_PROC(syscall_handler)
+        /* Using the register bank 1 */
 
         /* Switch to the kernel stack */
         mov.l   1f, r15
@@ -677,6 +733,7 @@ LABEL(syscall_return)
 END_PROC(syscall_return)
 
 
+/* KDB call, etc. */
 BEGIN_LOCAL_PROC(syscall_misc)
         /* Get the pointer to sh_context_t in the current TCB */
         mov.l   1f, r15

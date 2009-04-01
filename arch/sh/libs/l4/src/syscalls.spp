@@ -182,46 +182,54 @@ LABEL(L4_Schedule)
     nop
 
 /*
- * L4_Ipc
+ * L4_Ipc(L4_ThreadId_t to, L4_ThreadId_t FromSpecifier,
+ *        L4_MsgTag_t tag, L4_ThreadId_t* from)
  */
 EXPORT L4_Ipc
 LABEL(L4_Ipc)
     SAVE_CONTEXT
-
-    /* Load UTCB address */
-    mov.l   CONST_UTCB_BASE, r10
-    add     #__L4_TCR_MR_OFFSET, r10
+    mov.l   r7, @-r15
+    mov.l   r5, @-r15
 
     /* Only load MRs if send phase is included. */
 	mov.l   nilthread, r1
     cmp/eq  r4, r1
     bt      1f
-	mov.l   @(4, r10), r1
-    mov.l   @(8, r10), r2
-    mov.l   @(12, r10), r3
-    mov.l   @(16, r10), r6
-    mov.l   @(20, r10), r9
-1:
-    mov     #SYSNUM(ipc), SYSCALL_REG
-    trapa   #SYSCALL_NUM
 
     /* Load UTCB address */
     mov.l   CONST_UTCB_BASE, r10
     add     #__L4_TCR_MR_OFFSET, r10
+	mov.l   @(4, r10), r1       // mr1
+    mov.l   @(8, r10), r2       // mr2
+    mov.l   @(12, r10), r3      // mr3
+    mov.l   @(16, r10), r7      // mr4
+    mov.l   @(20, r10), r9      // mr5
+1:
+    mov     #SYSNUM(ipc), SYSCALL_REG
+    trapa   #SYSCALL_NUM
 
     /* Only store MRs if recv phase is included. */
-	mov.l	r1, @-r15
-	mov.l	nilthread, r1
-	cmp/eq	r1, r5
-	mov.l	@r15+, r1
+    mov.l   @r15+, r10
+	mov.l	nilthread, r11
+	cmp/eq	r10, r11
+	mov.l	@r15+, r10
     bt      2f
-	mov.l   r0, @(0, r10)
-    mov.l   r1, @(4, r10)
-    mov.l   r2, @(8, r10)
-    mov.l   r3, @(12, r10)
-    mov.l   r6, @(16, r10)
-    mov.l   r9, @(20, r10)
+
+    /* Store the from thread ID */
+    mov.l   r0, @r10
+
+    /* Load UTCB address */
+    mov.l   CONST_UTCB_BASE, r10
+    add     #__L4_TCR_MR_OFFSET, r10
+	mov.l   r6, @(0, r10)       // tag
+    mov.l   r1, @(4, r10)       // mr1
+    mov.l   r2, @(8, r10)       // mr2
+    mov.l   r3, @(12, r10)      // mr3
+    mov.l   r7, @(16, r10)      // mr4
+    mov.l   r9, @(20, r10)      // mr5
 2:
+    /* Return MR0 */
+    mov     r6, r0
     RESTORE_CONTEXT
     rts
     nop
@@ -470,10 +478,10 @@ LABEL(L4_MemoryCopy)
     rts
     nop
 
-/*
- *  Defined NILTHREAD
- */
 
+/*
+ * NILTHREAD
+ */
     .balign 4
 nilthread:
 	.long   0xfffffffc

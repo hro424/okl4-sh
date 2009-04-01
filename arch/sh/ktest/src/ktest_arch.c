@@ -18,3 +18,17 @@ L4_Word_t* get_mr_base(void)
 {
     return &(L4_GetUtcbBase())[__L4_TCR_MR_OFFSET];
 }
+
+TCase* sh_space(TCase* tc);
+
+TCase*
+make_arch_tcase(void)
+{
+    TCase*  tc;
+
+    tc = tcase_create("SH Tests");
+
+    //tc = sh_space(tc);
+
+    return tc;
+}
