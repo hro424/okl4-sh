@@ -232,9 +232,9 @@ generic_space_t::activate(tcb_t *tcb)
 
     this->lookup_mapping((addr_t)USER_UTCB_REF, &pg, &pgsize);
 
-    fill_tlb((addr_t)USER_UTCB_REF, (space_t*)this, pg, pgsize);
-
-    *(volatile word_t*)USER_UTCB_REF = tcb->get_utcb_location();
+    word_t* user_utcb_ref_kernel = (word_t*)(utcb_ref_page + 0xF00);
+    *user_utcb_ref_kernel = tcb->get_utcb_location();
+    sh_cache::writeback_d(user_utcb_ref_kernel, 5);
 }
 
 /**

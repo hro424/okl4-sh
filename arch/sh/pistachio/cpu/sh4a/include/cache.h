@@ -305,12 +305,12 @@ public:
      *
      * @param asid      the ASID
      * @param vaddr     the address to be invalidated
-     * @param log2size  the range of invalidation in log2
      */
     static void invalidate_tlb_entry(u8_t asid, addr_t vaddr) {
         word_t  addr;
         word_t  data;
 
+        // Access the memory mapped UTLB
         addr = REG_UTLB_ADDRESS | REG_UTLB_ASSOC;
         data = asid | ((word_t)vaddr & 0xFFFFFC00);
         ENTER_P2();
