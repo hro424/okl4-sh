@@ -559,6 +559,7 @@ END_LOCAL_PROC(exp_traps_handler)
 /*
  * IPC handler
  */
+// TODO: IPC optimization
 BEGIN_LOCAL_PROC(ipc_handler)
         /* Using the register bank 1 */
 
@@ -625,7 +626,6 @@ END_LOCAL_PROC(ipc_handler)
 /*
  * System call handler
  */
-// TODO: IPC optimization
 BEGIN_LOCAL_PROC(syscall_handler)
         /* Using the register bank 1 */
 
@@ -704,6 +704,19 @@ BEGIN_PROC(ipc_syscall_return)
         add     r14, r15
         mov.l   @r15, r0
 
+        /* Restore message registers from UTCB */
+        mov.l   4f, r10
+        mov.l   @r10, r10
+        mov.l   5f, r11
+        shll2   r11
+        add     r11, r10
+        mov.l   @(0, r10), r6
+        mov.l   @(4, r10), r1
+        mov.l   @(8, r10), r2
+        mov.l   @(12, r10), r3
+        mov.l   @(16, r10), r7
+        mov.l   @(20, r10), r9
+
         /* FALL THROUGH */
 
 LABEL(syscall_return)
@@ -727,8 +740,10 @@ LABEL(syscall_return)
 
         ALIGN   4
 1:      .long   SH_GLOBAL_BASE
-2:      .long   OFS_TCB_PARTNER
+2:      .long   OFS_TCB_SENT_FROM
 3:      .long   OFS_CONTEXT_MACH
+4:      .long   USER_UTCB_REF
+5:      .long   __L4_TCR_MR_OFFSET
 
 END_PROC(syscall_return)
 
