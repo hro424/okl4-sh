@@ -27,8 +27,15 @@
  * Address space layout info
  */
 
-#define ARCH_OBJECT_PTR(index)      (VIRT_ADDR_BASE + (index))
-#define ARCH_OBJECT_INDEX(ptr)      (((word_t)(ptr)) - VIRT_ADDR_BASE)
+/**
+ * Converts a cap index to a pointer
+ */
+#define ARCH_OBJECT_PTR(index)      (P1_START + (index))
+
+/**
+ * Converts a pointer to a cap index
+ */
+#define ARCH_OBJECT_INDEX(ptr)      (((word_t)(ptr)) - P1_START)
 
 #define KTCB_ALIGN          16
 
