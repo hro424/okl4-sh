@@ -13,9 +13,18 @@
  */
         EXPORT  L4_KDB_Enter
 LABEL(L4_KDB_Enter)
+        /*
+         * Save R8 to R7.  R8 is used to hold syscall number.
+         * R7 is used as the forth argument of a function call in general,
+         * and saved and restored by the trap handler.
+         */
+        mov     r8, r7
         sts     pr, r6
         mov.l   1f, r8
         trapa   #SYSCALL_NUM
+
+        /* Recover R8 by means of R7.  R7 is restored by the trap handler. */
+        mov     r7, r8
         jmp     @r6
         nop
         .balign 4
@@ -26,9 +35,11 @@ LABEL(L4_KDB_Enter)
         .macro  __L4_KDB_Op op, name
         EXPORT  \name
 LABEL(\name)
+        mov     r8, r7
         sts     pr, r6
         mov.l   1f, r8
         trapa   #SYSCALL_NUM
+        mov     r7, r8
         jmp     @r6
         nop
         .balign 4
@@ -74,6 +85,7 @@ LABEL(L4_KDB_SetObjectName_ASM)
 
         mov     #L4_TRAP_KSET_OBJECT_NAME, r8
         trapa   #SYSCALL_NUM
+
         mov.l   @r15+, r9
         mov.l   @r15+, r1
         jmp     @r1
