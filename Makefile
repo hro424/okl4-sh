@@ -1,32 +1,25 @@
 
-COMMAND=	./tools/build.py
-OPTIONS=	PYFREEZE=false MACHINE=sh2007
+MACHINE=		sh2007
+#MACHINE=		rp1
+VERBOSE_INIT=	false
+VERBOSE_BUILD=	true
+
+COMMAND=		./tools/build.py
+OPTIONS=		PYFREEZE=false MACHINE=${MACHINE} VERBOSE_STR=${VERBOSE_BUILD}
+
+ifeq (${VERBOSE_INIT},true)
+	OPTIONS+=	VERBOSE_INIT=1
+endif
+
 
 all: hello
 
 test:
-	${COMMAND} ${OPTIONS} VERBOSE_STR=true PROJECT=ktest
-	make img
+	${COMMAND} ${OPTIONS} PROJECT=ktest
 
 hello:
-	${COMMAND} ${OPTIONS} VERBOSE_STR=true PROJECT=examples EXAMPLE=hello
-	make img
-
-rp1:
-	./tools/build.py PYFREEZE=false VERBOSE_STR=true MACHINE=msrp1 PROJECT=examples EXAMPLE=hello
-	make img
-
-rp1-test:
-	./tools/build.py PYFREEZE=false VERBOSE_STR=true MACHINE=msrp1 PROJECT=ktest
-	make img
-
-img:
-	cp build/images/image.boot .
-	sh-linux-objcopy -O binary image.boot
-	cp image.boot /nfsroot/okl4/bootimage.bin
+	${COMMAND} ${OPTIONS} PROJECT=examples EXAMPLE=hello
 
 clean:
 	rm -vfr build/
-	rm -vf image.boot
 	rm -vf *.lds
-	rm -vf *cscope*
