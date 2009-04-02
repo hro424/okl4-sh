@@ -34,6 +34,8 @@ __asm__ (
     "    mov.l   r2, @-r15          \n"
     "    mov.l   r1, @-r15          \n"
     "    mov.l   r0, @-r15          \n"
+    "    mov     r15, r5            \n"
+    "    stc     ssr, r6            \n"
     "    bra     enter_kdebug_c     \n"
     "    nop                        \n"
 );
