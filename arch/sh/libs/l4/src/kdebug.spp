@@ -102,10 +102,10 @@ LABEL(L4_KDB_SetObjectName_ASM)
 LABEL(L4_Wbtest)
         sts     pr, r1
         mov.l   r1, @-r15
+        mov.l   r8, @-r15
         mov.l   r5, @-r15
         mov.l   r6, @-r15
         mov.l   r7, @-r15
-        mov.l   r8, @-r15
 
         /* Pass values */
         mov.l   @r5, r5
@@ -115,8 +115,6 @@ LABEL(L4_Wbtest)
         mov     #L4_TRAP_WBTEST, r8
         trapa   #SYSCALL_NUM
 
-        mov.l   @r15+, r8
-
         /* Write back to output addresses */
         mov.l   @r15+, r1
         mov.l   r7, @r1
@@ -125,6 +123,7 @@ LABEL(L4_Wbtest)
         mov.l   @r15+, r1
         mov.l   r5, @r1
 
+        mov.l   @r15+, r8
         mov.l   @r15+, r1
         jmp     @r1
         nop

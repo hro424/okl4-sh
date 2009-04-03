@@ -637,13 +637,13 @@ END_LOCAL_PROC(ipc_handler)
 BEGIN_LOCAL_PROC(syscall_handler)
         /* Using the register bank 1 */
 
-        /* Switch to the kernel stack */
-        mov.l   1f, r15
-
         /* Branch to misc L4 syscalls */
         mov.l   4f, r0
         cmp/hi  r0, r8
         bt      syscall_misc
+
+        /* Switch to the kernel stack */
+        mov.l   1f, r15
 
         /* Set the return address */
         mov     r8, r0

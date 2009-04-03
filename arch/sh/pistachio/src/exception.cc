@@ -241,7 +241,7 @@ sys_sh_misc(sh_context_t* context)
         {
             word_t res;
             res = sys_wbtest(context->r4, &context->r5, &context->r6,
-                             &context->r1);
+                             &context->r7);
             context->r0 = res;
         }
         return;
