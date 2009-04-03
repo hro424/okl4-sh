@@ -594,11 +594,16 @@ BEGIN_LOCAL_PROC(ipc_handler)
         shll2   r11
         add     r11, r10
         mov.l   r6, @(0, r10)
+
+        mov.l   NILTHREAD, r11
+        cmp/eq  r4, r11
+        bt      11f
         mov.l   r1, @(4, r10)
         mov.l   r2, @(8, r10)
         mov.l   r3, @(12, r10)
         mov.l   r7, @(16, r10)
         mov.l   r9, @(20, r10)
+11:
 
         /* Switch to the kernel stack */
         mov.l   3f, r15
@@ -621,6 +626,9 @@ BEGIN_LOCAL_PROC(ipc_handler)
 5:      .long   __L4_TCR_MR_OFFSET
 6:      .long   ipc_syscall_return
 7:      .long   sh_syscall_vectors
+
+NILTHREAD:
+        .long   0xFFFFFFFC
 END_LOCAL_PROC(ipc_handler)
 
 /*
