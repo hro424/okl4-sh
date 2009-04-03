@@ -315,10 +315,11 @@ pgent_t::set_entry(generic_space_t* s, pgsize_e pgsize, addr_t paddr,
         l2_entry.small.size0 = 1;
         l2_entry.small.perm = perm;
         l2_entry.small.shared =
-            ((word_t)attrib >> CACHE_ATTRIB_SHARED_BIT) & 0x1;
-        l2_entry.small.wt = ((word_t)attrib >> CACHE_ATTRIB_MODE_BIT) & 0x1;
+            ((word_t)attrib >> ARCH_CACHE_ATTRIB_SHARED_BIT) & 0x1;
+        l2_entry.small.wt =
+            ((word_t)attrib >> ARCH_CACHE_ATTRIB_MODE_BIT) & 0x1;
         l2_entry.small.cache =
-            ((word_t)attrib >> CACHE_ATTRIB_CACHED_BIT) & 0x1;
+            ((word_t)attrib >> ARCH_CACHE_ATTRIB_CACHED_BIT) & 0x1;
         l2_entry.small.base_address = (word_t)paddr >> PAGE_BITS_4K;
 
         l2.raw = l2_entry.raw;
@@ -333,10 +334,11 @@ pgent_t::set_entry(generic_space_t* s, pgsize_e pgsize, addr_t paddr,
         l1_entry.large.x = executable;
         l1_entry.large.perm = perm;
         l1_entry.large.shared =
-            ((word_t)attrib >> CACHE_ATTRIB_SHARED_BIT) & 0x1;
-        l1_entry.large.wt = ((word_t)attrib >> CACHE_ATTRIB_MODE_BIT) & 0x1;
+            ((word_t)attrib >> ARCH_CACHE_ATTRIB_SHARED_BIT) & 0x1;
+        l1_entry.large.wt =
+            ((word_t)attrib >> ARCH_CACHE_ATTRIB_MODE_BIT) & 0x1;
         l1_entry.large.cache =
-            ((word_t)attrib >> CACHE_ATTRIB_CACHED_BIT) & 0x1;
+            ((word_t)attrib >> ARCH_CACHE_ATTRIB_CACHED_BIT) & 0x1;
         l1_entry.large.base_address = (word_t)paddr >> PAGE_BITS_1M;
 
         l1.raw = l1_entry.raw;
@@ -351,10 +353,11 @@ pgent_t::set_entry(generic_space_t* s, pgsize_e pgsize, addr_t paddr,
         l2_entry.medium.x = executable;
         l2_entry.medium.perm = perm;
         l2_entry.medium.shared =
-            ((word_t)attrib >> CACHE_ATTRIB_SHARED_BIT) & 0x1;
-        l2_entry.medium.wt = ((word_t)attrib >> CACHE_ATTRIB_MODE_BIT) & 0x1;
+            ((word_t)attrib >> ARCH_CACHE_ATTRIB_SHARED_BIT) & 0x1;
+        l2_entry.medium.wt =
+            ((word_t)attrib >> ARCH_CACHE_ATTRIB_MODE_BIT) & 0x1;
         l2_entry.medium.cache =
-            ((word_t)attrib >> CACHE_ATTRIB_CACHED_BIT) & 0x1;
+            ((word_t)attrib >> ARCH_CACHE_ATTRIB_CACHED_BIT) & 0x1;
         l2_entry.medium.base_address = (word_t)paddr >> PAGE_BITS_64K;
 
         l2.raw = l2_entry.raw;
@@ -376,9 +379,12 @@ pgent_t::set_entry_1m(generic_space_t* s, addr_t paddr, bool readable,
     l1_entry.large.present = 1;
     l1_entry.large.x = executable;
     l1_entry.large.perm = perm;
-    l1_entry.large.shared = ((word_t)attrib >> CACHE_ATTRIB_SHARED_BIT) & 0x1;
-    l1_entry.large.wt = ((word_t)attrib >> CACHE_ATTRIB_MODE_BIT) & 0x1;
-    l1_entry.large.cache = ((word_t)attrib >> CACHE_ATTRIB_CACHED_BIT) & 0x1;
+    l1_entry.large.shared =
+        ((word_t)attrib >> ARCH_CACHE_ATTRIB_SHARED_BIT) & 0x1;
+    l1_entry.large.wt =
+        ((word_t)attrib >> ARCH_CACHE_ATTRIB_MODE_BIT) & 0x1;
+    l1_entry.large.cache =
+        ((word_t)attrib >> ARCH_CACHE_ATTRIB_CACHED_BIT) & 0x1;
     l1_entry.large.base_address = (word_t)paddr >> PAGE_BITS_1M;
 
     l1.raw = l1_entry.raw;
@@ -400,20 +406,20 @@ pgent_t::get_attributes(generic_space_t* s, pgsize_e pgsize)
 
     switch (pgsize) {
         case size_1m:
-            ret = (l1.large.shared << CACHE_ATTRIB_SHARED_BIT) |
-                    (l1.large.wt << CACHE_ATTRIB_MODE_BIT) |
-                    (l1.large.cache << CACHE_ATTRIB_CACHED_BIT);
+            ret = (l1.large.shared << ARCH_CACHE_ATTRIB_SHARED_BIT) |
+                    (l1.large.wt << ARCH_CACHE_ATTRIB_MODE_BIT) |
+                    (l1.large.cache << ARCH_CACHE_ATTRIB_CACHED_BIT);
             break;
         case size_64k:
-            ret = (l2.medium.shared << CACHE_ATTRIB_SHARED_BIT) |
-                    (l2.medium.wt << CACHE_ATTRIB_MODE_BIT) |
-                    (l2.medium.cache << CACHE_ATTRIB_CACHED_BIT);
+            ret = (l2.medium.shared << ARCH_CACHE_ATTRIB_SHARED_BIT) |
+                    (l2.medium.wt << ARCH_CACHE_ATTRIB_MODE_BIT) |
+                    (l2.medium.cache << ARCH_CACHE_ATTRIB_CACHED_BIT);
             break;
         case size_4k:
         default:
-            ret = (l2.small.shared << CACHE_ATTRIB_SHARED_BIT) |
-                    (l2.small.wt << CACHE_ATTRIB_MODE_BIT) |
-                    (l2.small.cache << CACHE_ATTRIB_CACHED_BIT);
+            ret = (l2.small.shared << ARCH_CACHE_ATTRIB_SHARED_BIT) |
+                    (l2.small.wt << ARCH_CACHE_ATTRIB_MODE_BIT) |
+                    (l2.small.cache << ARCH_CACHE_ATTRIB_CACHED_BIT);
             break;
     }
     return (memattrib_e)ret;
