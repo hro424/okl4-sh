@@ -417,9 +417,9 @@ END_LOCAL_PROC(exp_instruction_exception)
 
 BEGIN_LOCAL_PROC(exp_address_error)
         /* Check whether it was raised in user or kernel mode */
-        stc     ssr, r0
-        rotl    r0
-        rotl    r0
+        stc     ssr, r1
+        rotl    r1
+        rotl    r1
         bt      10f
 
         /* Get the pointer to sh_context_t in the current TCB */
@@ -427,8 +427,8 @@ BEGIN_LOCAL_PROC(exp_address_error)
         add     #OFS_GLOBAL_CURRENT_TCB, r15
         mov.l   @r15, r15
         add     #OFS_TCB_ARCH_CONTEXT, r15
-        mov.l   5f, r0
-        add     r0, r15
+        mov.l   5f, r1
+        add     r1, r15
 10:
         SAVE_CONTEXT
         /* Using register bank 0 */
