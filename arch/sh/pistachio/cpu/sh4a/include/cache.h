@@ -301,7 +301,7 @@ public:
     }
 
     /**
-     * Invalidates the TLB entry.
+     * Invalidates the specified TLB entry.
      *
      * @param asid      the ASID
      * @param vaddr     the address to be invalidated

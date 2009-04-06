@@ -275,10 +275,6 @@ pgent_t::remove_subtree(generic_space_t* s, pgsize_e pgsize, bool kernel,
                 phys_to_virt((addr_t)(l1.table.base_address << SH_L2_BITS)),
                 SH_L2_SIZE);
     }
-    else if (pgsize == size_64k) {
-        l2.medium.tree = 0;
-        sync_large(s);
-    }
     clear(s, pgsize, kernel);
 }
 

@@ -291,7 +291,10 @@ generic_space_t::flush_tlbent_local(space_t *curspace, addr_t vaddr,
     if (asid->is_valid()) {
         this->activate(get_current_tcb());
 
-        sh_cache::flush_d(vaddr, log2size);
+        sh_cache::flush_d();
+        //TODO: Work-around: Crash when the entry (vaddr) does not exist
+        //      in the operand cache.
+        //sh_cache::flush_d(vaddr, log2size);
         sh_cache::invalidate_tlb_entry(asid->value(), vaddr);
 
         curspace->activate(get_current_tcb());
