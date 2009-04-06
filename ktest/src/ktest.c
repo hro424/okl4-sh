@@ -209,8 +209,7 @@ init_boot_params(void)
         test_irqs = okl4_env_get("NO_DEVICE_IRQ_LIST");
     }
     assert(test_irqs != NULL);
-printf("DEBUG: num_irqs = %lu\n", test_irqs->num_irqs);
-//    assert(test_irqs->num_irqs >= 2);
+    assert(test_irqs->num_irqs >= 2);
     VALID_IRQ1 = test_irqs->irqs[0];
     VALID_IRQ2 = test_irqs->irqs[1];
 
