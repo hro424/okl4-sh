@@ -24,6 +24,12 @@ void fill_tlb(addr_t vaddr,
               pgent_t* pg,
               pgent_t::pgsize_e pgsize);
 
+void fill_tlb(int entry,
+              addr_t vaddr,
+              space_t* space,
+              pgent_t* pg,
+              pgent_t::pgsize_e pgsize);
+
 void dump_utlb();
 
 #endif /* ARCH_OKL4_TLB_H */

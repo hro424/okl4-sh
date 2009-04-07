@@ -220,14 +220,17 @@ generic_space_t::activate(tcb_t *tcb)
     set_hw_asid(dest_asid);
     mapped_reg_write(REG_TTB, new_pt);
 
-    // Map the UTCB reference page
-    ((space_t*)this)->add_mapping((addr_t)USER_UTCB_REF,
-                                  virt_to_phys(utcb_ref_page),
-                                  pgent_t::size_4k, space_t::read_write,
-                                  false, writeback,
-                                  get_current_kmem_resource());
-
-    this->lookup_mapping((addr_t)USER_UTCB_REF, &pg, &pgsize);
+    if (!this->lookup_mapping((addr_t)USER_UTCB_REF, &pg, &pgsize)) {
+        // Map the UTCB reference page
+        ((space_t*)this)->add_mapping((addr_t)USER_UTCB_REF,
+                                      virt_to_phys(utcb_ref_page),
+                                      pgent_t::size_4k, space_t::read_write,
+                                      false, writeback,
+                                      get_current_kmem_resource());
+    }
+    else {
+        fill_tlb(0x3F, (addr_t)USER_UTCB_REF, (space_t*)this, pg, pgsize);
+    }
 
     word_t* user_utcb_ref_kernel = (word_t*)(utcb_ref_page + 0xF00);
     *user_utcb_ref_kernel = tcb->get_utcb_location();

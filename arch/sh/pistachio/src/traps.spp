@@ -106,20 +106,20 @@ END_PROC_TRAPS(sh_general_exception)
  */
 BEGIN_PROC(abort_return)
 BEGIN_LOCAL_PROC(common_return)
-        /* Load context if returning to user. */
-        /* TODO: Returning to the kernel
+        /* Check if returning to kernel. */
+        /* NOTE: Activating continuation resets the stack pointer. */
         mov     r15, r0
-        mov     #STACK_TEST, r1
-        and     r0, r1
-        cmp.eq  r1, r0
-        bf      2f
-        */
+        mov.l   2f, r1
+        and     r1, r0
+        cmp/eq  r1, r0
+        bf      10f
 
         /* Restore the context from TCB. */
         mov.l   1f, r15
         add     #OFS_GLOBAL_CURRENT_TCB, r15
         mov.l   @r15, r15
         add     #OFS_TCB_ARCH_CONTEXT, r15
+10:
         RESTORE_CONTEXT
         rte
         nop
@@ -127,6 +127,7 @@ BEGIN_LOCAL_PROC(common_return)
 
         ALIGN   4
 1:      .long   SH_GLOBAL_BASE
+2:      .long   STACK_TOP
 END_LOCAL_PROC(common_return)
 END_PROC(abort_return)
 
@@ -142,7 +143,7 @@ BEGIN_PROC_TRAPS(sh_tlb_miss, 0x400)
         stc     ssr, r0
         rotl    r0
         rotl    r0
-        bt      7f
+        bt      kernel_tlb_miss
 
         /* From user */
         /* Get the pointer to sh_context_t in the current TCB */
@@ -152,8 +153,18 @@ BEGIN_PROC_TRAPS(sh_tlb_miss, 0x400)
         add     #OFS_TCB_ARCH_CONTEXT, r15
         mov.l   2f, r0
         add     r0, r15
+        bra     11f
 
-7:
+kernel_tlb_miss:
+        /* Load the kernel stack if the current sp doesn't hold it. */
+        mov     r15, r0
+        mov.l   7f, r1
+        or      r1, r0
+        mov.l   4f, r1
+        cmp/eq  r1, r0
+        bt      11f
+        mov     r1, r15
+11:
         SAVE_CONTEXT
         /* Using the register bank 0 */
 
@@ -167,10 +178,15 @@ BEGIN_PROC_TRAPS(sh_tlb_miss, 0x400)
         /* Pass the context via the second argument */
         mov     r15, r5
 
+        /* Check whether it is raised in user or kernel mode */
+        stc     ssr, r0
+        rotl    r0
+        rotl    r0
+
         /* Load the kernel stack if from user mode*/
-        bt      8f
+        bt      12f
         mov.l   4f, r15
-8:
+12:
         clrt
 
         /* Set up continuation */
@@ -190,6 +206,7 @@ BEGIN_PROC_TRAPS(sh_tlb_miss, 0x400)
 4:      .long   KERNEL_STACK
 5:      .long   common_return
 6:      .long   TLB_HANDLER
+7:      .long   STACK_TOP
 
 END_PROC_TRAPS(sh_tlb_miss)
 
@@ -593,7 +610,7 @@ BEGIN_LOCAL_PROC(ipc_handler)
         mov.l   5f, r11
         shll2   r11
         add     r11, r10
-        mov.l   r6, @(0, r10)
+        mov.l   r6, @(0, r10)   /* This may raise a TLB exception */
 
         mov.l   NILTHREAD, r11
         cmp/eq  r4, r11
@@ -619,6 +636,7 @@ BEGIN_LOCAL_PROC(ipc_handler)
         jmp     @r0
         nop
 
+        ALIGN   4
 1:      .long   SH_GLOBAL_BASE
 2:      .long   SIZEOF_CONTEXT
 3:      .long   KERNEL_STACK
@@ -718,7 +736,7 @@ BEGIN_PROC(ipc_syscall_return)
         mov.l   5f, r11
         shll2   r11
         add     r11, r10
-        mov.l   @(0, r10), r6
+        mov.l   @(0, r10), r6   /* This may raise a TLB exception. */
         mov.l   @(4, r10), r1
         mov.l   @(8, r10), r2
         mov.l   @(12, r10), r3

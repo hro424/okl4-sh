@@ -23,6 +23,41 @@ fill_tlb(addr_t vaddr, space_t* space, pgent_t* pg, pgent_t::pgsize_e pgsize)
     reg |= (tmp << 10) & REG_MMUCR_URC_MASK;
     mapped_reg_write(REG_MMUCR, reg);
     entry++;    // overflow -> go back to 0
+    if (entry == 0x3F) {
+        entry = 0;
+    }
+
+    addr = (word_t)vaddr;
+    addr = (addr >> hw_pgshifts[pgsize]) << hw_pgshifts[pgsize];
+
+    //TRACE_INIT("  fill %p:%x\n", vaddr, pg->ptel(pgsize));
+    mapped_reg_write(REG_PTEH,
+                 (addr & REG_PTEH_VPN_MASK) |
+                 ((word_t)space->get_asid()->get(space) & REG_PTEH_ASID_MASK));
+    // Add dirty bit to avoid the initial write exception
+    mapped_reg_write(REG_PTEL, pg->ptel(pgsize) | (1 << 2));
+
+    __asm__ __volatile__ ("ldtlb");
+
+    UPDATE_REG();
+
+    //dump_utlb();
+    //TODO
+    sh_cache::flush();
+}
+
+void
+fill_tlb(int entry, addr_t vaddr, space_t* space, pgent_t* pg,
+         pgent_t::pgsize_e pgsize)
+{
+    word_t      reg;
+    word_t      addr;
+
+    reg  = mapped_reg_read(REG_MMUCR);
+    // Clear the URC field
+    reg &= ~(REG_MMUCR_URC_MASK);
+    reg |= (entry << 10) & REG_MMUCR_URC_MASK;
+    mapped_reg_write(REG_MMUCR, reg);
 
     addr = (word_t)vaddr;
     addr = (addr >> hw_pgshifts[pgsize]) << hw_pgshifts[pgsize];
