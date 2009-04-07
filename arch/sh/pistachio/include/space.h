@@ -76,7 +76,7 @@ space_t::space_control(word_t ctrl)
 INLINE bool
 generic_space_t::does_tlbflush_pay(word_t log2size)
 {
-    return log2size > 12;
+    return log2size > 20;
 }
 
 INLINE pgent_t*

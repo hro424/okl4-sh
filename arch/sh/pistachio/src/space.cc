@@ -271,6 +271,7 @@ generic_space_t::sync_kernel_space(addr_t addr)
 void
 generic_space_t::flush_tlb(space_t *curspace)
 {
+    //TODO: Get a different ASID
     asid_t *asid = ((space_t *)this)->get_asid();
     if (asid->is_valid()) {
         flush_asid(asid->value());

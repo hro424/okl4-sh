@@ -1,8 +1,7 @@
-/* $Id$ */
-
 /**
  * @file    arch/sh/pistachio/include/asid.h
  * @since   December 2008
+ * @author  Hiroo Ishikawa <hiroo.ishikawa@gmail.com>
  */
 
 #ifndef OKL4_ARCH_SH_ASID_H
@@ -46,6 +45,7 @@ set_hw_asid(hw_asid_t asid)
 INLINE void
 flush_asid(hw_asid_t asid)
 {
+    //TODO
     /*XXX Do nothing here */
 }
 

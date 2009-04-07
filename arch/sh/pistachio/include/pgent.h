@@ -1,9 +1,8 @@
-/* $Id$ */
-
 /**
  * @brief   Page table entry
  * @file    arch/sh/pistachio/include/pgent.h
  * @since   December 9, 2008
+ * @author  Hiroo Ishikawa <hiroo.ishikawa@gmail.com>
  */
 
 #ifndef OKL4_ARCH_SH_PGENT_H
@@ -240,6 +239,7 @@ pgent_t::clear(generic_space_t* s, pgsize_e pgsize, bool kernel)
 {
     switch (pgsize) {
         case size_64k:
+            raw = 0;
             sync_large(s, 0);
             break;
         case size_4k:
