@@ -51,6 +51,7 @@ public:
     };
     
     /**
+     *  Checks if this entry is valid.
      */
     bool is_valid(generic_space_t* s, pgsize_e pgsize);
 
@@ -132,11 +133,11 @@ pgent_t::is_valid(generic_space_t* s, pgsize_e pgsize)
 {
     switch (pgsize) {
         case size_1m:
-            return (l1.large.present == 1) || (l1.table.tree == 1);
+            return (l1.large.valid == 1) || (l1.table.tree == 1);
         case size_64k:
-            return (l2.medium.present == 1) || (l2.medium.tree == 1);
+            return (l2.medium.valid == 1) || (l2.medium.tree == 1);
         case size_4k:
-            return (l2.small.present == 1);
+            return (l2.small.valid == 1);
         default:
             return false;
     }
@@ -237,9 +238,19 @@ pgent_t::clear(generic_space_t* s, pgsize_e pgsize, bool kernel, addr_t vaddr)
 INLINE void
 pgent_t::clear(generic_space_t* s, pgsize_e pgsize, bool kernel)
 {
-    raw = 0;
-    if (EXPECT_FALSE(pgsize == size_64k)) {
-        sync_large(s, 0);
+    switch (pgsize) {
+        case size_64k:
+            sync_large(s, 0);
+            break;
+        case size_4k:
+            int tree = l2.small.tree;
+            raw = 0;
+            l2.small.tree = tree;
+            break;
+        case size_1m:
+        default:
+            raw = 0;
+            break;
     }
 }
 
@@ -274,6 +285,10 @@ pgent_t::remove_subtree(generic_space_t* s, pgsize_e pgsize, bool kernel,
         kresource->free(kmem_group_pgtab,
                 phys_to_virt((addr_t)(l1.table.base_address << SH_L2_BITS)),
                 SH_L2_SIZE);
+        l1.table.tree = 0;
+    }
+    else {
+        l2.medium.tree = 0;
     }
     clear(s, pgsize, kernel);
 }
@@ -305,8 +320,8 @@ pgent_t::set_entry(generic_space_t* s, pgsize_e pgsize, addr_t paddr,
         l2_entry_t l2_entry;
 
         l2_entry.raw = 0;
-        l2_entry.small.tree = 1;
-        l2_entry.small.present = 1;
+        l2_entry.small.tree = l2.small.tree;
+        l2_entry.small.valid = 1;
         l2_entry.small.x = executable;
         l2_entry.small.size0 = 1;
         l2_entry.small.perm = perm;
@@ -326,7 +341,7 @@ pgent_t::set_entry(generic_space_t* s, pgsize_e pgsize, addr_t paddr,
         l1_entry.raw = 0;
         l1_entry.large.size0 = 1;
         l1_entry.large.size1 = 1;
-        l1_entry.large.present = 1;
+        l1_entry.large.valid = 1;
         l1_entry.large.x = executable;
         l1_entry.large.perm = perm;
         l1_entry.large.shared =
@@ -345,7 +360,7 @@ pgent_t::set_entry(generic_space_t* s, pgsize_e pgsize, addr_t paddr,
 
         l2_entry.raw = 0;
         l2_entry.medium.size1 = 1;
-        l2_entry.medium.present = 1;
+        l2_entry.medium.valid = 1;
         l2_entry.medium.x = executable;
         l2_entry.medium.perm = perm;
         l2_entry.medium.shared =
@@ -372,7 +387,7 @@ pgent_t::set_entry_1m(generic_space_t* s, addr_t paddr, bool readable,
     perm = writable ? 0 : 1;
 
     l1_entry.raw = 0;
-    l1_entry.large.present = 1;
+    l1_entry.large.valid = 1;
     l1_entry.large.x = executable;
     l1_entry.large.perm = perm;
     l1_entry.large.shared =

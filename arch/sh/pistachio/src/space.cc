@@ -136,12 +136,9 @@ generic_space_t::allocate_utcb(tcb_t* tcb, kmem_resource_t* kresource)
         if (EXPECT_TRUE(level1.is_subtree(this, pgent_t::size_1m))) {
             leaf = *level1.subtree(this, pgent_t::size_1m)->next(
                     this, UTCB_AREA_PGSIZE,
-                    ((word_t)utcb & (PAGE_SIZE_1M-1)) >> UTCB_AREA_PAGEBITS);
+                    ((word_t)utcb & (PAGE_SIZE_1M - 1)) >> UTCB_AREA_PAGEBITS);
 
-            if (leaf.l2.medium.present == 0)
-            {
-                is_valid = false;
-            }
+            is_valid = leaf.is_valid(this, pgent_t::size_64k);
         }
         else {
             enter_kdebug("1MB page in UTCB area");
@@ -293,7 +290,7 @@ generic_space_t::flush_tlbent_local(space_t *curspace, addr_t vaddr,
 
         sh_cache::flush_d();
         //TODO: Work-around: Crash when the entry (vaddr) does not exist
-        //      in the operand cache.
+        //      in the operand cache. (MAP0500)
         //sh_cache::flush_d(vaddr, log2size);
         sh_cache::invalidate_tlb_entry(asid->value(), vaddr);
 

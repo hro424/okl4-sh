@@ -56,7 +56,7 @@ public:
                 /* Size of the entry */
                 size1           : 1,
                 /* Present */
-                present         : 1,
+                valid           : 1,
                 /* Subtree */
                 tree            : 1,
                 /* Executable */
@@ -71,7 +71,7 @@ public:
         struct {
             BITFIELD4(word_t,
                 reserved        : 8,
-                present         : 1,
+                valid         : 1,
                 tree            : 1,
                 base_address    : 22
             );
@@ -114,7 +114,7 @@ public:
                 /* Size of the entry (bit 1) */
                 size1           : 1,
                 /* Present */
-                present         : 1,
+                valid           : 1,
                 /* Executable */
                 x               : 1,
                 /* Subtree */
@@ -144,7 +144,7 @@ public:
                 /* Size of the entry */
                 size1           : 1,
                 /* Present */
-                present         : 1,
+                valid           : 1,
                 /* Executable */
                 x               : 1,
                 /* Subtree */
