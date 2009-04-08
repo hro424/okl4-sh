@@ -3,6 +3,24 @@
 
 #if defined(ASSEMBLY)
 
+#define ENTER_P2_AREA                   \
+        mova    201f, r0;               \
+        mov.l   200f, r11;              \
+        add     r11, r0;                \
+        jmp     @r0;                    \
+        nop;                            \
+        .balign 4;                      \
+200:    .long   P2_START - P1_START;    \
+201:
+
+#define ENTER_P1_AREA                   \
+        mov.l   200f, r11;              \
+        jmp     @r11;                   \
+        nop;                            \
+        .balign 4;                      \
+200:    .long   201f;                   \
+201:
+
 // Do not use R8 and R9, which is used by system calls
 #define SWITCH_BANK_1_TO_0              \
     stc     sr, r10;                    \

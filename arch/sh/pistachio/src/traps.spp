@@ -604,13 +604,18 @@ BEGIN_LOCAL_PROC(ipc_handler)
 10:
         SWITCH_BANK_1_TO_0
 
+        ENTER_P2_AREA
+
         /* Save message registers to UTCB */
-        mov.l   4f, r10
+        mov.l   1f, r10
+        add     #OFS_GLOBAL_CURRENT_TCB, r10
+        mov.l   @r10, r10
+        add     #OFS_TCB_UTCB, r10
         mov.l   @r10, r10
         mov.l   5f, r11
         shll2   r11
         add     r11, r10
-        mov.l   r6, @(0, r10)   /* This may raise a TLB exception */
+        mov.l   r6, @(0, r10)
 
         mov.l   NILTHREAD, r11
         cmp/eq  r4, r11
@@ -621,6 +626,7 @@ BEGIN_LOCAL_PROC(ipc_handler)
         mov.l   r7, @(16, r10)
         mov.l   r9, @(20, r10)
 11:
+        ENTER_P1_AREA
 
         /* Switch to the kernel stack */
         mov.l   3f, r15
@@ -640,7 +646,6 @@ BEGIN_LOCAL_PROC(ipc_handler)
 1:      .long   SH_GLOBAL_BASE
 2:      .long   SIZEOF_CONTEXT
 3:      .long   KERNEL_STACK
-4:      .long   USER_UTCB_REF
 5:      .long   __L4_TCR_MR_OFFSET
 6:      .long   ipc_syscall_return
 7:      .long   sh_syscall_vectors
@@ -721,59 +726,6 @@ LABEL(sh_syscall_vectors)
 END_LOCAL_PROC(syscall_handler)
 
 
-BEGIN_PROC(ipc_syscall_return)
-        /* Return the IPC partner to user via r0 */
-        mov.l   1f, r15
-        add     #OFS_GLOBAL_CURRENT_TCB, r15
-        mov.l   @r15, r15
-        mov.l   2f, r14
-        add     r14, r15
-        mov.l   @r15, r0
-
-        /* Restore message registers from UTCB */
-        mov.l   4f, r10
-        mov.l   @r10, r10
-        mov.l   5f, r11
-        shll2   r11
-        add     r11, r10
-        mov.l   @(0, r10), r6   /* This may raise a TLB exception. */
-        mov.l   @(4, r10), r1
-        mov.l   @(8, r10), r2
-        mov.l   @(12, r10), r3
-        mov.l   @(16, r10), r7
-        mov.l   @(20, r10), r9
-
-        /* FALL THROUGH */
-
-LABEL(syscall_return)
-        /* Restore the control and system registers from TCB */
-        mov.l   1f, r15
-        add     #OFS_GLOBAL_CURRENT_TCB, r15
-        mov.l   @r15, r15
-        add     #OFS_TCB_ARCH_CONTEXT, r15
-        mov.l   3f, r14
-        add     r14, r15
-        
-        lds.l   @r15+, mach
-        lds.l   @r15+, macl
-        lds.l   @r15+, pr
-        ldc.l   @r15+, ssr
-        ldc.l   @r15+, spc
-        mov.l   @r15, r15
-        rte
-        nop    
-        /* NOT REACHED */
-
-        ALIGN   4
-1:      .long   SH_GLOBAL_BASE
-2:      .long   OFS_TCB_SENT_FROM
-3:      .long   OFS_CONTEXT_MACH
-4:      .long   USER_UTCB_REF
-5:      .long   __L4_TCR_MR_OFFSET
-
-END_PROC(syscall_return)
-
-
 /* KDB call, etc. */
 BEGIN_LOCAL_PROC(syscall_misc)
         /* Get the pointer to sh_context_t in the current TCB */
@@ -807,4 +759,58 @@ BEGIN_LOCAL_PROC(syscall_misc)
 4:      .long   sys_sh_misc
 5:      .long   SIZEOF_CONTEXT
 END_LOCAL_PROC(syscall_misc)
+
+
+BEGIN_PROC(ipc_syscall_return)
+        /* Return the IPC partner to user via r0 */
+        mov.l   1f, r15
+        add     #OFS_GLOBAL_CURRENT_TCB, r15
+        mov.l   @r15, r15
+        mov     r15, r10
+        mov.l   2f, r14
+        add     r14, r15
+        mov.l   @r15, r0
+
+        /* Save message registers to UTCB */
+        add     #OFS_TCB_UTCB, r10
+        mov.l   @r10, r10
+        mov.l   5f, r11
+        shll2   r11
+        add     r11, r10
+
+        mov.l   @(0, r10), r6
+        mov.l   @(4, r10), r1
+        mov.l   @(8, r10), r2
+        mov.l   @(12, r10), r3
+        mov.l   @(16, r10), r7
+        mov.l   @(20, r10), r9
+
+        /* FALL THROUGH */
+
+LABEL(syscall_return)
+        /* Restore the control and system registers from TCB */
+        mov.l   1f, r15
+        add     #OFS_GLOBAL_CURRENT_TCB, r15
+        mov.l   @r15, r15
+        add     #OFS_TCB_ARCH_CONTEXT, r15
+        mov.l   3f, r14
+        add     r14, r15
+        
+        lds.l   @r15+, mach
+        lds.l   @r15+, macl
+        lds.l   @r15+, pr
+        ldc.l   @r15+, ssr
+        ldc.l   @r15+, spc
+        mov.l   @r15, r15
+        rte
+        nop    
+        /* NOT REACHED */
+
+        ALIGN   4
+1:      .long   SH_GLOBAL_BASE
+2:      .long   OFS_TCB_SENT_FROM
+3:      .long   OFS_CONTEXT_MACH
+5:      .long   __L4_TCR_MR_OFFSET
+
+END_PROC(syscall_return)
 
