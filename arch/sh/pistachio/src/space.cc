@@ -229,6 +229,7 @@ generic_space_t::activate(tcb_t *tcb)
                                       get_current_kmem_resource());
     }
     else {
+        //TODO: This is an ad hoc solution.
         fill_tlb(0x3F, (addr_t)USER_UTCB_REF, (space_t*)this, pg, pgsize);
     }
 
@@ -292,10 +293,12 @@ generic_space_t::flush_tlbent_local(space_t *curspace, addr_t vaddr,
     if (asid->is_valid()) {
         this->activate(get_current_tcb());
 
-        sh_cache::flush_d();
         //TODO: Work-around: Crash when the entry (vaddr) does not exist
         //      in the operand cache. (MAP0500)
         //sh_cache::flush_d(vaddr, log2size);
+        //
+        // We flush the entire operand cache at this moment.
+        sh_cache::flush_d();
         sh_cache::invalidate_tlb_entry(asid->value(), vaddr);
 
         curspace->activate(get_current_tcb());

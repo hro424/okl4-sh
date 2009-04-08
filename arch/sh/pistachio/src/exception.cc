@@ -170,6 +170,35 @@ handle_address_error(word_t ecode, sh_context_t* context)
     send_exception_ipc(ecode, instr, context, continuation);
 }
 
+/*
+ * Fills in TLB after page fault has been handled.
+ */
+CONTINUATION_FUNCTION(tlb_fill)
+{
+    tcb_t*              current;
+    space_t*            space;
+    addr_t              faddr;
+    pgent_t*            pg;
+    pgent_t::pgsize_e   pgsize;
+    space_t::access_e   access;
+    continuation_t      continuation;
+
+    current = get_current_tcb();
+    faddr = ARCH_KTCB_PF_ADDR(&current->arch);
+    access = ARCH_KTCB_PF_ACCESS(&current->arch);
+    continuation = ARCH_KTCB_PF_CONT(&current->arch);
+    space = get_current_space();
+
+    if (space->lookup_mapping(faddr, &pg, &pgsize)) {
+        if (((access == space_t::write) && pg->is_writable(space, pgsize))
+            || ((access == space_t::read) && pg->is_readable(space, pgsize))) {
+            fill_tlb(faddr, space, pg, pgsize);
+        }
+    }
+
+    ACTIVATE_CONTINUATION(continuation);
+}
+
 /**
  * Handles TLB miss and memory access violation.  Invoked by the trap handler.
  *
@@ -231,10 +260,14 @@ handle_tlb_exception(word_t ecode, sh_context_t* context)
         }
     }
 
-    space->handle_pagefault(faddr, (addr_t)context->pc, access, kernel,
-                            continuation);
-}
+    tcb_t* current = get_current_tcb();
+    ARCH_KTCB_PF_ADDR(&current->arch) = faddr;
+    ARCH_KTCB_PF_ACCESS(&current->arch) = access;
+    ARCH_KTCB_PF_CONT(&current->arch) = continuation;
 
+    space->handle_pagefault(faddr, (addr_t)context->pc, access, kernel,
+                            tlb_fill);
+}
 
 extern "C" word_t sys_wbtest(word_t op, word_t* arg0, word_t* arg1, word_t* arg2);
 
