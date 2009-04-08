@@ -39,18 +39,21 @@ call_with_asm_continuation(word_t argument0, word_t argument1,
 {
     register word_t arg0    ASM_REG("r4") = argument0;
     register word_t arg1    ASM_REG("r5") = argument1;
-    register word_t lr      ASM_REG("r14") = continuation;
+    register word_t pr      ASM_REG("r14") = continuation;
     register word_t stack   ASM_REG("r1") = STACK_TOP;
+    register word_t func    ASM_REG("r0") = function;
 
     __asm__ __volatile__ (
         CHECK_ARG("r4", "%0")
         CHECK_ARG("r5", "%1")
         CHECK_ARG("r14", "%2")
         CHECK_ARG("r1", "%3")
+        CHECK_ARG("r0", "%4")
+        "    lds     %2, pr      \n"
         "    or      r1, r15     \n"
-        "    jmp     @%2         \n"
+        "    jmp     @%4         \n"
         "    nop                 \n"
-        :: "r" (arg0), "r" (arg1), "r" (lr), "r" (stack), "r" (function)
+        :: "r" (arg0), "r" (arg1), "r" (pr), "r" (stack), "r" (func)
     );
     while (1);
 }
