@@ -615,7 +615,7 @@ BEGIN_LOCAL_PROC(ipc_handler)
         mov.l   5f, r11
         shll2   r11
         add     r11, r10
-        mov.l   r6, @(0, r10)
+        mov.l   r6, @(0, r10)       // Save tag (mr0)
 
         mov.l   NILTHREAD, r11
         cmp/eq  r4, r11
