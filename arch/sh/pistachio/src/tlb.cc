@@ -23,7 +23,7 @@ fill_tlb(addr_t vaddr, space_t* space, pgent_t* pg, pgent_t::pgsize_e pgsize)
     reg |= (tmp << 10) & REG_MMUCR_URC_MASK;
     mapped_reg_write(REG_MMUCR, reg);
     entry++;    // overflow -> go back to 0
-    if (entry == 0x3F) {
+    if (entry == UTLB_UTCB) {
         entry = 0;
     }
 

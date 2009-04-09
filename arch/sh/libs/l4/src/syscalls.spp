@@ -70,7 +70,7 @@ LABEL(L4_ExchangeRegisters)
     mov     #SYSNUM(exchange_registers), SYSCALL_REG
     trapa   #SYSCALL_NUM
 
-    /* r0 holds result */
+    /* r0 holds the result. */
 
     RESTORE_CONTEXT
 
@@ -101,7 +101,7 @@ LABEL(L4_ThreadControl)
      */
     mov.l   @(0, r15), r1       // ExceptionHandler
     mov.l   @(4, r15), r2       // resources
-    mov.l   @(8, r15), r3      // *UtcbLocation
+    mov.l   @(8, r15), r3       // *UtcbLocation
 
     SAVE_CONTEXT
     mov     #SYSNUM(thread_control), SYSCALL_REG
@@ -144,8 +144,10 @@ LABEL(L4_Schedule)
     RESTORE_CONTEXT
 
     mov.l   @(8, r15), r2
+    tst     r2, r2
+    bt      1f
     mov.l   r1, @r2             // *rem_timeslice = r_tslen;
-
+1:
     rts
     nop
 

@@ -180,7 +180,6 @@ void empty(word_t foo);
     register word_t ip_r    ASM_REG("r7") = ip;                         \
     register word_t fl_r    ASM_REG("r1") = flags;                      \
     register word_t hdl_r   ASM_REG("r2") = handle;                     \
-    register word_t pgr_r   ASM_REG("r3") = (pager).get_raw();          \
                                                                         \
     __asm__ __volatile__ (                                              \
         CHECK_ARG("r0", "%1")                                           \
@@ -189,14 +188,12 @@ void empty(word_t foo);
         CHECK_ARG("r7", "%4")                                           \
         CHECK_ARG("r1", "%5")                                           \
         CHECK_ARG("r2", "%6")                                           \
-        CHECK_ARG("r3", "%7")                                           \
-        "    or      %8, r15         \n"                                \
+        "    or      %7, r15         \n"                                \
         "    jmp     @%0             \n"                                \
         "    nop                     \n"                                \
         :                                                               \
         : "r"  (continuation), "r" (rslt), "r" (ctrl), "r" (sp_r),      \
-          "r" (ip_r), "r" (fl_r), "r" (hdl_r), "r" (pgr_r),             \
-          "r" (STACK_TOP)                                               \
+          "r" (ip_r), "r" (fl_r), "r" (hdl_r), "r" (STACK_TOP)          \
         : "r15", "memory"                                               \
     );                                                                  \
     while (1);                                                          \

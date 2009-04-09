@@ -21,6 +21,9 @@ asid_cache_t asid_cache UNIT("cpulocal");
 
 ALIGNED(SH_L1_SIZE) char UNIT("kspace") _kernel_space_pagetable[SH_L1_SIZE];
 
+ALIGNED(PAGE_SIZE_4K) unsigned char utcb_ref_page[PAGE_SIZE_4K];
+
+
 void SECTION(".init")
 init_kernel_space()
 {
@@ -198,8 +201,6 @@ generic_space_t::free_utcb(utcb_t* utcb)
      */
 }
 
-static unsigned char utcb_ref_page[4096] __attribute__ ((aligned (4096)));
-
 /**
  * Set up hardware context to run the tcb in this space.
  */
@@ -208,9 +209,6 @@ generic_space_t::activate(tcb_t *tcb)
 {
     word_t              dest_asid;
     word_t              new_pt;
-    pgent_t*            pg;
-    pgent_t::pgsize_e   pgsize;
-
 
     dest_asid = ((space_t *)this)->get_asid()->get((space_t *)this);
     get_globals()->current_clist = this->get_clist();
@@ -219,19 +217,6 @@ generic_space_t::activate(tcb_t *tcb)
     // Change ASID
     set_hw_asid(dest_asid);
     mapped_reg_write(REG_TTB, new_pt);
-
-    if (!this->lookup_mapping((addr_t)USER_UTCB_REF, &pg, &pgsize)) {
-        // Map the UTCB reference page
-        ((space_t*)this)->add_mapping((addr_t)USER_UTCB_REF,
-                                      virt_to_phys(utcb_ref_page),
-                                      pgent_t::size_4k, space_t::read_write,
-                                      false, writeback,
-                                      get_current_kmem_resource());
-    }
-    else {
-        //TODO: This is an ad hoc solution.
-        fill_tlb(0x3F, (addr_t)USER_UTCB_REF, (space_t*)this, pg, pgsize);
-    }
 
     word_t* user_utcb_ref_kernel = (word_t*)(utcb_ref_page + 0xF00);
     *user_utcb_ref_kernel = tcb->get_utcb_location();

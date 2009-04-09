@@ -10,6 +10,8 @@
 #include <l4.h>
 #include <arch/pgent.h>
 
+#define UTLB_UTCB       0x3F
+
 /**
  * Fills the specified TLB entry.
  * NOTE: The current replacement policy is round-robin.

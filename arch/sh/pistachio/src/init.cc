@@ -10,6 +10,7 @@
 #include <interrupt.h>
 #include <schedule.h>
 #include <space.h>
+#include <arch/tlb.h>
 #include <soc/soc.h>
 
 #if defined(__GNUC__)
@@ -127,6 +128,26 @@ activate_mmu()
     UPDATE_REG();
 }
 
+extern unsigned char utcb_ref_page[];
+
+INLINE void SECTION(".init")
+init_tlb()
+{
+    word_t  ptel;
+
+    ptel = ((word_t)utcb_ref_page & REG_PTEL_PPN_MASK) | REG_PTEL_V |
+        REG_PTEL_PR1 | REG_PTEL_PR0 | REG_PTEL_SZ0 |
+        REG_PTEL_C | REG_PTEL_D | REG_PTEL_SH;
+
+    mapped_reg_write(REG_MMUCR, REG_MMUCR_AT | UTLB_UTCB << 10);
+    mapped_reg_write(REG_PTEH, USER_UTCB_REF & REG_PTEH_VPN_MASK);
+    mapped_reg_write(REG_PTEL, ptel);
+
+    __asm__ __volatile__ ("ldtlb");
+
+    UPDATE_REG();
+}
+
 extern "C" void NORETURN SECTION(".init")
 startup_system()
 {
@@ -187,7 +208,7 @@ startup_system()
 }
 
 /**
- * Initializes the kernel page table and maps the kernel and data areas.
+ * Initializes the kernel page table and maps the kernel text and data areas.
  *
  * @param base      the base physical address of the kernel address space
  */
@@ -206,6 +227,7 @@ init_memory()
      * Enable virtual memory, caching, etc
      */
     activate_mmu();
+    init_tlb();
 
     /*
      * Initialize global pointers
