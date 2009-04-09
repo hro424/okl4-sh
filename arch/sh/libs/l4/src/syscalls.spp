@@ -351,7 +351,7 @@ LABEL(L4_SpaceControl)
      * We pass the rest of its arguments via r0-r3, leaving 1st-4th
      * arguments there.
      */
-    mov.l   @r15, r0            // resources
+    mov.l   @r15, r1            // resources
 
     SAVE_CONTEXT
 
@@ -360,7 +360,7 @@ LABEL(L4_SpaceControl)
 
     RESTORE_CONTEXT
 
-    /* TODO: Assume that old_resources is returned via r1. */
+    /* old_resources is returned via r1. */
     mov.l   @(4, r15), r2
     tst     r2, r2
     bt      1f
