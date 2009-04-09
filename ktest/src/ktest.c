@@ -232,7 +232,6 @@ main(int argc, char *argv[])
 
     libcheck = KTEST_SERVER;
 
-L4_KDB_Enter("");
     result = init_boot_params();
     if (result != 0) {
         printf("Couldn't find boot parameters\n");
