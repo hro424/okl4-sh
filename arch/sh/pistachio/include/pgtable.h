@@ -71,7 +71,7 @@ public:
         struct {
             BITFIELD4(word_t,
                 reserved        : 8,
-                valid         : 1,
+                valid           : 1,
                 tree            : 1,
                 base_address    : 22
             );
@@ -83,9 +83,13 @@ public:
                              | large.wt);
     }
 
-    addr_t address_large() { return (addr_t)(large.base_address << 20); }
+    addr_t address_large() {
+        return (addr_t)(large.base_address << (32 - SH_SECTION_BITS));
+    }
 
-    addr_t address_table() { return (addr_t)(table.base_address << 10); }
+    addr_t address_table() {
+        return (addr_t)(table.base_address << SH_L2_BITS);
+    }
 
     word_t ptel_large() { return raw & (REG_PTEL_MASK & ~0x000FFC00); }
 };
@@ -162,9 +166,13 @@ public:
                              | small.wt);
     }
 
-    addr_t address_medium() { return (addr_t)(medium.base_address << 16); }
+    addr_t address_medium() {
+        return (addr_t)(medium.base_address << PAGE_BITS_64K);
+    }
 
-    addr_t address_small() { return (addr_t)(small.base_address << 12); }
+    addr_t address_small() {
+        return (addr_t)(small.base_address << PAGE_BITS_4K);
+    }
 
     word_t ptel_medium() { return raw & (REG_PTEL_MASK & ~0x0000FC00); }
 

@@ -196,7 +196,7 @@ static void ktest_thread_handler(void)
                     }
 
                     //printf("pagefault msg type= %x  from %lx  [%p] @ %lx:%lx\n", type,
-                    //       client.raw, (void*)ip, fault_addr, phys);
+                    //       client.raw, (void*)ip, fault_addr, offset);
 
                     //printf("map space, thread %lx, %lx\n", client.raw, __L4_TCR_SenderSpace());
 

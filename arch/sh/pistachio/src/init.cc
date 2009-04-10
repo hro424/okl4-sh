@@ -137,7 +137,7 @@ init_tlb()
 
     ptel = ((word_t)utcb_ref_page & REG_PTEL_PPN_MASK) | REG_PTEL_V |
         REG_PTEL_PR1 | REG_PTEL_PR0 | REG_PTEL_SZ0 |
-        REG_PTEL_C | REG_PTEL_D | REG_PTEL_SH;
+        REG_PTEL_D | REG_PTEL_SH;
 
     mapped_reg_write(REG_MMUCR, REG_MMUCR_AT | UTLB_UTCB << 10);
     mapped_reg_write(REG_PTEH, USER_UTCB_REF & REG_PTEH_VPN_MASK);

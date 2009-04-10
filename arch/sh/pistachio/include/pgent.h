@@ -181,7 +181,7 @@ pgent_t::is_executable(generic_space_t* s, pgsize_e pgsize)
 INLINE bool
 pgent_t::is_kernel(generic_space_t* s, pgsize_e pgsize)
 {
-    return pgsize == size_1m ?  l1.large.perm <= 1 : l2.small.perm <= 1;
+    return pgsize == size_1m ? l1.large.perm <= 1 : l2.small.perm <= 1;
     switch (pgsize) {
         case size_1m:
             return (l1.large.perm <= 1);
@@ -282,9 +282,8 @@ pgent_t::remove_subtree(generic_space_t* s, pgsize_e pgsize, bool kernel,
 {
     if (pgsize == size_1m) {
         // Release the L2 table
-        kresource->free(kmem_group_pgtab,
-                phys_to_virt((addr_t)(l1.table.base_address << SH_L2_BITS)),
-                SH_L2_SIZE);
+        kresource->free(kmem_group_pgtab, phys_to_virt(l1.address_table()),
+                        SH_L2_SIZE);
         l1.table.tree = 0;
     }
     else {

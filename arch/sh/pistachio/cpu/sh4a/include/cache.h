@@ -11,6 +11,8 @@
 
 class generic_space_t;
 
+#define CACHE_NEED_PGENT
+
 #define CACHE_LINE_SIZE     (32)
 #define CACHE_WAYS          (4)
 #define CACHE_ENTRIES       (256)
