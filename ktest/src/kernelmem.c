@@ -287,7 +287,7 @@ static int CreateMaxThreads(void)
     int res = 1;
    
     // MIPS32 address space ends at 0x80000000
-#if (defined(L4_ARCH_MIPS) && defined(L4_32BIT))
+#if ((defined(L4_ARCH_MIPS) || defined(L4_ARCH_SH)) && defined(L4_32BIT))
     unsigned long utcb_base = 0x70000000;
 #else
     unsigned long utcb_base = 0xb0000000;
