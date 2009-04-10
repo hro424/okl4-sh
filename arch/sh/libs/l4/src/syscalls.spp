@@ -218,9 +218,10 @@ EXPORT L4_Notify
 LABEL(L4_Notify)
     SAVE_CONTEXT
 
-    mov.l   SHIFT_NOTIFY, r6	// tag = 1 << 13
-    mov     r5, r1              // mr[1] = mask
-    mov.l   nilthread, r5       // receiver = nil
+    mov     #0x20, r6
+    shll8   r6	                // tag      <- 1 << 13
+    mov     r5, r1              // mr[1]    <- mask
+    mov.l   nilthread, r5       // receiver <- nil
 
     mov     #SYSNUM(ipc), SYSCALL_REG
     trapa   #SYSCALL_NUM
@@ -231,9 +232,6 @@ LABEL(L4_Notify)
     rts
     nop
 
-LABEL(SHIFT_NOTIFY)
-    .long	1 << 13
-
 /*
  * L4_WaitNotify
  */
@@ -242,9 +240,10 @@ LABEL(L4_WaitNotify)
     SAVE_CONTEXT
     mov.l   r4, @-r15
 
-    mov.l	nilthread, r4           // to_tid = nilthread
-    mov.l	MINUS_2, r5             // from_tid = wait_notify
-    mov.l	SHIFT_WAIT_NOTIFY, r6   // tag = 1 << 14
+    mov.l	nilthread, r4           // to_tid   <-  nilthread
+    mov.l	MINUS_2, r5             // from_tid <- wait_notify
+    mov     #0x40, r6
+    shll8   r6                      // tag      <- 1 << 14
 
     mov     #SYSNUM(ipc), SYSCALL_REG
     trapa   #SYSCALL_NUM
