@@ -23,7 +23,7 @@ class sh7780(sh4a):
     memory_timer = [Region(0xFF000000, 0xFFFF0000, "all", "uncached")]
     interrupt_timer = [0x580, 0x5A0, 0x5C0, 0x5E0, 0xE00, 0xE20, 0xE40]
     v2_drivers = [
-            ("test_device", "vtest", [], [0x700,0x720]),
+            ("test_device", "vtest", [], [0x600, 0x620]),
             ("sh7780_scif", "vserial", memory_serial, interrupt_serial),
             ("sh7780_tmu", "vtimer", memory_timer, interrupt_timer)
             ]
