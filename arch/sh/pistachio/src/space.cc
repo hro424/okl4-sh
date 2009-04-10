@@ -141,7 +141,7 @@ generic_space_t::allocate_utcb(tcb_t* tcb, kmem_resource_t* kresource)
                     this, UTCB_AREA_PGSIZE,
                     ((word_t)utcb & (PAGE_SIZE_1M - 1)) >> UTCB_AREA_PAGEBITS);
 
-            is_valid = leaf.is_valid(this, pgent_t::size_64k);
+            is_valid = leaf.is_valid(this, pgent_t::size_4k);
         }
         else {
             enter_kdebug("1MB page in UTCB area");
@@ -220,6 +220,7 @@ generic_space_t::activate(tcb_t *tcb)
 
     word_t* user_utcb_ref_kernel = (word_t*)(utcb_ref_page + 0xF00);
     *user_utcb_ref_kernel = tcb->get_utcb_location();
+    //sh_cache::invalidate_d((addr_t)USER_UTCB_REF, 5);
     sh_cache::writeback_d(user_utcb_ref_kernel, 5);
 }
 
