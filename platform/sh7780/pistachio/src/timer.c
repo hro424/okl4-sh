@@ -46,8 +46,8 @@ soc_enable_timer(void)
 void
 init_clocks(void)
 {
-    unmask_intevt(TMU2);
-    set_intprio(TMU2, INTC_PRIORITY_LOWEST);
+    unmask_intevt(DEFAULT_TIMER);
+    set_intprio(DEFAULT_TIMER, INTC_PRIORITY_HIGHEST);
     tmu_init();
     tmu_start();
 }

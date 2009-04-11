@@ -196,6 +196,7 @@ public:
 
     /**
      * Writes back and invalidates the operand cache.
+     * Must be executed in a non-preemptive region.
      */
     static void flush_d() {
         word_t  addr0, addr1, addr2, addr3, end;
@@ -207,22 +208,21 @@ public:
         end = KERNEL_AREA_START + CACHE_WAY_SIZE;
 
         /*
-         *  NOTE: Use the 32KiB range at KERNEL_AREA_START, because
-         *  (1)  TLB miss is not thrown because P1 is a non-TLB area.
-         *  (2)  movca.l writes r0 to a cache block, not directly to memory,
-         *       if write-back cache is enabled.  This actually writes back
-         *       the latest content of the cache block.
-         *  (3)  ocbi immediately invalidates the cache block, so that the
-         *       cache block is not written back to memory.
+         * NOTE: Use the 32KiB range at KERNEL_AREA_START, because
+         * (1)  TLB miss is not thrown because P1 is a non-TLB area.
+         * (2)  movca.l writes r0 to a cache block, not directly to memory,
+         *      if write-back cache is enabled.  This actually writes back
+         *      the latest content of the cache block.
+         * (3)  ocbi immediately invalidates the cache block, so that the
+         *      cache block is not written back to memory.
          *
-         *  Do not use VIRT_ADDR_BASE where the global data is stored.
+         * Do not use VIRT_ADDR_BASE where the global data is stored.
          */
         /*
          * NOTE: flush 4 entries at the same time, because SH-4A's cache is 
          * 4-way set associative.
          */
         do {
-            sh_cpu::cli();
             __asm__ __volatile__ (
                 "    movca.l     r0, @%0    \n"
                 "    movca.l     r0, @%1    \n"
@@ -239,7 +239,6 @@ public:
             addr1 += CACHE_LINE_SIZE;
             addr2 += CACHE_LINE_SIZE;
             addr3 += CACHE_LINE_SIZE;
-            sh_cpu::sti();
         } while (addr0 < end);
     }
 

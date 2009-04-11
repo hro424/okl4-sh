@@ -274,7 +274,7 @@ LABEL(kernel_interrupt)
         add     #OFS_GLOBAL_CURRENT_TCB, r15
         mov.l   @r15, r15
         add     #OFS_TCB_PREEMPTION_CONTINUATION, r15
-        mov     r15, r0
+        mov.l   @r15, r0
 
         /* Reset the kernel stack */
         mov.l   5f, r15

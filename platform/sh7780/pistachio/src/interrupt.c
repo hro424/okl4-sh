@@ -280,8 +280,7 @@ soc_handle_interrupt(word_t context, word_t intevt)
     continuation_t cont = ASM_CONTINUATION;
 
     if (INTEVT_MIN <= intevt && intevt <= INTEVT_MAX) {
-        //TODO:
-        if (EXPECT_TRUE(evt2index(intevt) == TMU2)) {
+        if (EXPECT_TRUE(evt2index(intevt) == DEFAULT_TIMER)) {
             handle_timer_interrupt(0, cont);
         }
         handle_irq_reschedule(intevt, cont);

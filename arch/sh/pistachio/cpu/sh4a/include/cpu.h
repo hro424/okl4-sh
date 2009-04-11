@@ -42,6 +42,9 @@
 class sh_cpu
 {
 public:
+    /**
+     * Denies exceptions/interrupts
+     */
     static void cli() {
         u32_t   tmp;
         __asm__ __volatile__ (
@@ -53,6 +56,9 @@ public:
             : "memory");
     }
 
+    /**
+     * Allows exceptions/interrupts
+     */
     static void sti() {
         u32_t   tmp;
         __asm__ __volatile__ (
