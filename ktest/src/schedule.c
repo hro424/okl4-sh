@@ -71,7 +71,6 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <ktest/bad_capids.h>
-#include <l4/kdebug.h>
 
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
 
@@ -457,7 +456,6 @@ START_TEST(SCHED0300)
     L4_Word_t rem_timeslice_before;
     L4_Word_t new_timeslice;
 
-L4_KDB_Enter("");
     if(!g_counter) {
         compute_counter();
     }
