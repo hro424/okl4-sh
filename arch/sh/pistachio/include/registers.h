@@ -81,6 +81,11 @@
 #define REG_PVR             0xFF000030
 #define REG_PRR             0xFF000044
 
+/* Frequency Control */
+#define REG_CPG_FRQCR       0xFFC80000
+#define REG_CPG_PLLCR       0xFFC80024
+#define REG_CPG_MSTPCR      0xFFC80030
+
 /*
  * MASKS FOR MEMORY-MAPPED REGISTERS
  */

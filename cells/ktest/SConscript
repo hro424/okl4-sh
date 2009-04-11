@@ -110,7 +110,7 @@ if serial_driver:
     rootserver_env.add_use_device(None, ["serial_dev"])
 
     # Test device depends on v2 drivers
-# rootserver_env.add_use_device(None, ["test_dev"])
+rootserver_env.add_use_device(None, ["test_dev"])
 
 if timer_driver:
     rootserver_env.Package("drivers/%s" % timer_driver)

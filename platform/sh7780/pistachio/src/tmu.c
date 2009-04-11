@@ -10,6 +10,14 @@
 #include <timer.h>
 #include <tmu.h>
 
+#define TMU_TSTR        TMU_TSTR0
+#define TMU_TSTR_N      TMU_TSTR0_2
+#define TMU_TCOR        TMU_TCOR2
+#define TMU_TCNT        TMU_TCNT2
+#define TMU_TCR         TMU_TCR2
+
+#define PCK             50000000
+
 void
 tmu_init(void)
 {
@@ -18,29 +26,43 @@ tmu_init(void)
 
     tmu_stop();
 
-    count = TIMER_RATE / (1000000 / TIMER_TICK_LENGTH);
+    count = PCK / 4 / (1000000 / TIMER_TICK_LENGTH);
 
-    mapped_reg_write(TMU_CONSTANT0, count);
-    mapped_reg_write(TMU_COUNTER0, count);
+    reg = TMU_TCR_UNIE | TMU_TCR_TPSC_PCK4;
+    u16_t tmp;
+    do {
+        mapped_reg_write16(TMU_TCR, reg);
+        tmp = mapped_reg_read16(TMU_TCR);
+    } while (tmp != reg);
 
-    reg = TMU_CONTROL_UNIE | TMU_CONTROL_TPSC_PCK4;
-    mapped_reg_write16(TMU_CONTROL0, reg);
+    mapped_reg_write(TMU_TCOR, count);
+    mapped_reg_write(TMU_TCNT, count);
 }
 
 void
 tmu_start(void)
 {
     u8_t reg;
-    reg = mapped_reg_read8(TMU_START0);
-    reg |= TMU_START0_0;
-    mapped_reg_write8(TMU_START0, reg);
+    reg = mapped_reg_read8(TMU_TSTR);
+    reg |= TMU_TSTR_N;
+    mapped_reg_write8(TMU_TSTR, reg);
 }
 
 void
 tmu_stop(void)
 {
     u8_t reg;
-    reg = mapped_reg_read8(TMU_START0);
-    reg &= ~TMU_START0_0;
-    mapped_reg_write8(TMU_START0, reg);
+    reg = mapped_reg_read8(TMU_TSTR);
+    reg &= ~TMU_TSTR_N;
+    mapped_reg_write8(TMU_TSTR, reg);
+}
+
+void
+tmu_clear(void)
+{
+    u16_t   reg;
+
+    reg = mapped_reg_read16(TMU_TCR);
+    reg &= ~TMU_TCR_UNF;
+    mapped_reg_write16(TMU_TCR, reg);
 }

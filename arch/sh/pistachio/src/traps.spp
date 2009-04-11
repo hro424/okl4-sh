@@ -240,13 +240,13 @@ BEGIN_PROC_TRAPS(sh_interrupt, 0x200)
 
         /*
          * Read the interrupt event register.
-         * Pass it via the first argument.
+         * Pass it via the second argument.
          */
-        mov.l   3f, r4
-        mov.l   @r4, r4
+        mov.l   3f, r5
+        mov.l   @r5, r5
 
-        /* Pass the saved context via the second argument */
-        mov     r15, r5
+        /* Pass the saved context via the first argument */
+        mov     r15, r4
 
         /* Set up continuation */
         mov.l   4f, r0

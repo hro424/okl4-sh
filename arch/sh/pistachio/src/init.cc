@@ -37,14 +37,14 @@ NORETURN void SECTION(".init") generic_init();
 INLINE void SECTION(".init")
 show_processor_info()
 {
-    word_t ver;
+    word_t val;
     word_t rev;
 
-    ver = mapped_reg_read(REG_PVR);
-    ver &= 0xFFFFFF00;
+    val = mapped_reg_read(REG_PVR);
+    val &= 0xFFFFFF00;
 
-    TRACE_INIT("Processor Id => %lx: ", ver);
-    switch (ver >> 24) {
+    TRACE_INIT("Processor Id => %lx: ", val);
+    switch (val >> 24) {
         case 0x10: TRACE_INIT("SH-4A"); break;
         default: TRACE_INIT("UNKNOWN"); break;
     }
@@ -53,6 +53,49 @@ show_processor_info()
     rev &= 0x0000FFF0;
     TRACE_INIT(", rev %lx", rev);
     TRACE_INIT("\n");
+
+    val = mapped_reg_read(REG_CPG_FRQCR);
+    switch ((val >> 20) & 0x1F) {
+        case 0x2:
+            TRACE_INIT("Ick x12, SHck x6, ");
+            break;
+        case 0x4:
+            TRACE_INIT("Ick x12, SHck x4, ");
+            break;
+        default:
+            TRACE_INIT("Ick N/A, SHck N/A, ");
+            break;
+    }
+
+    switch ((val >> 16) & 0x0F) {
+        case 0x3:
+            TRACE_INIT("Bck x3, ");
+            break;
+        case 0x4:
+            TRACE_INIT("Bck x2, ");
+            break;
+        case 0x5:
+            TRACE_INIT("Bck x3/2, ");
+            break;
+        case 0x6:
+            TRACE_INIT("Bck x1, ");
+            break;
+        default:
+            TRACE_INIT("Bck N/A, ");
+            break;
+    }
+
+    switch (val & 0xF) {
+        case 0x5:
+            TRACE_INIT("Pck x3/2\n");
+            break;
+        case 0x6:
+            TRACE_INIT("Pck x3/2\n");
+            break;
+        default:
+            TRACE_INIT("Pck N/A\n");
+            break;
+    }
 }
 
 INLINE void SECTION(".init")

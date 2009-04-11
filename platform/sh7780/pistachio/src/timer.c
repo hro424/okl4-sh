@@ -23,6 +23,7 @@ soc_get_timer_tick_length(void)
 void NORETURN
 handle_timer_interrupt(int wakeup, continuation_t cont)
 {
+    tmu_clear();
     kernel_scheduler_handle_timer_interrupt(wakeup, TIMER_TICK_LENGTH, cont);
 }
 
@@ -45,6 +46,9 @@ soc_enable_timer(void)
 void
 init_clocks(void)
 {
+    unmask_intevt(TMU2);
+    set_intprio(TMU2, INTC_PRIORITY_LOWEST);
     tmu_init();
+    tmu_start();
 }
 

@@ -12,16 +12,30 @@
 #include <kernel/arch/registers.h>
 #include <kernel/arch/continuation.h>
 
+/**
+ * Mapping between an interrupt handler and a notification mask.
+ */
 typedef struct {
     soc_ref_t   handler;
     word_t      notify_mask;
 } irq_mapping_t;
 
+/**
+ * Owner address space of the interrupt.
+ */
 typedef struct {
     space_h     owner;
 } irq_owner_t;
 
-/* Converts INTEVT to the internal interrupt number */
+typedef struct {
+    word_t      mask;
+    word_t      intpri;
+    word_t      offset;
+} irq_util_t;
+
+/**
+ * Converts INTEVT to the interrupt number used internally
+ */
 static word_t evttbl[112] = {
     IRQ7, 0, IRQ0, 0, IRQ1, 0, IRQ2, 0, IRQ3, 0,
     /* 10 */
@@ -52,77 +66,80 @@ static word_t evttbl[112] = {
     GPIO2, GPIO3
 };
 
-#define IRQ_VECT(evt, mask)     mask
+#define IRQ_VECT(evt, mask, prio, offset)     { mask, prio, offset }
 
-static word_t intc_mask[IRQS] = {
-    IRQ_VECT(IRQ0,          MASK_IRQ0),
-    IRQ_VECT(IRQ1,          MASK_IRQ1),
-    IRQ_VECT(IRQ2,          MASK_IRQ2),
-    IRQ_VECT(IRQ3,          MASK_IRQ3),
-    IRQ_VECT(IRQ4,          MASK_IRQ4),
-    IRQ_VECT(IRQ5,          MASK_IRQ5),
-    IRQ_VECT(IRQ6,          MASK_IRQ6),
-    IRQ_VECT(IRQ7,          MASK_IRQ7),
-    IRQ_VECT(RTC_ATI,       MASK_RTC),
-    IRQ_VECT(RTC_PRI,       MASK_RTC),
-    IRQ_VECT(RTC_CUI,       MASK_RTC),
-    IRQ_VECT(WDT,           MASK_WDT),
-    IRQ_VECT(TMU0,          MASK_TMU012),
-    IRQ_VECT(TMU1,          MASK_TMU012),
-    IRQ_VECT(TMU2,          MASK_TMU012),
-    IRQ_VECT(TMU2_TICPI,    MASK_TMU012),
-    IRQ_VECT(HUDI,          MASK_HUDI),
-    IRQ_VECT(DMAC0_DMINT0,  MASK_DMAC0),
-    IRQ_VECT(DMAC0_DMINT1,  MASK_DMAC0),
-    IRQ_VECT(DMAC0_DMINT2,  MASK_DMAC0),
-    IRQ_VECT(DMAC0_DMINT3,  MASK_DMAC0),
-    IRQ_VECT(DMAC0_DMINT3,  MASK_DMAC0),
-    IRQ_VECT(SCIF0_ERI,     MASK_SCIF0),
-    IRQ_VECT(SCIF0_RXI,     MASK_SCIF0),
-    IRQ_VECT(SCIF0_BRI,     MASK_SCIF0),
-    IRQ_VECT(SCIF0_TXI,     MASK_SCIF0),
-    IRQ_VECT(DMAC0_DMINT4,  MASK_DMAC0),
-    IRQ_VECT(DMAC0_DMINT5,  MASK_DMAC0),
-    IRQ_VECT(DMAC0_DMINT6,  MASK_DMAC0),
-    IRQ_VECT(DMAC0_DMINT7,  MASK_DMAC0),
-    IRQ_VECT(CMT,           MASK_CMT),
-    IRQ_VECT(HAC,           MASK_HAC),
-    IRQ_VECT(PCISERR,       MASK_PCIC0),
-    IRQ_VECT(PCIINTA,       MASK_PCIC1),
-    IRQ_VECT(PCIINTB,       MASK_PCIC2),
-    IRQ_VECT(PCIINTC,       MASK_PCIC3),
-    IRQ_VECT(PCIINTD,       MASK_PCIC4),
-    IRQ_VECT(PCIERR,        MASK_PCIC5),
-    IRQ_VECT(PCIPWD3,       MASK_PCIC5),
-    IRQ_VECT(PCIPWD2,       MASK_PCIC5),
-    IRQ_VECT(PCIPWD1,       MASK_PCIC5),
-    IRQ_VECT(PCIPWD0,       MASK_PCIC5),
-    IRQ_VECT(SCIF1_ERI,     MASK_SCIF1),
-    IRQ_VECT(SCIF1_RXI,     MASK_SCIF1),
-    IRQ_VECT(SCIF1_BRI,     MASK_SCIF1),
-    IRQ_VECT(SCIF1_TXI,     MASK_SCIF1),
-    IRQ_VECT(SIOF,          MASK_SIOF),
-    IRQ_VECT(HSPI,          MASK_HSPI),
-    IRQ_VECT(MMCIF_FSTAT,   MASK_MMCIF),
-    IRQ_VECT(MMCIF_TRAN,    MASK_MMCIF),
-    IRQ_VECT(MMCIF_ERR,     MASK_MMCIF),
-    IRQ_VECT(MMCIF_FRDY,    MASK_MMCIF),
-    IRQ_VECT(DMAC1_DMINT8,  MASK_DMAC1),
-    IRQ_VECT(DMAC1_DMINT9,  MASK_DMAC1),
-    IRQ_VECT(DMAC1_DMINT10, MASK_DMAC1),
-    IRQ_VECT(DMAC1_DMINT11, MASK_DMAC1),
-    IRQ_VECT(TMU3,          MASK_TMU345),
-    IRQ_VECT(TMU4,          MASK_TMU345),
-    IRQ_VECT(TMU5,          MASK_TMU345),
-    IRQ_VECT(SSI,           MASK_SSI),
-    IRQ_VECT(FLSTE,         MASK_FLCTL),
-    IRQ_VECT(FLTEND,        MASK_FLCTL),
-    IRQ_VECT(FLTRQ0,        MASK_FLCTL),
-    IRQ_VECT(FLTRQ1,        MASK_FLCTL),
-    IRQ_VECT(GPIO0,         MASK_GPIO),
-    IRQ_VECT(GPIO1,         MASK_GPIO),
-    IRQ_VECT(GPIO2,         MASK_GPIO),
-    IRQ_VECT(GPIO3,         MASK_GPIO),
+/**
+ * Obtains a mask corresponding to an interrupt.
+ */
+static irq_util_t intc_util[IRQS] = {
+    IRQ_VECT(IRQ0,          MASK_IRQ0,      INTC_INTPRI,     0x1C),
+    IRQ_VECT(IRQ1,          MASK_IRQ1,      INTC_INTPRI,     0x18),
+    IRQ_VECT(IRQ2,          MASK_IRQ2,      INTC_INTPRI,     0x14),
+    IRQ_VECT(IRQ3,          MASK_IRQ3,      INTC_INTPRI,     0x10),
+    IRQ_VECT(IRQ4,          MASK_IRQ4,      INTC_INTPRI,     0x0C),
+    IRQ_VECT(IRQ5,          MASK_IRQ5,      INTC_INTPRI,     0x08),
+    IRQ_VECT(IRQ6,          MASK_IRQ6,      INTC_INTPRI,     0x04),
+    IRQ_VECT(IRQ7,          MASK_IRQ7,      INTC_INTPRI,     0x00),
+    IRQ_VECT(RTC_ATI,       MASK_RTC,       INTC_INT2PRI1,   0x00),
+    IRQ_VECT(RTC_PRI,       MASK_RTC,       INTC_INT2PRI1,   0x00),
+    IRQ_VECT(RTC_CUI,       MASK_RTC,       INTC_INT2PRI1,   0x00),
+    IRQ_VECT(WDT,           MASK_WDT,       INTC_INT2PRI2,   0x08),
+    IRQ_VECT(TMU0,          MASK_TMU012,    INTC_INT2PRI0,   0x18),
+    IRQ_VECT(TMU1,          MASK_TMU012,    INTC_INT2PRI0,   0x10),
+    IRQ_VECT(TMU2,          MASK_TMU012,    INTC_INT2PRI0,   0x08),
+    IRQ_VECT(TMU2_TICPI,    MASK_TMU012,    INTC_INT2PRI0,   0x00),
+    IRQ_VECT(HUDI,          MASK_HUDI,      INTC_INT2PRI3,   0x18),
+    IRQ_VECT(DMAC0_DMINT0,  MASK_DMAC0,     INTC_INT2PRI3,   0x10),
+    IRQ_VECT(DMAC0_DMINT1,  MASK_DMAC0,     INTC_INT2PRI3,   0x10),
+    IRQ_VECT(DMAC0_DMINT2,  MASK_DMAC0,     INTC_INT2PRI3,   0x10),
+    IRQ_VECT(DMAC0_DMINT3,  MASK_DMAC0,     INTC_INT2PRI3,   0x10),
+    IRQ_VECT(DMAC0_DMINT3,  MASK_DMAC0,     INTC_INT2PRI3,   0x10),
+    IRQ_VECT(SCIF0_ERI,     MASK_SCIF0,     INTC_INT2PRI2,   0x18),
+    IRQ_VECT(SCIF0_RXI,     MASK_SCIF0,     INTC_INT2PRI2,   0x18),
+    IRQ_VECT(SCIF0_BRI,     MASK_SCIF0,     INTC_INT2PRI2,   0x18),
+    IRQ_VECT(SCIF0_TXI,     MASK_SCIF0,     INTC_INT2PRI2,   0x18),
+    IRQ_VECT(DMAC0_DMINT4,  MASK_DMAC0,     INTC_INT2PRI3,   0x10),
+    IRQ_VECT(DMAC0_DMINT5,  MASK_DMAC0,     INTC_INT2PRI3,   0x10),
+    IRQ_VECT(DMAC0_DMINT6,  MASK_DMAC0,     INTC_INT2PRI3,   0x10),
+    IRQ_VECT(DMAC0_DMINT7,  MASK_DMAC0,     INTC_INT2PRI3,   0x10),
+    IRQ_VECT(CMT,           MASK_CMT,       INTC_INT2PRI4,   0x18),
+    IRQ_VECT(HAC,           MASK_HAC,       INTC_INT2PRI4,   0x10),
+    IRQ_VECT(PCISERR,       MASK_PCIC0,     INTC_INT2PRI4,   0x08),
+    IRQ_VECT(PCIINTA,       MASK_PCIC1,     INTC_INT2PRI4,   0x00),
+    IRQ_VECT(PCIINTB,       MASK_PCIC2,     INTC_INT2PRI5,   0x18),
+    IRQ_VECT(PCIINTC,       MASK_PCIC3,     INTC_INT2PRI5,   0x10),
+    IRQ_VECT(PCIINTD,       MASK_PCIC4,     INTC_INT2PRI5,   0x08),
+    IRQ_VECT(PCIERR,        MASK_PCIC5,     INTC_INT2PRI5,   0x00),
+    IRQ_VECT(PCIPWD3,       MASK_PCIC5,     INTC_INT2PRI5,   0x00),
+    IRQ_VECT(PCIPWD2,       MASK_PCIC5,     INTC_INT2PRI5,   0x00),
+    IRQ_VECT(PCIPWD1,       MASK_PCIC5,     INTC_INT2PRI5,   0x00),
+    IRQ_VECT(PCIPWD0,       MASK_PCIC5,     INTC_INT2PRI5,   0x00),
+    IRQ_VECT(SCIF1_ERI,     MASK_SCIF1,     INTC_INT2PRI2,   0x10),
+    IRQ_VECT(SCIF1_RXI,     MASK_SCIF1,     INTC_INT2PRI2,   0x10),
+    IRQ_VECT(SCIF1_BRI,     MASK_SCIF1,     INTC_INT2PRI2,   0x10),
+    IRQ_VECT(SCIF1_TXI,     MASK_SCIF1,     INTC_INT2PRI2,   0x10),
+    IRQ_VECT(SIOF,          MASK_SIOF,      INTC_INT2PRI6,   0x18),
+    IRQ_VECT(HSPI,          MASK_HSPI,      INTC_INT2PRI6,   0x10),
+    IRQ_VECT(MMCIF_FSTAT,   MASK_MMCIF,     INTC_INT2PRI6,   0x08),
+    IRQ_VECT(MMCIF_TRAN,    MASK_MMCIF,     INTC_INT2PRI6,   0x08),
+    IRQ_VECT(MMCIF_ERR,     MASK_MMCIF,     INTC_INT2PRI6,   0x08),
+    IRQ_VECT(MMCIF_FRDY,    MASK_MMCIF,     INTC_INT2PRI6,   0x08),
+    IRQ_VECT(DMAC1_DMINT8,  MASK_DMAC1,     INTC_INT2PRI3,   0x08),
+    IRQ_VECT(DMAC1_DMINT9,  MASK_DMAC1,     INTC_INT2PRI3,   0x08),
+    IRQ_VECT(DMAC1_DMINT10, MASK_DMAC1,     INTC_INT2PRI3,   0x08),
+    IRQ_VECT(DMAC1_DMINT11, MASK_DMAC1,     INTC_INT2PRI3,   0x08),
+    IRQ_VECT(TMU3,          MASK_TMU345,    INTC_INT2PRI1,   0x18),
+    IRQ_VECT(TMU4,          MASK_TMU345,    INTC_INT2PRI1,   0x10),
+    IRQ_VECT(TMU5,          MASK_TMU345,    INTC_INT2PRI1,   0x08),
+    IRQ_VECT(SSI,           MASK_SSI,       INTC_INT2PRI6,   0x00),
+    IRQ_VECT(FLSTE,         MASK_FLCTL,     INTC_INT2PRI7,   0x18),
+    IRQ_VECT(FLTEND,        MASK_FLCTL,     INTC_INT2PRI7,   0x18),
+    IRQ_VECT(FLTRQ0,        MASK_FLCTL,     INTC_INT2PRI7,   0x18),
+    IRQ_VECT(FLTRQ1,        MASK_FLCTL,     INTC_INT2PRI7,   0x18),
+    IRQ_VECT(GPIO0,         MASK_GPIO,      INTC_INT2PRI7,   0x10),
+    IRQ_VECT(GPIO1,         MASK_GPIO,      INTC_INT2PRI7,   0x10),
+    IRQ_VECT(GPIO2,         MASK_GPIO,      INTC_INT2PRI7,   0x10),
+    IRQ_VECT(GPIO3,         MASK_GPIO,      INTC_INT2PRI7,   0x10),
 };
 
 /* Map interrupt numbers to handler/notify mask information. */
@@ -161,50 +178,40 @@ evt2index(word_t intevt)
     return evttbl[i];
 }
 
-static inline void
-mask_external_interrupt(word_t index)
-{
-    mapped_reg_write(INTC_INTMSK0, intc_mask[index]);
-}
-
-static inline void
-unmask_internal_interrupt(word_t index)
-{
-    mapped_reg_write(INTC_INTMSKCLR0, intc_mask[index]);
-}
-
-static inline void
-mask_internal_interrupt(word_t index)
-{
-    mapped_reg_write(INTC_INT2MSKR, intc_mask[index]);
-}
-
-static inline void
-unmask_external_interrupt(word_t index)
-{
-    mapped_reg_write(INTC_INT2MSKCR, intc_mask[index]);
-}
-
-static void
+void
 mask_intevt(word_t index)
 {
-    if (index > IRQ7) {
-        mask_internal_interrupt(index);
-    }
-    else {
-        mask_external_interrupt(index);
-    }
+    word_t  reg = index > IRQ7 ? INTC_INT2MSKR : INTC_INTMSK0;
+    mapped_reg_write(reg, intc_util[index].mask);
 }
 
-static void
+void
 unmask_intevt(word_t index)
 {
-    if (index > IRQ7) {
-        unmask_internal_interrupt(index);
-    }
-    else {
-        unmask_external_interrupt(index);
-    }
+    word_t  reg = index > IRQ7 ? INTC_INT2MSKCR : INTC_INTMSKCLR0;
+    mapped_reg_write(reg, intc_util[index].mask);
+}
+
+void
+set_intprio(word_t index, u8_t prio)
+{
+    word_t  val;
+    word_t  mask = index > IRQ7 ? 0x1F : 0x0F;
+
+    val = mapped_reg_read(intc_util[index].intpri);
+    val &= ~(mask << intc_util[index].offset);
+    val |= (prio & mask) << intc_util[index].offset;
+    mapped_reg_write(intc_util[index].intpri, val);
+}
+
+u8_t
+get_intprio(word_t index)
+{
+    word_t val;
+    word_t mask = index > IRQ7 ? 0x1F : 0x0F;
+
+    val = mapped_reg_read(intc_util[index].intpri);
+    return (val >> intc_util[index].offset) & mask;
 }
 
 /*
@@ -273,12 +280,11 @@ soc_handle_interrupt(word_t context, word_t intevt)
     continuation_t cont = ASM_CONTINUATION;
 
     if (INTEVT_MIN <= intevt && intevt <= INTEVT_MAX) {
+        //TODO:
+        if (EXPECT_TRUE(evt2index(intevt) == TMU2)) {
+            handle_timer_interrupt(0, cont);
+        }
         handle_irq_reschedule(intevt, cont);
-    }
-
-    //TODO:
-    if (EXPECT_TRUE(evt2index(intevt) == TMU0)) {
-        handle_timer_interrupt(0, cont);
     }
 
     ACTIVATE_CONTINUATION(cont);

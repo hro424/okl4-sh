@@ -5,7 +5,7 @@
 #include <soc/arch/soc.h>
 
 /*
- * SH2007
+ * NOTE: SH2007 external interrupts
  * IRQ0     LAN0
  * IRQ1     LAN1
  * IRQ2     Compact Flash
@@ -64,6 +64,9 @@
 #define INTC_ICR0_IRLM1         0x00400000
 #define INTC_ICR0_LSH           0x00200000
 
+/**
+ * Event numbers for internal use
+ */
 typedef enum {
     IRQ0 = 0,
     IRQ1,
@@ -138,6 +141,9 @@ typedef enum {
     INTEVT_MAX = 0xFE0
 } intevt_e;
 
+/**
+ * Interrupt masks
+ */
 typedef enum {
     MASK_IRQ0 =         0x80000000,
     MASK_IRQ1 =         0x40000000,
@@ -172,6 +178,46 @@ typedef enum {
     MASK_GPIO =         0x02000000
 } intc_mask_e;
 
+typedef enum {
+    INTC_PRIORITY_MASK0 =       0x00,
+    INTC_PRIORITY_MASK1 =       0x01,
+    INTC_PRIORITY_LOWEST =      0x02,
+    INTC_PRIORITY_HIGHEST =     0x1F,
+} intc_priority_e;
+
+/**
+ * Initializes the SH7780 interrupt controller.
+ */
 void init_intc(void);
+
+/**
+ * Masks the specified interrupt.
+ *
+ * @param index     the interlly used index of the interrupt.
+ */
+void mask_intevt(word_t index);
+
+/**
+ * Removes the mask of the specified interrupt.
+ *
+ * @param index     the internally used index of the interrupt.
+ */
+void unmask_intevt(word_t index);
+
+/**
+ * Assigns the priority of the specified interrupt.
+ * NOTE: Priority 0 and 1 masks the interrupt.
+ *
+ * @param index     the internally used index of the interrupt.
+ * @param prio      the priority to be set.
+ */
+void set_intprio(word_t index, u8_t prio);
+
+/**
+ * Gets the current priority of the specified interrupt.
+ *
+ * @param index     the internally used index of the interrupt.
+ */
+u8_t get_intprio(word_t index);
 
 #endif /* OKL4_PLATFORM_SH7780_INTERRUPT_H */
