@@ -1,7 +1,7 @@
 /**
  *  @brief  Implementation of the kernel debugger interface
  *  @since  March 2009
- *  @author Hiroo Ishikawa <hiroo.ishikawa@gmail.com>
+ *  @author Hiroo Ishikawa <ishikawa@dcl.info.waseda.ac.jp>
  */
 
 #include <compat/asm.h>

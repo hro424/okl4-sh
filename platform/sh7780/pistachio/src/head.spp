@@ -1,7 +1,7 @@
 /**
  *  @brief  Kernel entry point
  *  @since  December 2008
- *  @author Hiroo Ishikawa <hiroo.ishikawa@gmail.com>
+ *  @author Hiroo Ishikawa <ishikawa@dcl.info.waseda.ac.jp>
  */
 
 #include <soc/interface.h>

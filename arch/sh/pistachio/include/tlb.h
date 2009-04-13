@@ -1,7 +1,7 @@
 /**
  *  @brief  TLB utilities
  *  @since  March 2009
- *  @author Hiroo Ishikawa <hiroo.ishikawa@gmail.com>
+ *  @author Hiroo Ishikawa <ishikawa@dcl.info.waseda.ac.jp>
  */
 
 #ifndef ARCH_OKL4_TLB_H

@@ -1,7 +1,7 @@
 /**
  *  @brief  TLB utility
  *  @since  March 2009
- *  @author Hiroo Ishikawa <hiroo.ishikawa@gmail.com>
+ *  @author Hiroo Ishikawa <ishikawa@dcl.info.waseda.ac.jp>
  */
 
 #include <arch/tlb.h>

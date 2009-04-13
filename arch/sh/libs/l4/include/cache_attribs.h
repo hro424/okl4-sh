@@ -1,7 +1,7 @@
 /**
  * @brief   Definition of cache attributes
  * @since   December 2008
- * @author  Hiroo Ishikawa <hiroo.ishikawa@gmail.com>
+ * @author  Hiroo Ishikawa <ishikawa@dcl.info.waseda.ac.jp>
  * @see     arch/sh/libs/l4/include/elfweaver_info.h
  */
 

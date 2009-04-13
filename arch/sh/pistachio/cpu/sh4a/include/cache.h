@@ -1,7 +1,7 @@
 /**
  * @brief   SH4A cache management
  * @since   December 2008
- * @author  Hiroo Ishikawa <hiroo.ishikawa@gmail.com>
+ * @author  Hiroo Ishikawa <ishikawa@dcl.info.waseda.ac.jp>
  */
 
 #ifndef OKL4_ARCH_SH_7780_CACHE_H

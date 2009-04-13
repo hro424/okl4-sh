@@ -82,6 +82,7 @@ word_t L4_KDB_GetNumTracepoints(void);
 word_t L4_KDB_GetTracepointCount(word_t);
 void L4_KDB_GetTracepointNameIntroMRs(word_t);
 void L4_KDB_TCCtrl(word_t);
+
 word_t L4_KDB_PMN_Read(word_t);
 void L4_KDB_PMN_Write(word_t, word_t);
 word_t L4_KDB_PMN_Ofl_Read(word_t);

@@ -2,7 +2,7 @@
  * @brief   Page table entry
  * @file    arch/sh/pistachio/include/pgent.h
  * @since   December 9, 2008
- * @author  Hiroo Ishikawa <hiroo.ishikawa@gmail.com>
+ * @author  Hiroo Ishikawa <ishikawa@dcl.info.waseda.ac.jp>
  */
 
 #ifndef OKL4_ARCH_SH_PGENT_H

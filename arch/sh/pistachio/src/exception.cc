@@ -2,7 +2,7 @@
  * @brief   Exception handlers
  * @file    arch/sh/pistachio/src/exception.cc
  * @since   January 2009
- * @author  Hiroo Ishikawa <hiroo.ishikawa@gmail.com>
+ * @author  Hiroo Ishikawa <ishikawa@dcl.info.waseda.ac.jp>
  */
 
 #include <l4.h>

@@ -1,7 +1,7 @@
 /**
  * @brief   Utilities to access memory mapped registers
  * @since   February 2009
- * @author  Hiroo Ishikawa <hiroo.ishikawa@gmail.com>
+ * @author  Hiroo Ishikawa <ishikawa@dcl.info.waseda.ac.jp>
  */
 
 #ifndef OKL4_ARCH_SH_KERNEL_REGISTERS_H

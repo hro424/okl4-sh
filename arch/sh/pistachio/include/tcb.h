@@ -1,7 +1,7 @@
 /**
  * @brief   Utilities for manipulating TCB
  * @since   December 2008
- * @author  Hiroo Ishikawa <hiroo.ishikawa@gmail.com>
+ * @author  Hiroo Ishikawa <ishikawa@dcl.info.waseda.ac.jp>
  */
 
 #ifndef OKL4_ARCH_SH_TCB_H

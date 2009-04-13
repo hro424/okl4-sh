@@ -1,6 +1,6 @@
 /**
  * @since   December 2008
- * @author  Hiroo Ishikawa <hiroo.ishikawa@gmail.com>
+ * @author  Hiroo Ishikawa <ishikawa@dcl.info.waseda.ac.jp>
  */
 
 #ifndef OKL4_ARCH_SH_PGTABLE_H

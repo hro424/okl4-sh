@@ -2,7 +2,7 @@
  * @brief   SH7780 trap handling routine
  * @file    arch/sh/pistachio/src/traps.spp
  * @since   December 8, 2008
- * @author  Hiroo Ishikawa <hiroo.ishikawa@gmail.com>
+ * @author  Hiroo Ishikawa <ishikawa.info.waseda.ac.jp>
  */
 
 #include <asmsyms.h>
