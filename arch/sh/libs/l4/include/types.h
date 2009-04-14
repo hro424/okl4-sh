@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /**
  * @brief   Architecture-specific type definitions
  * @file    arch/sh/libs/l4/include/types.h

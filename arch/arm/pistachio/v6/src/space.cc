@@ -107,8 +107,7 @@ void SECTION(".init") init_kernel_space()
  * initialize THE kernel space
  * @see get_kernel_space()
  */
-void SECTION(".init")
-generic_space_t::init_kernel_mappings()
+void SECTION(".init") generic_space_t::init_kernel_mappings()
 {
     /* Kernel space's mappings already setup in initial root page table */
 }
@@ -118,8 +117,7 @@ generic_space_t::init_kernel_mappings()
  *
  * @param utcb_area     fpage describing location of UTCB area
  */
-bool
-generic_space_t::init (fpage_t utcb_area, kmem_resource_t *kresource)
+bool generic_space_t::init (fpage_t utcb_area, kmem_resource_t *kresource)
 {
     word_t i;
     word_t offset = USER_AREA_SECTIONS;
@@ -161,8 +159,7 @@ generic_space_t::init (fpage_t utcb_area, kmem_resource_t *kresource)
 /**
  * Clean up a Space
  */
-void
-generic_space_t::arch_free(kmem_resource_t *kresource)
+void generic_space_t::arch_free(kmem_resource_t *kresource)
 {
     asid_t *asid = ((space_t *)this)->get_asid();
 

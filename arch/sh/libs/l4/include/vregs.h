@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /**
  * @since   December 2008
  */

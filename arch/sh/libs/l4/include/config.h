@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /**
  * @file    arch/sh/libs/l4/include/config.h
  * @since   December 9, 2008
