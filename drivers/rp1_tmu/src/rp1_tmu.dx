@@ -1,4 +1,4 @@
-<device name="sh7780_tmu">
+<device name="rp1_tmu">
 
     <interface interface_type="timer" name="timer" />
 

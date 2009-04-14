@@ -1,0 +1,6 @@
+##
+##
+
+Import("*")
+lib = env.KengeLibrary("rp1_tmu", LIBS=["c", "driver", "util"])
+Return("lib")

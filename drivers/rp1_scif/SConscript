@@ -1,0 +1,7 @@
+##
+##
+
+Import("env")
+lib = env.KengeLibrary("rp1_scif", LIBS=["c", "driver", "util"])
+Return("lib")
+

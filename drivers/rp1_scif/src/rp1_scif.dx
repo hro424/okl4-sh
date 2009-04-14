@@ -1,4 +1,4 @@
-<device name="sh7780_scif">
+<device name="rp1_scif">
 
     <state name="enabled" />
     <state name="disabled" />

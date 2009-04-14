@@ -1,0 +1,48 @@
+/**
+ *  @brief  Kernel entry point
+ *  @since  December 2008
+ *  @author Hiroo Ishikawa <ishikawa@dcl.info.waseda.ac.jp>
+ */
+
+#include <soc/interface.h>
+
+/*
+ * The kernel's entry point.
+ *
+ * It is the bootloader's responsibility to load the kernel image into physical
+ * memory, and jump to the symbol "_start" with the processor in privileged
+ * mode and translation disabled.
+ */
+
+        .section .init.head
+        BEGIN_PROC(_start)
+
+        nop
+        /* Initialize the vector base address */
+        mov.l   CONST_VBR_BASE, r0
+        ldc     r0, vbr
+
+        /* Setup status register for supervisor mode, interrupts disabled. */
+        mov.l   CONST_INITIAL_SR, r0
+        ldc     r0, sr
+
+        /* Setup boot stack */
+        mov.l   CONST_KERNEL_STACK, r15
+
+        /* Jump to the architecture startup routine */
+        mov.l   CONST_KERNEL_ARCH_INIT, r0
+        jmp     @r0
+        nop
+
+        ALIGN   4
+LABEL(CONST_VBR_BASE)
+        .long   exception_vector
+LABEL(CONST_INITIAL_SR)
+        .long   0x500000F0
+LABEL(CONST_KERNEL_STACK)
+        .long   __stack + STACK_TOP
+LABEL(CONST_KERNEL_ARCH_INIT)
+        .long   kernel_arch_init
+
+        END_PROC(_start)
+
