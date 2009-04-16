@@ -461,8 +461,12 @@ LABEL(L4_CapControl)
 EXPORT L4_MemoryCopy
 LABEL(L4_MemoryCopy)
     SAVE_CONTEXT
+    mov.l   r6, @-r15
+    mov.l   @r6, r6
     mov     #SYSNUM(memory_copy), SYSCALL_REG
     trapa   #SYSCALL_NUM
+    mov.l   @r15+, r6
+    mov.l   r1, @r6
     RESTORE_CONTEXT
     rts
     nop

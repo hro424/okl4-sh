@@ -4,11 +4,7 @@
  */
 
 #include <l4/kdebug.h>
-#ifdef RP1
 #include <rp1_scif.h>
-#else
-#include <sh7780_scif.h>
-#endif
 
 
 #define TX_FIFO_DEPTH           64
@@ -39,7 +35,7 @@ typedef enum {
  * Delivers the given data to a serial port.  A private function.
  */
 static void
-do_tx_work(struct sh7780_scif *device)
+do_tx_work(struct rp1_scif *device)
 {
     struct stream_interface*    si;
     struct stream_pkt*          packet;
@@ -81,7 +77,7 @@ do_tx_work(struct sh7780_scif *device)
  * Receives data from a serial port.  A private function.
  */
 static int 
-do_rx_work(struct sh7780_scif *device)
+do_rx_work(struct rp1_scif *device)
 {
     struct stream_interface*    si;
     struct stream_pkt*          packet;
@@ -150,7 +146,7 @@ do_rx_work(struct sh7780_scif *device)
  * Triggers delivery or receive of data.
  */
 static int
-stream_sync_impl(struct stream_interface* si, struct sh7780_scif* device)
+stream_sync_impl(struct stream_interface* si, struct rp1_scif* device)
 {
     int retval = 0;
     
@@ -168,7 +164,7 @@ stream_sync_impl(struct stream_interface* si, struct sh7780_scif* device)
  * Handles interrupt
  */
 static int
-device_interrupt_impl(struct device_interface* di, struct sh7780_scif* device,
+device_interrupt_impl(struct device_interface* di, struct rp1_scif* device,
                       int irq)
 {
     /*
@@ -178,11 +174,7 @@ device_interrupt_impl(struct device_interface* di, struct sh7780_scif* device,
 }
 
 static int
-device_poll_impl
-(
-    struct device_interface*    di,
-    struct sh7780_scif*         device
-)
+device_poll_impl(struct device_interface* di, struct rp1_scif* device)
 {
     return device_interrupt_impl(di, device, -1);
     /*return 0;*/
@@ -192,11 +184,7 @@ device_poll_impl
  * Otains the number of interfaces of this device driver.
  */
 static int
-device_num_interfaces_impl
-(
-    struct device_interface *di,
-    struct sh7780_scif      *dev
-)
+device_num_interfaces_impl(struct device_interface *di, struct rp1_scif *dev)
 {
     return 2;
 }
@@ -205,12 +193,8 @@ device_num_interfaces_impl
  * Obtains an interface of this device driver.
  */
 static struct generic_interface*
-device_get_interface_impl
-(
-    struct device_interface*    di,
-    struct sh7780_scif*         device,
-    int                         interface
-)
+device_get_interface_impl(struct device_interface* di, struct rp1_scif* device,
+                          int interface)
 {
     switch(interface) {
         case 0:
@@ -230,12 +214,8 @@ device_get_interface_impl
  * @param resources the resource that this driver occupies
  */
 static int
-device_setup_impl
-(
-    struct device_interface*    di,
-    struct sh7780_scif*         device,
-    struct resource*            resources
-)
+device_setup_impl(struct device_interface* di, struct rp1_scif* device,
+                  struct resource* resources)
 {
     int i, n_mem = 0;
     for (i = 0; i < 8; i++) {
@@ -245,7 +225,7 @@ device_setup_impl
                     device->main = *resources;
                 }
                 else {
-                    L4_KDB_Enter("sh7780_scif: got more memory than expected!");
+                    L4_KDB_Enter("rp1_scif: got more memory than expected!");
                 }
                 n_mem++;
                 break;
@@ -255,7 +235,7 @@ device_setup_impl
                 /* do nothing */
                 break;
             default:
-                L4_KDB_Enter("sh7780_scif: Invalid resource type");
+                L4_KDB_Enter("rp1_scif: Invalid resource type");
                 break;
         }
         resources++;
@@ -282,11 +262,7 @@ device_setup_impl
 }
 
 static int
-device_enable_impl
-(
-    struct device_interface*    di,
-    struct sh7780_scif*         device
-)
+device_enable_impl(struct device_interface* di, struct rp1_scif* device)
 {
     scscr1_set_te(1);
     scscr1_set_re(1);
@@ -296,11 +272,7 @@ device_enable_impl
 }
 
 static int
-device_disable_impl
-(
-    struct device_interface*    di,
-    struct sh7780_scif*         device
-)
+device_disable_impl(struct device_interface* di, struct rp1_scif* device)
 {
     device->state = STATE_DISABLED;
     scscr1_set_te(0);

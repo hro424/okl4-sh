@@ -50,7 +50,6 @@ LABEL(\name)
 
 #endif
 
-
         L4_KDB_Op(L4_TRAP_GETTICK, L4_KDB_GetTick)
         L4_KDB_Op(L4_TRAP_KGETC, L4_KDB_ReadChar_Blocked_ASM)
         L4_KDB_Op(L4_TRAP_KGETC_NB, L4_KDB_ReadChar_ASM)

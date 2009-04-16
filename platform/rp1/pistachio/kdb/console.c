@@ -137,6 +137,6 @@ soc_serial_init(word_t base)
 void
 soc_kdb_init()
 {
-    soc_serial_init(SCIF1_BASE);
+    soc_serial_init(SCIF0_BASE);
 }
 

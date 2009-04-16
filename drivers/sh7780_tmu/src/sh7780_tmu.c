@@ -4,11 +4,7 @@
  */
 
 #include <l4/kdebug.h>
-#ifdef RP1
-#include <rp1_tmu.h>
-#else
 #include <sh7780_tmu.h>
-#endif
 
 #define TIMER_RATE              (25000000UL)
 #define TIMER_RATE_MHZ          (TIMER_RATE / 1000000UL)

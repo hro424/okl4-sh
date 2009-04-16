@@ -82,6 +82,8 @@
 #define PMU_IRQ 12
 #elif defined(CONFIG_PLAT_IMX31)
 #define PMU_IRQ 23
+#elif defined(PLATFORM_SH7780)
+#define PMU_IRQ 0
 #else
 #error "Platform do not support Performance Moniter!"
 #endif

@@ -8,4 +8,4 @@
 #define __LENGTH_MAX_MOD "ll"
 #define __LENGTH_PTR_MOD "l"
 
-#endif
+#endif // OKL4_ARCH_SH_INT_TYPES_H

@@ -810,6 +810,8 @@ ipc_setup(struct bench_test *test, int args[])
         L4_Word_t pager_utcb = (L4_Word_t) __L4_ARM_Utcb();
 #elif defined(ARCH_IA32)
         L4_Word_t pager_utcb = (L4_Word_t) __L4_X86_Utcb();
+#elif defined(ARCH_SH)
+        L4_Word_t pager_utcb = (L4_Word_t) L4_GetUtcbBase();
 #else
         #error "Please define arch get_Utcb()"
 #endif

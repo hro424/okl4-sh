@@ -245,7 +245,7 @@ handle_tlb_exception(word_t ecode, sh_context_t* context)
             || ((access == space_t::read) && pg->is_readable(space, pgsize))) {
             //TODO: Ad hoc solution
             if (faddr == (addr_t)USER_UTCB_REF) {
-                fill_tlb(0x3F, faddr, space, pg, pgsize);
+                fill_tlb(UTLB_UTCB, faddr, space, pg, pgsize);
             }
             else {
                 fill_tlb(faddr, space, pg, pgsize);
@@ -290,7 +290,7 @@ sys_sh_misc(sh_context_t* context)
             context->r0 = res;
         }
         return;
-#endif
+#endif // CONFIG_WBTEST
 
 #if defined(CONFIG_KDB_CONS)
         case L4_TRAP_KPUTC:
@@ -309,13 +309,13 @@ sys_sh_misc(sh_context_t* context)
         case L4_TRAP_KGETC_NB:
             context->r0 = 0;
             return;
-#endif
+#endif // CONFIG_KDB_CONS
 
 #if defined(CONFIG_DEBUG)
         case L4_TRAP_CKBR:
             kdb_breakin_handler(context->r4);
             return;
-#endif
+#endif // CONFIG_DEBUG
 
 #if defined(CONFIG_THREAD_NAMES) ||         \
             defined(CONFIG_SPACE_NAMES) ||  \
@@ -391,7 +391,7 @@ sys_sh_misc(sh_context_t* context)
             }
 
             printf(" ---\n" TXT_NORMAL);
-#endif
+#endif // CONFIG_KDB_CONS
             kdebug_entry_t kdebug_entry = kdebug_entries.kdebug_entry;
             if (EXPECT_FALSE(kdebug_entry != NULL)) {
                 kdebug_entry(context);
@@ -438,7 +438,7 @@ sys_sh_misc(sh_context_t* context)
                 }
             }
             return;
-#endif
+#endif // CONFIG_TRACEPOINTS
 #endif // CONFIG_KDEBUG
         default:
             break;

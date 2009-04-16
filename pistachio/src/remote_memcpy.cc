@@ -80,7 +80,7 @@ DECLARE_TRACEPOINT(SYSCALL_MEMORY_COPY);
  * This should be generic, but currently does not support all architectures.
  */
 #if defined(CONFIG_REMOTE_MEMORY_COPY) && \
-    (defined(CONFIG_ARCH_IA32) || defined(CONFIG_ARCH_ARM) || defined(CONFIG_ARCH_MIPS))
+    (defined(CONFIG_ARCH_IA32) || defined(CONFIG_ARCH_ARM) || defined(CONFIG_ARCH_MIPS) || defined(CONFIG_ARCH_SH))
 /** @todo FIXME: SMT/SMP safety - glee. */
 static word_t memcpy_buf[REMOTE_MEMCPY_BUFSIZE/sizeof(word_t)];
 

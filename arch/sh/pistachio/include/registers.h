@@ -165,4 +165,45 @@
 #define REG_UTLB_ASSOC      0x80
 
 
+/*
+ * User Break Controller
+ */
+#define REG_UBC_CBR0                0xFF200000
+#define REG_UBC_CRR0                0xFF200004
+#define REG_UBC_CAR0                0xFF200008
+#define REG_UBC_CAMR0               0xFF20000C
+#define REG_UBC_CBR1                0xFF200020
+#define REG_UBC_CRR1                0xFF200024
+#define REG_UBC_CAR1                0xFF200028
+#define REG_UBC_CAMR1               0xFF20002C
+#define REG_UBC_CDR1                0xFF200030
+#define REG_UBC_CDMR1               0xFF200034
+#define REG_UBC_CETR1               0xFF200038
+#define REG_UBC_CCMFR               0xFF200600
+#define REG_UBC_CBCR                0xFF200620
+
+#define REG_UBC_CBR_MFE             0x80000000
+#define REG_UBC_CBR_AIE             0x40000000
+#define REG_UBC_CBR_MFI_MF0         0x00000000
+#define REG_UBC_CBR_MFI_MR1         0x01000000
+#define REG_UBC_CBR_AIV_MASK        0x00FF0000
+#define REG_UBC_CBR_DBE             0x00008000
+#define REG_UBC_CBR_SZ_ALL          0x00000000
+#define REG_UBC_CBR_SZ_B            0x00001000
+#define REG_UBC_CBR_SZ_W            0x00002000
+#define REG_UBC_CBR_SZ_L            0x00003000
+#define REG_UBC_CBR_SZ_Q            0x00004000
+#define REG_UBC_CBR_ETBE            0x00000800
+#define REG_UBC_CBR_CD              0x00000000
+#define REG_UBC_CBR_ID_ID           0x00000000
+#define REG_UBC_CBR_ID_I            0x00000010
+#define REG_UBC_CBR_ID_D            0x00000020
+#define REG_UBC_CBR_RW_RW           0x00000000
+#define REG_UBC_CBR_RW_R            0x00000002
+#define REG_UBC_CBR_RW_W            0x00000004
+#define REG_UBC_CBR_CE              0x00000001
+
+#define REG_UBC_CRR_PCB             0x00000002
+#define REG_UBC_CRR_BIE             0x00000001
+
 #endif /* OKL4_ARCH_SH_REGISTERS_H */
