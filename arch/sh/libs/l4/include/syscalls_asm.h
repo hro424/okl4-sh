@@ -35,8 +35,19 @@
 #define L4_TRAP_GETTPNAME           0xA9
 #define L4_TRAP_TCCTRL              0xAA
 
-#define L4_TRAP_PMN_READ            0xB0
-#define L4_TRAP_PMN_WRITE           0xB1
+//XXX: CONFIDENTIAL START
+#define L4_TRAP_PPC_ENABLE          0xB0
+#define L4_TRAP_PPC_DISABLE         0xB1
+#define L4_TRAP_PPC_CONFIG          0xB2
+#define L4_TRAP_PPC_DIRECT_MODE     0xB3
+#define L4_TRAP_PPC_TRIGGER_MODE    0xB4
+#define L4_TRAP_PPC_START           0xB5
+#define L4_TRAP_PPC_STOP            0xB6
+#define L4_TRAP_PPC_RESTART         0xB7
+#define L4_TRAP_PPC_GET_COUNTER     0xB8
+#define L4_TRAP_PPC_RESET           0xB9
+#define L4_TRAP_PPC_EXPAND_COUNTER  0xBA
+//XXX: CONFIDENTIAL END
 
 #define L4_TRAP_GETTICK             0xC0
 #define L4_TRAP_WBTEST              0xD0

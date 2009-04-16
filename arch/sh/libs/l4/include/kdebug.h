@@ -113,5 +113,32 @@ L4_KDB_GetTracepointName(word_t tp, char *dest)
     return OKL4_KDB_RES_OK;
 }
 
+//XXX: CONFIDENTIAL START
+void L4_KDB_PPC_Enable(void);
+void L4_KDB_PPC_Disable(void);
+void L4_KDB_PPC_Config(word_t cit);
+void L4_KDB_PPC_SetDirectMode(void);
+void L4_KDB_PPC_SetTriggerMode(void);
+void L4_KDB_PPC_Start(void);
+void L4_KDB_PPC_Stop(void);
+void L4_KDB_PPC_Restart(void);
+void L4_KDB_PPC_Reset(void);
+void L4_KDB_PPC_ExpandCounter(void);
+void L4_KDB_PPC_GetCounter_ASM(L4_Word32_t* hi, L4_Word32_t* lo);
+
+INLINE L4_Word64_t
+L4_KDB_PPC_GetCounter(void)
+{
+    L4_Word32_t hi, lo;
+    L4_Word64_t c;
+
+    L4_KDB_PPC_GetCounter_ASM(&hi, &lo);
+
+    c = (L4_Word64_t)hi;
+    c <<= 32;
+    c |= lo;
+
+    return c;
+}
 
 #endif /* OKL4_ARCH_SH_L4_KDEBUG_H */

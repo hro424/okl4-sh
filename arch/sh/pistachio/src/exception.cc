@@ -14,6 +14,7 @@
 #include <tracebuffer.h>
 #include <arch/exception.h>
 #include <arch/ipc.h>
+#include <arch/ppc_regs.h>
 #include <arch/tlb.h>
 #include <kdb/check_breakin.h>
 #include <kdb/names.h>
@@ -399,6 +400,41 @@ sys_sh_misc(sh_context_t* context)
             return;
         }
 #if defined(CONFIG_PERF)
+        //XXX: CONFIDENTIAL START
+        case L4_TRAP_PPC_ENABLE:
+            sh_ppc_cpu::enable(REG_CCBR0);
+            return;
+        case L4_TRAP_PPC_DISABLE:
+            sh_ppc_cpu::disable(REG_CCBR0);
+            return;
+        case L4_TRAP_PPC_CONFIG:
+            sh_ppc_cpu::config(REG_CCBR0, context->r4);
+            return;
+        case L4_TRAP_PPC_DIRECT_MODE:
+            sh_ppc_cpu::set_direct_mode(REG_CCBR0);
+            return;
+        case L4_TRAP_PPC_TRIGGER_MODE:
+            sh_ppc_cpu::set_trigger_mode(REG_CCBR0, context->r4, context->r5);
+            return;
+        case L4_TRAP_PPC_START:
+            sh_ppc_cpu::start(REG_CCBR0);
+            return;
+        case L4_TRAP_PPC_STOP:
+            sh_ppc_cpu::stop(REG_CCBR0);
+            return;
+        case L4_TRAP_PPC_RESTART:
+            sh_ppc_cpu::restart(REG_CCBR0);
+            return;
+        case L4_TRAP_PPC_GET_COUNTER:
+            sh_ppc_cpu::get_counter(&context->r1, &context->r2);
+            return;
+        case L4_TRAP_PPC_RESET:
+            sh_ppc_cpu::reset(REG_CCBR0);
+            return;
+        case L4_TRAP_PPC_EXPAND_COUNTER:
+            sh_ppc_cpu::expand_counter();
+            return;
+        //XXX: CONFIDENTIAL END
 #endif
 
 #if defined(CONFIG_KDEBUG_TIMER)

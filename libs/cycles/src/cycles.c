@@ -93,6 +93,9 @@ setup(struct counter *cycle_counter)
 #ifdef __HAVE_ARM_PMN_CYCLE_COUNTER
     setup_CCNT();
 #endif
+#ifdef __HAVE_SH_PPC
+    setup_PPC();
+#endif // __HAVE_SH_PPC
 }
 
 #ifdef __HAVE_CYCLE_COUNTER
@@ -108,6 +111,9 @@ start(void)
 #ifdef __HAVE_ARM_PMN_CYCLE_COUNTER
     restart_CCNT();
 #endif
+#ifdef __HAVE_SH_PPC
+    restart_PPC();
+#endif // __HAVE_SH_PPC
 }
 
 static void
@@ -119,6 +125,9 @@ stop(void)
 #ifdef __HAVE_ARM_PMN_CYCLE_COUNTER
     stop_CCNT();
 #endif
+#ifdef __HAVE_SH_PPC
+    stop_PPC();
+#endif // __HAVE_SH_PPC
 }
 
 static uint64_t
@@ -128,6 +137,8 @@ get_count(int counter)
     return (uint64_t)(end_clock - start_clock);
 #elif defined (__HAVE_ARM_PMN_CYCLE_COUNTER)
     return (get_CCNT_overflow_counter() << 32) + get_CCNT_value();
+#elif defined (__HAVE_SH_PPC)
+    return get_PPC();
 #else
     return 0;
 #endif

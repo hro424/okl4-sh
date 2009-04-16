@@ -62,12 +62,30 @@ LABEL(\name)
         L4_KDB_Op(L4_TRAP_GETTPNAME, L4_KDB_GetTracepointNameIntroMRs)
         L4_KDB_Op(L4_TRAP_TCCTRL, L4_KDB_TCCtrl)
 
-        /*TODO: Get the NDA code
-        L4_KDB_Op(L4_TRAP_PMN_READ, L4_KDB_PMN_Read)
-        L4_KDB_Op(L4_TRAP_PMN_WRITE, L4_KDB_PMN_Write)
-        L4_KDB_Op(L4_TRAP_PMN_OFL_READ, L4_KDB_PMN_Ofl_Read)
-        L4_KDB_Op(L4_TRAP_PMN_OFL_WRITE, L4_KDB_PMN_Ofl_Write)
-        */
+        //XXX: CONFIDENTIAL START
+        L4_KDB_Op(L4_TRAP_PPC_ENABLE, L4_KDB_PPC_Enable)
+        L4_KDB_Op(L4_TRAP_PPC_DISABLE, L4_KDB_PPC_Disable)
+        L4_KDB_Op(L4_TRAP_PPC_CONFIG, L4_KDB_PPC_Config)
+        L4_KDB_Op(L4_TRAP_PPC_DIRECT_MODE, L4_KDB_PPC_SetDirectMode)
+        L4_KDB_Op(L4_TRAP_PPC_TRIGGER_MODE, L4_KDB_PPC_SetTriggerMode)
+        L4_KDB_Op(L4_TRAP_PPC_START, L4_KDB_PPC_Start)
+        L4_KDB_Op(L4_TRAP_PPC_STOP, L4_KDB_PPC_Stop)
+        L4_KDB_Op(L4_TRAP_PPC_RESTART, L4_KDB_PPC_Restart)
+        L4_KDB_Op(L4_TRAP_PPC_RESET, L4_KDB_PPC_Reset)
+        L4_KDB_Op(L4_TRAP_PPC_EXPAND_COUNTER, L4_KDB_PPC_ExpandCounter)
+
+        EXPORT  L4_KDB_PPC_GetCounter_ASM
+LABEL(L4_KDB_PPC_GetCounter_ASM)
+        mov     r8, r7
+        sts     pr, r6
+        mov     #L4_TRAP_PPC_GET_COUNTER, r8
+        trapa   #SYSCALL_NUM
+        mov.l   r1, @r5
+        mov.l   r2, @r4
+        mov     r7, r8
+        jmp     @r6
+        nop
+        //XXX: CONFIDENTIAL END
 
 /*
  * L4_KDB_SetObjectName_ASM(word_t type, word_t id, const char* name)
