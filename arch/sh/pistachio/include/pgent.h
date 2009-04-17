@@ -243,10 +243,12 @@ pgent_t::clear(generic_space_t* s, pgsize_e pgsize, bool kernel)
             sync_large(s, 0);
             break;
         case size_4k:
+        {
             int tree = l2.small.tree;
             raw = 0;
             l2.small.tree = tree;
             break;
+        }
         case size_1m:
         default:
             raw = 0;

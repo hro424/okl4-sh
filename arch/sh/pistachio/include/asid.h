@@ -15,11 +15,7 @@ get_hw_asid()
 {
     word_t  asid;
 
-    __asm__ __volatile__ (
-        "    mov     %1, %0"
-        : "=r" (asid)
-        : "m" (REG_PTEH)
-    );
+    asid = mapped_reg_read(REG_PTEH);
     asid &= REG_PTEH_ASID_MASK;
     return (hw_asid_t)asid;
 }
