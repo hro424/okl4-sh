@@ -244,13 +244,8 @@ handle_tlb_exception(word_t ecode, sh_context_t* context)
     if (space->lookup_mapping(faddr, &pg, &pgsize)) {
         if (((access == space_t::write) && pg->is_writable(space, pgsize))
             || ((access == space_t::read) && pg->is_readable(space, pgsize))) {
-            //TODO: Ad hoc solution
-            if (faddr == (addr_t)USER_UTCB_REF) {
-                fill_tlb(UTLB_UTCB, faddr, space, pg, pgsize);
-            }
-            else {
-                fill_tlb(faddr, space, pg, pgsize);
-            }
+
+            fill_tlb(faddr, space, pg, pgsize);
 
             if (kernel) {
                 return;

@@ -10,9 +10,25 @@
 #include <l4.h>
 #include <arch/pgent.h>
 
-#define UTLB_MIN        0x00
-#define UTLB_MAX        0x3F
-#define UTLB_UTCB       UTLB_MAX
+/**
+ * Size of UTLB
+ */
+#define UTLB_SIZE       0x40
+
+/**
+ * Entry for the UTCB page
+ */
+#define UTLB_UTCB       0x3F
+
+/**
+ * First UTLB entry
+ */
+#define UTLB_FIRST      0x00
+
+/**
+ * Last UTLB entry
+ */
+#define UTLB_LAST       (UTLB_UTCB - 1)
 
 /**
  * Fills a TLB entry with the specified virtual address.
@@ -29,28 +45,13 @@ void fill_tlb(addr_t vaddr,
               pgent_t::pgsize_e pgsize);
 
 /**
- * Fills the specified TLB entry with the specified virtual address.
- *
- * @param entry     the TLB entry < 0x3F
- * @param vaddr     the virtual address
- * @param space     the address space
- * @param pg        the page entry
- * @param pgsize    the size of the page
- */
-void fill_tlb(int entry,
-              addr_t vaddr,
-              space_t* space,
-              pgent_t* pg,
-              pgent_t::pgsize_e pgsize);
-
-/**
  * Check if the specified entry is in TLB.
  *
  * @param vaddr     the virtual address to be searched
  * @param space     the address space
  */
-bool
-lookup_tlb(addr_t vaddr, space_t* space);
+void
+refresh_tlb(addr_t vaddr, space_t* space);
 
 void dump_utlb();
 

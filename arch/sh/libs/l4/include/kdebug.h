@@ -140,5 +140,6 @@ L4_KDB_PPC_GetCounter(void)
 
     return c;
 }
+//XXX: CONFIDENTIAL END
 
 #endif /* OKL4_ARCH_SH_L4_KDEBUG_H */
