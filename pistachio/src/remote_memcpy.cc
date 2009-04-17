@@ -106,6 +106,7 @@ static CONTINUATION_FUNCTION(memory_copy_recover)
     current = get_current_tcb();
     fault = (word_t)TCB_SYSDATA_USER_ACCESS(current)->fault_address;
     addr = (word_t)TCB_SYSDATA_MEMCPY(current)->copy_start;
+    current->clear_user_access();
 
     /*
      * At this state we could still be on the other guy's page table.

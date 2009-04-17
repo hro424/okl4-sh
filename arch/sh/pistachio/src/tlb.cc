@@ -6,6 +6,7 @@
 
 #include <arch/tlb.h>
 #include <linear_ptab.h>
+#include <tcb.h>
 
 // LRU list of UTLB entries
 static word_t utlb_entry[UTLB_SIZE];
@@ -73,11 +74,6 @@ refill_tlb(addr_t vaddr, space_t* space)
     ENTER_P2();
     word_t      addr;
     hw_asid_t   asid;
-    hw_asid_t   utlb_asid;
-    word_t      utlb_addr;
-    word_t      utlb_data;
-    word_t      utlb_vpn;
-    word_t      utlb_sz;
     pgent_t*    pg;
     pgent_t::pgsize_e   pgsize;
 
@@ -86,6 +82,13 @@ refill_tlb(addr_t vaddr, space_t* space)
 
     // Compare ASID and address
     for (word_t i = UTLB_FIRST; i < UTLB_LAST; i++) {
+        word_t      compare;
+        word_t      utlb_addr;
+        word_t      utlb_data;
+        word_t      utlb_vpn;
+        word_t      utlb_sz;
+        hw_asid_t   utlb_asid;
+
         utlb_addr = mapped_reg_read(REG_UTLB_ADDRESS | (utlb_entry[i] << 8));
         utlb_data = mapped_reg_read(REG_UTLB_DATA | (utlb_entry[i] << 8));
 
@@ -93,9 +96,9 @@ refill_tlb(addr_t vaddr, space_t* space)
         utlb_asid = (hw_asid_t)(utlb_addr & 0x000000FF);
         // Mapping SH4A page sizes to pgsize_e
         utlb_sz = ((utlb_data >> 4) & 0x1) + ((utlb_data >> 6) & 0x2) - 1;
-        addr = (addr >> hw_pgshifts[utlb_sz]) << hw_pgshifts[utlb_sz];
+        compare = (addr >> hw_pgshifts[utlb_sz]) << hw_pgshifts[utlb_sz];
 
-        if (utlb_vpn == addr && utlb_asid == asid) {
+        if (utlb_vpn == compare && utlb_asid == asid) {
             utlb_sort(i);
             ENTER_P1();
             return;
@@ -104,7 +107,13 @@ refill_tlb(addr_t vaddr, space_t* space)
     ENTER_P1();
 
     if (!space->lookup_mapping(vaddr, &pg, &pgsize)) {
-        panic("refresh_tlb: page not found\n");
+        tcb_t*          current;
+        continuation_t  cont;
+
+        current = get_current_tcb();
+        TCB_SYSDATA_USER_ACCESS(current)->fault_address = vaddr;
+        cont = current->user_access_continuation();
+        ACTIVATE_CONTINUATION(cont);
     }
 
     fill_tlb(vaddr, space, pg, pgsize);
