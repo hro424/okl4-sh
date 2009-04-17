@@ -189,6 +189,9 @@ init_tlb()
     __asm__ __volatile__ ("ldtlb");
 
     UPDATE_REG();
+
+    // Initializes the LRU list
+    utlb_init();
 }
 
 extern "C" void NORETURN SECTION(".init")

@@ -16,7 +16,7 @@
 #define UTLB_SIZE       0x40
 
 /**
- * Entry for the UTCB page
+ * Entry for the UCB page is fixed.
  */
 #define UTLB_UTCB       0x3F
 
@@ -29,6 +29,11 @@
  * Last UTLB entry
  */
 #define UTLB_LAST       (UTLB_UTCB - 1)
+
+/**
+ * Initializes the UTLB LRU list.
+ */
+void utlb_init();
 
 /**
  * Fills a TLB entry with the specified virtual address.
@@ -45,13 +50,13 @@ void fill_tlb(addr_t vaddr,
               pgent_t::pgsize_e pgsize);
 
 /**
- * Check if the specified entry is in TLB.
+ * Fills TLB if the specified entry is off.  Updates the LRU list if found.
  *
  * @param vaddr     the virtual address to be searched
  * @param space     the address space
  */
 void
-refresh_tlb(addr_t vaddr, space_t* space);
+refill_tlb(addr_t vaddr, space_t* space);
 
 void dump_utlb();
 
