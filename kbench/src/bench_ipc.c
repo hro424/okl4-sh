@@ -87,7 +87,11 @@ extern struct bench_test bench_ipc_intra_ovh;
 extern struct bench_test bench_ipc_intra_async;
 extern struct bench_test bench_ipc_intra_async_ovh;
 
+#ifdef ARCH_SH
+#define UTCB_ADDRESS    (0x70000000UL)
+#else
 #define UTCB_ADDRESS    (0x80000000UL)
+#endif
 #define FASS_UTCB_ADDRESS (0x81000000UL)
 #define getTagE(tag) ((tag.raw & (1 << 15)) >> 15)
 #define START_LABEL     0xbe9
