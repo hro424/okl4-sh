@@ -344,13 +344,15 @@ CONTINUATION_FUNCTION(range_flush)
 #endif
                     preempt_enable(range_flush);
 
-                    word_t base = (word_t)addr_align((addr_t)start, blocksize);
-                    word_t limit = base + blocksize;
+                    {
+                        word_t base = (word_t)addr_align((addr_t)start, blocksize);
+                        word_t limit = base + blocksize;
 
-                    if ((start+size) <= limit) {
-                        blocksize = size;
-                    } else {
-                        blocksize = limit - start;
+                        if ((start+size) <= limit) {
+                            blocksize = size;
+                        } else {
+                            blocksize = limit - start;
+                        }
                     }
 
                     preempt_disable();
