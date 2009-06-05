@@ -16,10 +16,14 @@ ifeq (${VERBOSE_BUILD},true)
 endif
 
 
-all: hello
+all: sdk
+
+.PHONY: sdk
+sdk:
+	${COMMAND} ${OPTIONS} PROJECT=sdk
 
 test:
-	${COMMAND} ${OPTIONS} PROJECT=ktest
+	${COMMAND} ${OPTIONS} PROJECT=test
 
 bench:
 	${COMMAND} ${OPTIONS} PROJECT=kbench
