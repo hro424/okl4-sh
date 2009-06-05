@@ -27,6 +27,7 @@
 
 /**
  * Last UTLB entry
+ * NOTE: 0x3F is reserved for the UTCB reference page.
  */
 #define UTLB_LAST       (UTLB_UTCB - 1)
 
