@@ -27,16 +27,20 @@ class ShRelocType(ElfRelocType):
 # Body
 
 counter = 0
-matchstr = re.compile(r'HOWTO\s*\((\w+)')
+matchstr1 = re.compile(r'HOWTO\s*\((\w+)')
+matchstr2 = re.compile(r'EMPTY_HOWTO\s*\(\w+)')
 
 for line in open(sys.argv[1], 'r').xreadlines():
     line = line.strip()
-    r = matchstr.match(line)
+    r = matchstr1.match(line)
     if r != None:
         type = r.group(1)
         print type + " = ShRelocType(" + str(counter) + ", \"" + type[5:] + "\")"
         counter += 1
-
+    else
+        r = matchstr2.match(line)
+        if r != None:
+            counter += 1
 
 # Footer
 print

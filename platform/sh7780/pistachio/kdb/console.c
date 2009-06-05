@@ -1,13 +1,15 @@
-/* $Id$ */
 
 /**
  * @since   February 2009
  * @see     SH hardware manual
  */
 
+#if defined(CONFIG_KDB_CONS)
+
 #include <console.h>
 #include <soc/soc.h>
 #include <kernel/arch/registers.h>
+
 
 static word_t   scif_base;
 
@@ -140,3 +142,4 @@ soc_kdb_init()
     soc_serial_init(SCIF1_BASE);
 }
 
+#endif

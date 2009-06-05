@@ -146,7 +146,7 @@ BEGIN_PROC_TRAPS(sh_tlb_miss, 0x400)
         bt      kernel_tlb_miss
 
         /* From user */
-        /* Get the pointer to sh_context_t in the current TCB */
+        /* Get the pointer to sh_irq_context_t in the current TCB */
         mov.l   1f, r15
         add     #OFS_GLOBAL_CURRENT_TCB, r15
         mov.l   @r15, r15
@@ -226,7 +226,7 @@ BEGIN_PROC_TRAPS(sh_interrupt, 0x200)
         bt      7f
 
         /* From user */
-        /* Get the pointer to sh_context_t in the current TCB */
+        /* Get the pointer to sh_irq_context_t in the current TCB */
         mov.l   1f, r15
         add     #OFS_GLOBAL_CURRENT_TCB, r15
         mov.l   @r15, r15
@@ -325,7 +325,7 @@ BEGIN_LOCAL_PROC(exp_memory_exception)
         rotl    r0
         bt      10f
 
-        /* Get the pointer to sh_context_t in the current TCB */
+        /* Get the pointer to sh_irq_context_t in the current TCB */
         mov.l   1f, r15
         add     #OFS_GLOBAL_CURRENT_TCB, r15
         mov.l   @r15, r15
@@ -382,7 +382,7 @@ BEGIN_LOCAL_PROC(exp_instruction_exception)
         rotl    r0
         bt      10f
 
-        /* Get the pointer to sh_context_t in the current TCB */
+        /* Get the pointer to sh_irq_context_t in the current TCB */
         mov.l   1f, r15
         add     #OFS_GLOBAL_CURRENT_TCB, r15
         mov.l   @r15, r15
@@ -400,8 +400,8 @@ BEGIN_LOCAL_PROC(exp_instruction_exception)
         stc     r0_bank, r4
 
         /*
-         * Pass the current SP, which points at sh_context_t, to the handler
-         * via the second argument
+         * Pass the current SP, which points at sh_irq_context_t, to the
+         * handler via the second argument
          */
         mov     r15, r5
 
@@ -417,7 +417,7 @@ BEGIN_LOCAL_PROC(exp_instruction_exception)
         lds     r0, pr
 
         /* Call the handler */
-        /* handle(sh_context_t* context) */
+        /* handle(sh_irq_context_t* context) */
         mov.l   4f, r0
         jmp     @r0
         nop
@@ -439,7 +439,7 @@ BEGIN_LOCAL_PROC(exp_address_error)
         rotl    r1
         bt      10f
 
-        /* Get the pointer to sh_context_t in the current TCB */
+        /* Get the pointer to sh_irq_context_t in the current TCB */
         mov.l   1f, r15
         add     #OFS_GLOBAL_CURRENT_TCB, r15
         mov.l   @r15, r15
@@ -457,8 +457,8 @@ BEGIN_LOCAL_PROC(exp_address_error)
         stc     r0_bank, r4
 
         /*
-         * Pass the current SP, which points at sh_context_t, to the handler
-         * via the second argument
+         * Pass the current SP, which points at sh_irq_context_t, to the
+         * handler via the second argument
          */
         mov     r15, r5
 
@@ -472,7 +472,7 @@ BEGIN_LOCAL_PROC(exp_address_error)
         lds     r0, pr
 
         /* Call the handler */
-        /* handle(sh_context_t* context) */
+        /* handle(sh_irq_context_t* context) */
         mov.l   4f, r0
         jmp     @r0
         nop
@@ -489,7 +489,7 @@ END_LOCAL_PROC(exp_address_error)
 
 //TODO
 BEGIN_LOCAL_PROC(exp_user_break)
-        /* Get the pointer to sh_context_t in the current TCB */
+        /* Get the pointer to sh_irq_context_t in the current TCB */
         mov.l   1f, r15
         add     #OFS_GLOBAL_CURRENT_TCB, r15
         mov.l   @r15, r15
@@ -536,7 +536,7 @@ BEGIN_LOCAL_PROC(exp_trapa_handler)
 
         /* Not an OKL4 system call. */
 
-        /* Get the pointer to sh_context_t in the current TCB */
+        /* Get the pointer to sh_irq_context_t in the current TCB */
         mov.l   2f, r15
         add     #OFS_GLOBAL_CURRENT_TCB, r15
         mov.l   @r15, r15
@@ -728,7 +728,7 @@ END_LOCAL_PROC(syscall_handler)
 
 /* KDB call, etc. */
 BEGIN_LOCAL_PROC(syscall_misc)
-        /* Get the pointer to sh_context_t in the current TCB */
+        /* Get the pointer to sh_irq_context_t in the current TCB */
         mov.l   1f, r15
         add     #OFS_GLOBAL_CURRENT_TCB, r15
         mov.l   @r15, r15

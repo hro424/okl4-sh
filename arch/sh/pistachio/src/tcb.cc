@@ -9,8 +9,8 @@
 bool
 tcb_t::copy_exception_mrs_from_frame(tcb_t *dest)
 {
-    sh_context_t* RESTRICT  context;
-    word_t* RESTRICT        mr;
+    sh_irq_context_t* RESTRICT  context;
+    word_t* RESTRICT            mr;
 
     context = &arch.context;
     mr = &dest->get_utcb()->mr[0];
@@ -57,7 +57,7 @@ tcb_t::copy_exception_mrs_to_frame(tcb_t *dest)
         dest->set_user_flags( get_mr(EXCEPT_IPC_GEN_MR_FLAGS) );
     /*
     } else {
-        sh_context_t* RESTRICT  context;
+        sh_irq_context_t* RESTRICT  context;
         word_t* RESTRICT        mr;
 
         context = &dest->arch.context;
@@ -85,8 +85,8 @@ tcb_t::copy_exception_mrs_to_frame(tcb_t *dest)
 void
 tcb_t::copy_user_regs(tcb_t *src)
 {
-    sh_context_t* RESTRICT  to;
-    sh_context_t* RESTRICT  from;
+    sh_irq_context_t* RESTRICT  to;
+    sh_irq_context_t* RESTRICT  from;
 
     to = &arch.context;
     from = &(src->arch.context);
@@ -111,8 +111,8 @@ tcb_t::copy_user_regs(tcb_t *src)
 void
 tcb_t::copy_regs_to_mrs(tcb_t *src)
 {
-    sh_context_t* RESTRICT  from;
-    word_t* RESTRICT        mr;
+    sh_irq_context_t* RESTRICT  from;
+    word_t* RESTRICT            mr;
 
     from = &(src->arch.context);
     mr = &this->get_utcb()->mr[0];
@@ -139,8 +139,8 @@ tcb_t::copy_regs_to_mrs(tcb_t *src)
 void
 tcb_t::copy_mrs_to_regs(tcb_t *dest)
 {
-    sh_context_t* RESTRICT  from;
-    word_t* RESTRICT        mr;
+    sh_irq_context_t* RESTRICT  from;
+    word_t* RESTRICT            mr;
 
     from = &(dest->arch.context);
     mr = &this->get_utcb()->mr[0];

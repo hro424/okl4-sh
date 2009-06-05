@@ -75,7 +75,7 @@ CONTINUATION_FUNCTION(finish_exception_ipc)
  * Delivers an exception IPC message to user.
  */
 extern "C" NORETURN void
-send_exception_ipc(word_t exc_num, word_t exc_code, sh_context_t* context,
+send_exception_ipc(word_t exc_num, word_t exc_code, sh_irq_context_t* context,
                    continuation_t continuation)
 {
     tcb_t*      current = get_current_tcb();
@@ -121,7 +121,7 @@ send_exception_ipc(word_t exc_num, word_t exc_code, sh_context_t* context,
  * Invoked by the trap handler.
  */
 extern "C" NORETURN void
-handle_syscall_exception(sh_context_t* context)
+handle_syscall_exception(sh_irq_context_t* context)
 {
     continuation_t  continuation = ASM_CONTINUATION;
     u16_t           instr;
@@ -138,7 +138,7 @@ handle_syscall_exception(sh_context_t* context)
  * @param context   the context of the exception
  */
 extern "C" NORETURN void
-handle_instruction_exception(word_t ecode, sh_context_t* context)
+handle_instruction_exception(word_t ecode, sh_irq_context_t* context)
 {
     continuation_t  continuation;
     u16_t           instr;
@@ -156,7 +156,7 @@ handle_instruction_exception(word_t ecode, sh_context_t* context)
 }
 
 extern "C" NORETURN void
-handle_address_error(word_t ecode, sh_context_t* context)
+handle_address_error(word_t ecode, sh_irq_context_t* context)
 {
     continuation_t  continuation;
     u16_t           instr;
@@ -207,7 +207,7 @@ CONTINUATION_FUNCTION(tlb_fill)
  * @param context   the context where this exception was raised
  */
 extern "C" void
-handle_tlb_exception(word_t ecode, sh_context_t* context)
+handle_tlb_exception(word_t ecode, sh_irq_context_t* context)
 {
     addr_t              faddr;
     pgent_t*            pg;
@@ -272,7 +272,7 @@ extern "C" word_t sys_wbtest(word_t op, word_t* arg0, word_t* arg1, word_t* arg2
  * Invoked by the trap handler.
  */
 extern "C" void
-sys_sh_misc(sh_context_t* context)
+sys_sh_misc(sh_irq_context_t* context)
 {
     continuation_t continuation = ASM_CONTINUATION;
 
@@ -481,7 +481,7 @@ sys_sh_misc(sh_context_t* context)
 }
 
 extern "C" void
-handle_user_break(sh_context_t* context)
+handle_user_break(sh_irq_context_t* context)
 {
     //TODO
     /* Call kernel debugger */

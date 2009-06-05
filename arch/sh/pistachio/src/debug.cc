@@ -41,7 +41,7 @@ __asm__ (
 );
 
 extern "C" void
-enter_kdebug_c(char* msg, sh_context_t* context, word_t stat)
+enter_kdebug_c(char* msg, sh_irq_context_t* context, word_t stat)
 {
     context->pc = (u32_t)__return_address();
     context->sr = (u32_t)stat;

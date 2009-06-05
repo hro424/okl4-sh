@@ -238,7 +238,7 @@ tcb_t::return_from_user_interruption()
 INLINE void
 tcb_t::init_stack()
 {
-    sh_context_t*   context = &arch.context;
+    sh_irq_context_t*   context = &arch.context;
     word_t*         t;
     word_t*         end;
     word_t          size = sizeof(arch.context);
@@ -267,7 +267,7 @@ tcb_t::init_stack()
 INLINE addr_t
 tcb_t::get_user_ip()
 {
-    sh_context_t* context = &arch.context;
+    sh_irq_context_t* context = &arch.context;
     return (addr_t) ((context)->pc & ~1UL);
 }
 
@@ -279,7 +279,7 @@ tcb_t::get_user_ip()
 INLINE void
 tcb_t::set_user_ip(addr_t ip)
 {
-    sh_context_t*   context = &arch.context;
+    sh_irq_context_t*   context = &arch.context;
     context->pc = (word_t)ip;
 }
 
@@ -290,7 +290,7 @@ tcb_t::set_user_ip(addr_t ip)
 INLINE addr_t
 tcb_t::get_user_sp()
 {
-    sh_context_t * context = &arch.context;
+    sh_irq_context_t * context = &arch.context;
 
     return (addr_t) (context)->sp;
 }
@@ -302,7 +302,7 @@ tcb_t::get_user_sp()
 INLINE void
 tcb_t::set_user_sp(addr_t sp)
 {
-    sh_context_t *context = &arch.context;
+    sh_irq_context_t *context = &arch.context;
 
     context->sp = (word_t)sp;
 }
@@ -325,7 +325,7 @@ INLINE void tcb_t::set_utcb_location(word_t location)
 INLINE word_t
 tcb_t::get_user_flags (void)
 {
-    sh_context_t * context = &(arch.context);
+    sh_irq_context_t * context = &(arch.context);
 
     return (word_t) (context)->sr & SH_USER_FLAGS_MASK;
 }
@@ -337,7 +337,7 @@ tcb_t::get_user_flags (void)
 INLINE void
 tcb_t::set_user_flags (const word_t flags)
 {
-    sh_context_t *context = &(arch.context);
+    sh_irq_context_t *context = &(arch.context);
 
     context->sr = (context->sr & ~SH_USER_FLAGS_MASK) |
             ((word_t)flags & SH_USER_FLAGS_MASK);

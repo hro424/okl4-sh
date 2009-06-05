@@ -103,7 +103,7 @@ CONTINUATION_FUNCTION(restart_do_ipc)
 void
 tcb_t::create_startup_stack(void (*func)())
 {
-    sh_context_t*   context;
+    sh_irq_context_t*   context;
 
     init_stack();
     notify(func);

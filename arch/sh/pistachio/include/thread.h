@@ -9,7 +9,7 @@
 #define SH_USER_FLAGS_MASK  0x100083F3
 
 #if !defined(ASSEMBLY)
-class sh_context_t
+class sh_irq_context_t
 {
 public:
     u32_t   r0;

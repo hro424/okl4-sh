@@ -14,9 +14,9 @@ class arch_ktcb_t
 public:
     typedef union {
         struct {
-            sh_context_t*   exception_context;
-            continuation_t  exception_ipc_continuation;
-            continuation_t  exception_continuation;
+            sh_irq_context_t*   exception_context;
+            continuation_t      exception_ipc_continuation;
+            continuation_t      exception_continuation;
         } exception;
 
         struct {
@@ -26,7 +26,7 @@ public:
         } irq;
 
         struct {
-            sh_context_t*       pf_context;
+            sh_irq_context_t*   pf_context;
             continuation_t      pf_continuation;
             addr_t              fault_addr;
             space_t::access_e   access;
@@ -34,10 +34,10 @@ public:
     } ktcb_misc;
 
     // Used to store syscall context
-    sh_context_t    context;
-    ktcb_misc       misc;
-    word_t          exc_code;
-    word_t          exc_num;
+    sh_irq_context_t    context;
+    ktcb_misc           misc;
+    word_t              exc_code;
+    word_t              exc_num;
 
 };
 
