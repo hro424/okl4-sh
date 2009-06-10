@@ -23,7 +23,7 @@ sdk:
 	${COMMAND} ${OPTIONS} PROJECT=sdk
 
 test:
-	${COMMAND} ${OPTIONS} PROJECT=test
+	${COMMAND} ${OPTIONS} PROJECT=ktest
 
 bench:
 	${COMMAND} ${OPTIONS} PROJECT=kbench

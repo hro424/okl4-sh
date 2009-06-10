@@ -88,7 +88,7 @@ void
 refill_tlb(addr_t vaddr, space_t* space)
 {
     // To read the mapped UTLB
-    ENTER_P2();
+    //ENTER_P2();
     word_t      addr;
     hw_asid_t   asid;
     pgent_t*    pg;
@@ -109,8 +109,10 @@ refill_tlb(addr_t vaddr, space_t* space)
 
 #ifdef TLB_LRU
         utlb_addr = mapped_reg_read(REG_UTLB_ADDRESS | (utlb_entry[i] << 8));
+        utlb_data = mapped_reg_read(REG_UTLB_DATA | (utlb_entry[i] << 8));
 #else
         utlb_addr = mapped_reg_read(REG_UTLB_ADDRESS | (i << 8));
+        utlb_data = mapped_reg_read(REG_UTLB_DATA | (i << 8));
 #endif // TLB_LRU
 
         utlb_asid = (hw_asid_t)(utlb_addr & 0x000000FF);
@@ -119,26 +121,19 @@ refill_tlb(addr_t vaddr, space_t* space)
         }
 
         utlb_vpn = utlb_addr & 0xFFFFFC00;
-
-#ifdef TLB_LRU
-        utlb_data = mapped_reg_read(REG_UTLB_DATA | (utlb_entry[i] << 8));
-#else
-        utlb_data = mapped_reg_read(REG_UTLB_DATA | (i << 8));
-#endif // TLB_LRU
-
         // Map SH4A page size to pgsize_e
         utlb_sz = ((utlb_data >> 4) & 0x1) + ((utlb_data >> 6) & 0x2) - 1;
         compare = (addr >> hw_pgshifts[utlb_sz]) << hw_pgshifts[utlb_sz];
 
         if (utlb_vpn == compare) {
+            //ENTER_P1();
 #ifdef TLB_LRU
             utlb_sort(i);
 #endif // TLB_LRU
-            ENTER_P1();
             return;
         }
     }
-    ENTER_P1();
+    //ENTER_P1();
 
     if (!space->lookup_mapping(vaddr, &pg, &pgsize)) {
         tcb_t*          current;

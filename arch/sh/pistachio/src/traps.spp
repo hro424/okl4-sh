@@ -62,36 +62,38 @@ BEGIN_PROC_TRAPS(sh_general_exception, 0x100)
 2:      .long   sh_general_exception
 
         ALIGN   0x80
-        .skip   0x20
 
         /*
          * General Exception Vector
          * Each vector immediately jumps to a procedure.
          */
-        /* Vector 1: TLB Protection Violation (read) (offset: 0xA0) */
+        /* Vector 1: First write (offset: 0x80) */
+        EXP_VECTOR(exp_first_write)
+
+        /* Vector 2: TLB Protection Violation (read) (offset: 0xA0) */
         EXP_VECTOR(exp_memory_exception)
 
-        /* Vector 2: TLB Protection Violation (write) (offset: 0xC0) */
+        /* Vector 3: TLB Protection Violation (write) (offset: 0xC0) */
         EXP_VECTOR(exp_memory_exception)
 
-        /* Vector 3: Address Error (read) (offset: 0xE0) */
+        /* Vector 4: Address Error (read) (offset: 0xE0) */
         EXP_VECTOR(exp_address_error)
 
-        /* Vector 4: Address Error (write) (offset: 0x100) */
+        /* Vector 5: Address Error (write) (offset: 0x100) */
         EXP_VECTOR(exp_address_error)
 
-        /* Vector 5: FPU Exception (offset: 0x120) */
+        /* Vector 6: FPU Exception (offset: 0x120) */
         EXP_VECTOR(exp_instruction_exception)
 
         .skip   0x20
 
-        /* Vector 6: TRAPA (offset: 0x160) */
+        /* Vector 7: TRAPA (offset: 0x160) */
         EXP_VECTOR(exp_trapa_handler)
 
-        /* Vector 7: Invalid Instruction (offset: 0x180) */
+        /* Vector 8: Invalid Instruction (offset: 0x180) */
         EXP_VECTOR(exp_instruction_exception)
 
-        /* Vector 8: Slot Invalid Instruction (offset: 0x1A0) */
+        /* Vector 9: Slot Invalid Instruction (offset: 0x1A0) */
         EXP_VECTOR(exp_instruction_exception)
 
         .skip   0x20
@@ -309,7 +311,9 @@ END_PROC_TRAPS(sh_interrupt)
 
 
 
-
+BEGIN_LOCAL_PROC(exp_first_write)
+        nop
+END_LOCAL_PROC(exp_first_write)
 
 
 /*
