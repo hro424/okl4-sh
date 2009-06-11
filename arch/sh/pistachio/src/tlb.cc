@@ -163,8 +163,14 @@ dirty_tlb(word_t vpn)
         word_t  utlb_data;
         word_t  utlb_sz;
 
+#ifdef TLB_LRU
         utlb_addr = mapped_reg_read(REG_UTLB_ADDRESS | (utlb_entry[i] << 8));
         utlb_data = mapped_reg_read(REG_UTLB_DATA | (utlb_entry[i] << 8));
+#else
+        utlb_addr = mapped_reg_read(REG_UTLB_ADDRESS | (i << 8));
+        utlb_data = mapped_reg_read(REG_UTLB_DATA | (i << 8));
+#endif // TLB_LRU
+
         utlb_sz = ((utlb_data >> 4) & 0x1) + ((utlb_data >> 6) & 0x2);
 
         // Compare VPN and ASID only
