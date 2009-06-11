@@ -176,8 +176,14 @@ dirty_tlb(word_t vpn)
         // Compare VPN and ASID only
         if ((vpn & mask[utlb_sz]) == (utlb_addr & 0xFFFFFCFF)) {
             ENTER_P2();
+#ifdef TLB_LRU
             mapped_reg_write(REG_UTLB_ADDRESS | (utlb_entry[i] << 8),
                              utlb_addr | 0x200);
+#else
+            mapped_reg_write(REG_UTLB_ADDRESS | (i << 8),
+                             utlb_addr | 0x200);
+#endif // TLB_LRU
+
             UPDATE_REG();
             ENTER_P1();
 #ifdef TLB_LRU
