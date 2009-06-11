@@ -266,7 +266,7 @@ handle_tlb_exception(word_t ecode, sh_irq_context_t* context)
 }
 
 extern "C" void
-handle_first_write(word_t ecode, sh_irq_context_t* context)
+handle_first_write(void)
 {
     word_t vpn = mapped_reg_read(REG_PTEH);
     dirty_tlb(vpn);

@@ -332,17 +332,6 @@ BEGIN_LOCAL_PROC(exp_first_write)
         SAVE_CONTEXT
         /* Using the register bank 0 */
 
-        /* Pass EXPEVT to the handler via the first argument.  */
-        /* r0 in bank1 holds EXPEVT. */
-        stc     r0_bank, r4
-
-        /*
-         * Pass the current context to the handler via the second argument.
-         * The context is supposed to be saved to a TCB in the handler so that
-         * the kernel return routine restores the context.
-         */
-        mov     r15, r5
-
         /* Load the kernel stack if from user mode */
         bt      11f
         mov.l   2f, r15

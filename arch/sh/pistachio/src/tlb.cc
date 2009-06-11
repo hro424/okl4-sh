@@ -123,6 +123,7 @@ refill_tlb(addr_t vaddr, space_t* space)
 
         utlb_vpn = utlb_addr & 0xFFFFFC00;
         // Map SH4A page size to pgsize_e
+        // NOTE: Assuming there's no 1k pages.
         utlb_sz = ((utlb_data >> 4) & 0x1) + ((utlb_data >> 6) & 0x2) - 1;
         compare = (addr >> hw_pgshifts[utlb_sz]) << hw_pgshifts[utlb_sz];
 
