@@ -265,6 +265,13 @@ handle_tlb_exception(word_t ecode, sh_irq_context_t* context)
                             tlb_fill);
 }
 
+extern "C" void
+handle_first_write(word_t ecode, sh_irq_context_t* context)
+{
+    word_t vpn = mapped_reg_read(REG_PTEH);
+    dirty_tlb(vpn);
+}
+
 extern "C" word_t sys_wbtest(word_t op, word_t* arg0, word_t* arg1, word_t* arg2);
 
 /**

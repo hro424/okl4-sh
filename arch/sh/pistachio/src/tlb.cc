@@ -76,8 +76,9 @@ fill_tlb(addr_t vaddr, space_t* space, pgent_t* pg, pgent_t::pgsize_e pgsize)
     mapped_reg_write(REG_PTEH,
                  (addr & REG_PTEH_VPN_MASK) |
                  ((word_t)space->get_asid()->get(space) & REG_PTEH_ASID_MASK));
-    // Add dirty bit to avoid the initial write exception
-    mapped_reg_write(REG_PTEL, pg->ptel(pgsize) | (1 << 2));
+    // Add dirty bit to avoid the first write exception
+    //mapped_reg_write(REG_PTEL, pg->ptel(pgsize) | (1 << 2));
+    mapped_reg_write(REG_PTEL, pg->ptel(pgsize));
 
     __asm__ __volatile__ ("ldtlb");
 
@@ -150,6 +151,33 @@ refill_tlb(addr_t vaddr, space_t* space)
     return;
 }
 
+void
+dirty_tlb(word_t vpn)
+{
+    static word_t mask[4] = { 0xFFFFFCFF, 0xFFFFF0FF, 0xFFFF00FF, 0xFFF000FF };
+
+    //printf("  dirty %x\n", vpn);
+    for (word_t i = UTLB_FIRST; i < UTLB_LAST; i++) {
+        word_t  utlb_addr;
+        word_t  utlb_data;
+        word_t  utlb_sz;
+
+        utlb_addr = mapped_reg_read(REG_UTLB_ADDRESS | (utlb_entry[i] << 8));
+        utlb_data = mapped_reg_read(REG_UTLB_DATA | (utlb_entry[i] << 8));
+        utlb_sz = ((utlb_data >> 4) & 0x1) + ((utlb_data >> 6) & 0x2);
+
+        // Compare VPN and ASID only
+        if ((vpn & mask[utlb_sz]) == (utlb_addr & 0xFFFFFCFF)) {
+            ENTER_P2();
+            mapped_reg_write(REG_UTLB_ADDRESS | (utlb_entry[i] << 8),
+                             utlb_addr | 0x200);
+            UPDATE_REG();
+            ENTER_P1();
+            utlb_sort(i);
+            return;
+        }
+    }
+}
 
 void
 dump_utlb()

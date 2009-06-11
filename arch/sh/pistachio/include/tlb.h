@@ -56,8 +56,9 @@ void fill_tlb(addr_t vaddr,
  * @param vaddr     the virtual address to be searched
  * @param space     the address space
  */
-void
-refill_tlb(addr_t vaddr, space_t* space);
+void refill_tlb(addr_t vaddr, space_t* space);
+
+void dirty_tlb(word_t vpn);
 
 void dump_utlb();
 
