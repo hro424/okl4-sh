@@ -174,7 +174,9 @@ dirty_tlb(word_t vpn)
                              utlb_addr | 0x200);
             UPDATE_REG();
             ENTER_P1();
+#ifdef TLB_LRU
             utlb_sort(i);
+#endif // TLB_LRU
             return;
         }
     }
